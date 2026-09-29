@@ -100,13 +100,24 @@ class WeatherService:
                 wind = current.get("wind_speed_10m", 5.0)
                 rain_sum = daily.get("precipitation_sum", [precip])[0] if daily.get("precipitation_sum") else precip
 
-                # Compute live adequacy & stress scores
-                rain_adequacy = 95.0 if rain_sum >= 5.0 else 75.0 if rain_sum >= 1.0 else 60.0
-                temp_stress = 15.0 if 18.0 <= temp <= 30.0 else 45.0 if 14.0 <= temp <= 34.0 else 80.0
-                humidity_balance = 90.0 if 50.0 <= humidity <= 75.0 else 65.0
-                sunlight_score = 88.0
+                # Compute live adequacy & stress scores continuously for variety
+                rain_adequacy = min(100.0, max(20.0, (rain_sum / 10.0) * 100)) if rain_sum > 0 else 40.0
+                
+                temp_diff = abs(temp - 24.0)
+                temp_stress = min(100.0, (temp_diff / 15.0) * 100)
+                
+                hum_diff = abs(humidity - 65.0)
+                humidity_balance = max(20.0, 100.0 - (hum_diff * 1.5))
+                
+                sunlight_score = max(50.0, min(100.0, 100.0 - (abs(temp - 25.0))))
 
                 overall = round((rain_adequacy * 0.35) + ((100.0 - temp_stress) * 0.30) + (humidity_balance * 0.20) + (sunlight_score * 0.15), 2)
+                
+                # Round individual scores
+                rain_adequacy = round(rain_adequacy, 1)
+                temp_stress = round(temp_stress, 1)
+                humidity_balance = round(humidity_balance, 1)
+                sunlight_score = round(sunlight_score, 1)
 
                 return {
                     "status_claim": f"Live Open-Meteo Weather Stream ({coords['name']})",

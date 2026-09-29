@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, EmailStr
+import json
+import os
 from backend.app.core.security import (
     create_access_token,
     get_password_hash,
@@ -9,30 +11,36 @@ from backend.app.core.security import (
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
-# In-memory user database for Milestone 1 demonstration
-DEMO_USERS = {
-    "admin": {
-        "username": "admin",
-        "email": "admin@yieldsense.ai",
-        "hashed_password": get_password_hash("admin123"),
-        "role": "Admin",
-        "full_name": "System Administrator"
-    },
-    "farmer": {
-        "username": "farmer",
-        "email": "farmer@yieldsense.ai",
-        "hashed_password": get_password_hash("farmer123"),
-        "role": "Farmer",
-        "full_name": "Ramesh Kumar (Farmer)"
-    },
-    "agronomist": {
-        "username": "agronomist",
-        "email": "agronomist@yieldsense.ai",
-        "hashed_password": get_password_hash("agro123"),
-        "role": "Agronomist",
-        "full_name": "Dr. Sarah Jenkins (Agronomist)"
-    }
-}
+DB_FILE = os.path.join(os.path.dirname(__file__), "users_db.json")
+
+def load_users():
+    if not os.path.exists(DB_FILE):
+        default_users = {
+            "admin": {
+                "username": "admin",
+                "email": "admin@yieldsense.ai",
+                "hashed_password": get_password_hash("admin123"),
+                "role": "Admin",
+                "full_name": "System Administrator"
+            },
+            "farmer": {
+                "username": "farmer",
+                "email": "farmer@yieldsense.ai",
+                "hashed_password": get_password_hash("farmer123"),
+                "role": "Farmer",
+                "full_name": "Ramesh Kumar (Farmer)"
+            }
+        }
+        with open(DB_FILE, "w", encoding="utf-8") as f:
+            json.dump(default_users, f, indent=4)
+        return default_users
+    
+    with open(DB_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def save_users(users_data):
+    with open(DB_FILE, "w", encoding="utf-8") as f:
+        json.dump(users_data, f, indent=4)
 
 class LoginRequest(BaseModel):
     username: str
@@ -54,7 +62,8 @@ class TokenResponse(BaseModel):
 
 @router.post("/login", response_model=TokenResponse)
 def login(request: LoginRequest):
-    user = DEMO_USERS.get(request.username.lower())
+    users_db = load_users()
+    user = users_db.get(request.username.lower())
     if not user or not verify_password(request.password, user["hashed_password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -77,7 +86,8 @@ def login(request: LoginRequest):
 
 @router.post("/register", response_model=TokenResponse)
 def register(request: RegisterRequest):
-    if request.username.lower() in DEMO_USERS:
+    users_db = load_users()
+    if request.username.lower() in users_db:
         raise HTTPException(status_code=400, detail="Username already registered")
     
     hashed = get_password_hash(request.password)
@@ -88,7 +98,8 @@ def register(request: RegisterRequest):
         "role": request.role,
         "full_name": request.full_name or request.username
     }
-    DEMO_USERS[request.username.lower()] = new_user
+    users_db[request.username.lower()] = new_user
+    save_users(users_db)
 
     token = create_access_token({
         "sub": new_user["username"],

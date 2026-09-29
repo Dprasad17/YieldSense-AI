@@ -109,3 +109,36 @@ def get_model_performance_metrics():
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read metrics: {str(e)}")
+
+@router.get("/recommendations-hub")
+def get_recommendations_hub_data():
+    # Dynamic simulation of field telemetry & actionable prescriptions
+    return {
+        "irrigation_dispatch": {
+            "title": "Urgent: Variable-Rate Irrigation Dispatch — Sector B4 Corn",
+            "yield_salvage": "+0.92 t/Ha Yield Salvage Potential",
+            "affected_area": "380 Hectares Affected",
+            "telemetry_trigger": "48h Root Zone Moisture Deficit (28% VWC) & Approaching 34°C Diurnal Heat Peak.",
+            "target_threshold": "Target root threshold: 38% VWC | Probe depth: 45cm & 90cm",
+            "explanation": "Phenological stage R1 (silking/pollination) is acutely vulnerable to heat-induced pollen desiccation. Dispatching a calculated 25mm pivot cycle within 36 hours prevents kernel count reduction across sandy-loam gradients."
+        },
+        "spray_window": {
+            "title": "Optimal Spray Window: Preventive Fungicide Application for Northern Corn Leaf Blight",
+            "prevention_potential": "Prevent up to 14% Foliar Necrosis • Target: Pyraclostrobin + Fluxapyroxad",
+            "window_status": "Friday 05:30 – 09:30 AM (4h Duration)",
+            "explanation": "Microclimate sensor mesh indicates spore germination index reached the 78/100 threshold following continuous leaf wetness > 11 hours. Ideal application window: Friday dawn to maximize systemic absorption."
+        },
+        "phenology": {
+            "current_stage": "R1",
+            "stage_name": "R1 (Silking / Pollination)",
+            "warning": "Peak heat stress window",
+            "completed": ["VE – V6 (Vegetative)", "V12 – VT (Tasseling)"],
+            "future": ["R3 (Milk / Grain Fill)", "R6 (Black Layer Maturity)"]
+        },
+        "microclimate": {
+            "canopy_temp": "31.8°C",
+            "canopy_threshold": "+2.4°C threshold",
+            "wind_inversion": "None",
+            "delta_t": "4.1"
+        }
+    }

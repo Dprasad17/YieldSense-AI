@@ -17,7 +17,7 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
     crop_type: 'Wheat',
     region: 'India',
     irrigation_type: 'Drip',
-    fertilizer_type: 'NPK 15-15-15',
+    fertilizer_type: 'NPK 14-35-14',
     crop_disease_status: 'None',
     soil_pH: 6.5,
     'soil_moisture_%': 45.0,
