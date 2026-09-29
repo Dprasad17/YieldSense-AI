@@ -1,0 +1,169 @@
+/*
+ * Field Intelligence design tokens.
+ * Every colour, font size, space and radius used by the app comes from here.
+ * Dark is the default theme; light is opt-in via [data-theme="light"] or the OS preference.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --canvas: #0a0f0c;
+  --surface: #111814;
+  --surface-2: #172019;
+  --border: #222d26;
+  --border-strong: #2e3b33;
+  --highlight: rgba(255, 255, 255, 0.04); /* inner top highlight on cards */
+
+  /* Text */
+  --ink: #e7eee9;
+  --muted: #8b978f;
+
+  /* Brand */
+  --primary: #2fbf7a;
+  --primary-hover: #27a56a;
+  --primary-ink: #04140b; /* text on primary */
+  --primary-soft: rgba(47, 191, 122, 0.12);
+  --focus-ring: rgba(47, 191, 122, 0.4);
+
+  /* Semantic data colours: the same concept always uses the same colour */
+  --data-water: #4c8df6;
+  --data-temperature: #e8a33a;
+  --data-soil: #b07a4f;
+  --data-vegetation: #3cc47c;
+  --data-model: #9b7bf0;
+
+  /* Status */
+  --success: #2fbf7a;
+  --warning: #e8a33a;
+  --danger: #ef5a5a;
+  --info: #4c8df6;
+  --success-soft: rgba(47, 191, 122, 0.12);
+  --warning-soft: rgba(232, 163, 58, 0.12);
+  --danger-soft: rgba(239, 90, 90, 0.12);
+  --info-soft: rgba(76, 141, 246, 0.12);
+
+  /* NDVI scale (low → high) */
+  --ndvi-0: #a50026;
+  --ndvi-1: #f46d43;
+  --ndvi-2: #fee08b;
+  --ndvi-3: #a6d96a;
+  --ndvi-4: #1a9850;
+
+  /* Typography */
+  --font-ui: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --font-display: 'Instrument Serif', Georgia, serif;
+
+  --text-xs: 12px; /* smallest allowed size */
+  --text-sm: 13px;
+  --text-md: 14px; /* body */
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 24px; /* page titles */
+  --text-3xl: 32px;
+  --text-display: 56px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  /* Spacing (8pt grid, with 4px half-steps) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Shape */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.45);
+
+  /* Motion */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 250ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout */
+  --content-max: 1440px;
+  --gutter: var(--space-8);
+  --sidebar-width: 248px;
+  --sidebar-collapsed: 64px;
+  --topbar-height: 56px;
+
+  /* Texture opacity for the field-grid canvas pattern */
+  --texture-opacity: 0.03;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+    --canvas: #f7f6f2;
+    --surface: #ffffff;
+    --surface-2: #f1efe8;
+    --border: #e4e2da;
+    --border-strong: #d4d1c6;
+    --highlight: rgba(255, 255, 255, 0.8);
+    --ink: #0f1a14;
+    --muted: #5b6760;
+    --primary: #1f7a4d;
+    --primary-hover: #19663f;
+    --primary-ink: #ffffff;
+    --primary-soft: rgba(31, 122, 77, 0.1);
+    --focus-ring: rgba(31, 122, 77, 0.4);
+    --shadow-sm: 0 1px 2px rgba(15, 26, 20, 0.06);
+    --shadow-md: 0 8px 24px rgba(15, 26, 20, 0.08);
+    --shadow-lg: 0 16px 48px rgba(15, 26, 20, 0.12);
+  }
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --canvas: #f7f6f2;
+  --surface: #ffffff;
+  --surface-2: #f1efe8;
+  --border: #e4e2da;
+  --border-strong: #d4d1c6;
+  --highlight: rgba(255, 255, 255, 0.8);
+  --ink: #0f1a14;
+  --muted: #5b6760;
+  --primary: #1f7a4d;
+  --primary-hover: #19663f;
+  --primary-ink: #ffffff;
+  --primary-soft: rgba(31, 122, 77, 0.1);
+  --focus-ring: rgba(31, 122, 77, 0.4);
+  --shadow-sm: 0 1px 2px rgba(15, 26, 20, 0.06);
+  --shadow-md: 0 8px 24px rgba(15, 26, 20, 0.08);
+  --shadow-lg: 0 16px 48px rgba(15, 26, 20, 0.12);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --gutter: var(--space-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

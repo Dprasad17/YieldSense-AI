@@ -5,7 +5,7 @@ from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from backend.app.core.config import settings
 
-from typing import Optional
+from typing import Optional, Callable
 
 security_bearer = HTTPBearer(auto_error=False)
 
@@ -39,3 +39,20 @@ def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Secur
         return {"username": username, "role": role, "email": email}
     except jwt.PyJWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+
+def require_user(credentials: Optional[HTTPAuthorizationCredentials] = Security(security_bearer)) -> dict:
+    """Like get_current_user, but rejects anonymous requests with 401."""
+    if not credentials:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    return get_current_user(credentials)
+
+def require_roles(*roles: str) -> Callable[..., dict]:
+    """Dependency factory: allows the request only if the token's role is in `roles`."""
+    allowed = {r.lower() for r in roles}
+
+    def checker(user: dict = Security(require_user)) -> dict:
+        if user["role"].lower() not in allowed:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+        return user
+
+    return checker

@@ -1,70 +1,76 @@
 import React from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Layers, Droplets, Activity, TrendingUp } from 'lucide-react';
+import { useDatasetSummary } from '../hooks/queries';
+import { formatCount, formatIndex, formatRainfall, formatYield } from '../lib/format';
+import { selectSummaryKpis } from '../lib/selectors';
+import { usePreferences } from '../store/preferences';
+import { filtersSearch } from '../store/filters';
+import { ErrorState, LoadingState, SampleDataPill } from './ui/States';
 
-interface MetricCardsProps {
-  summary: {
-    total_farms: number;
-    avg_yield_kg_ha: number;
-    avg_rainfall_mm: number;
-    avg_ndvi: number;
-    total_regions: number;
-    crops_supported: string[];
-  };
-}
+export const MetricCards: React.FC = () => {
+  const summaryQuery = useDatasetSummary();
+  const { unit } = usePreferences();
+  const [params] = useSearchParams();
+  const kpis = selectSummaryKpis(summaryQuery.data);
 
-export const MetricCards: React.FC<MetricCardsProps> = ({ summary }) => {
+  if (summaryQuery.isPending) return <LoadingState label="Loading dashboard…" />;
+  if (summaryQuery.isError || !kpis) return <ErrorState error={summaryQuery.error} onRetry={() => summaryQuery.refetch()} />;
+
+  const scope = `Global mean · ${formatCount(kpis.recordCount)} records`;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div className="metrics-grid">
         <div className="glass-card metric-card">
           <div className="metric-header">
-            <span className="metric-title">Monitored Farms</span>
+            <span className="metric-title">Farm records</span>
             <div className="metric-icon-wrapper" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
               <Layers size={20} />
             </div>
           </div>
           <div>
-            <div className="metric-value">{summary.total_farms.toLocaleString()}</div>
-            <div className="metric-subtitle">Across {summary.total_regions} Global Agricultural Regions</div>
+            <div className="metric-value num">{formatCount(kpis.recordCount)}</div>
+            <div className="metric-subtitle">Dataset rows across {formatCount(kpis.regionCount)} regions</div>
           </div>
         </div>
 
         <div className="glass-card metric-card">
           <div className="metric-header">
-            <span className="metric-title">Average Crop Yield</span>
+            <span className="metric-title">Average yield</span>
             <div className="metric-icon-wrapper" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa' }}>
               <TrendingUp size={20} />
             </div>
           </div>
           <div>
-            <div className="metric-value">{summary.avg_yield_kg_ha.toLocaleString()} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>kg/ha</span></div>
-            <div className="metric-subtitle">Across {summary.crops_supported.length} Primary Crop Types</div>
+            <div className="metric-value num">{formatYield(kpis.meanYield, unit)} <span style={{ fontSize: 'var(--text-lg)', color: 'var(--muted)' }}>{unit}</span></div>
+            <div className="metric-subtitle">{scope} · {kpis.cropCount} crops</div>
           </div>
         </div>
 
         <div className="glass-card metric-card">
           <div className="metric-header">
-            <span className="metric-title">Seasonal Rainfall</span>
+            <span className="metric-title">Seasonal rainfall</span>
             <div className="metric-icon-wrapper" style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#22d3ee' }}>
               <Droplets size={20} />
             </div>
           </div>
           <div>
-            <div className="metric-value">{summary.avg_rainfall_mm} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>mm</span></div>
-            <div className="metric-subtitle">Precipitation Telemetry Average</div>
+            <div className="metric-value num">{formatRainfall(kpis.meanRainfall)}</div>
+            <div className="metric-subtitle">{scope}</div>
           </div>
         </div>
 
         <div className="glass-card metric-card">
           <div className="metric-header">
-            <span className="metric-title">Soil Health (NDVI)</span>
+            <span className="metric-title">Vegetation health (NDVI)</span>
             <div className="metric-icon-wrapper" style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#c084fc' }}>
               <Activity size={20} />
             </div>
           </div>
           <div>
-            <div className="metric-value">{summary.avg_ndvi} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/ 1.0</span></div>
-            <div className="metric-subtitle">Vegetation Health Index Average</div>
+            <div className="metric-value num">{formatIndex(kpis.meanNdvi)} <span style={{ fontSize: 'var(--text-lg)', color: 'var(--muted)' }}>/ 1.00</span></div>
+            <div className="metric-subtitle">{scope}</div>
           </div>
         </div>
       </div>
@@ -75,7 +81,7 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ summary }) => {
         <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Regional Yield Performance</span>
-            <span className="badge badge-green">Live Telemetry</span>
+            <SampleDataPill reason="Regional averages are computed from the dataset in Phase 3." />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -102,16 +108,16 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ summary }) => {
         <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1rem' }}>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Supported Crop Species</span>
-              <span className="badge badge-purple">5 Key Crops</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Crops in the dataset</span>
+              <span className="badge badge-purple">{kpis.cropCount} crops</span>
             </div>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-              Precision ML models trained via <strong style={{ color: '#ffffff' }}>GridSearchCV</strong> to forecast productivity, soil pH suitability, and weather risk factors.
+              Yield predictions for these crops come from a model tuned with <strong style={{ color: 'var(--ink)' }}>GridSearchCV</strong> on the same dataset.
             </p>
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {summary.crops_supported.map((crop, idx) => (
+            {kpis.crops.map((crop, idx) => (
               <span key={idx} style={{
                 background: 'rgba(27, 94, 63, 0.35)',
                 border: '1px solid rgba(16, 185, 129, 0.4)',
@@ -121,14 +127,14 @@ export const MetricCards: React.FC<MetricCardsProps> = ({ summary }) => {
                 fontSize: '0.82rem',
                 fontWeight: 700
               }}>
-                🌾 {crop}
+                {crop}
               </span>
             ))}
           </div>
 
           <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.85rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Want a quick yield prediction?</span>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#34d399' }}>Go to Yield Predictor →</span>
+            <Link to={{ pathname: '/app/predict', search: filtersSearch(params) }} style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)', color: 'var(--primary)' }}>Go to Yield Predictor →</Link>
           </div>
         </div>
 

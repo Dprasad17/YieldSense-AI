@@ -1,11 +1,12 @@
 import os
 import json
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from backend.app.services.ml_service import ml_service
 from backend.app.services.llm_service import llm_service
+from backend.app.core.security import require_roles, require_user
 
 router = APIRouter(prefix="/api/predict", tags=["Yield Predictions & AI Insights"])
 
@@ -94,21 +95,40 @@ def generate_prediction_insights(request: YieldPredictionRequest):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Insight generation failed: {str(e)}")
 
-@router.get("/models")
-def get_model_performance_metrics():
-    metrics_path = os.path.join("models", "model_performance_metrics.json")
-    if not os.path.exists(metrics_path):
+METRICS_PATH = os.path.join("models", "model_performance_metrics.json")
+
+def _load_model_metrics() -> dict:
+    if not os.path.exists(METRICS_PATH):
         raise HTTPException(
             status_code=404,
             detail="Model performance metrics JSON not found. Please train models first."
         )
-
     try:
-        with open(metrics_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data
+        with open(METRICS_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read metrics: {str(e)}")
+
+@router.get("/models")
+def get_model_performance_metrics(_user: dict = Depends(require_roles("Admin", "Agronomist"))):
+    return _load_model_metrics()
+
+@router.get("/models/active")
+def get_active_model_summary(_user: dict = Depends(require_user)):
+    """Headline metrics of the model that serves predictions. Available to every signed-in role."""
+    data = _load_model_metrics()
+    name = data.get("best_model")
+    metrics = data.get(name) if name else None
+    if not metrics:
+        raise HTTPException(status_code=404, detail="Active model metrics not found.")
+    return {
+        "name": name,
+        "r2": metrics.get("r2"),
+        "rmse": metrics.get("rmse"),
+        "mae": metrics.get("mae"),
+        "inference_latency_ms": metrics.get("inference_latency_ms"),
+        "test_size": data.get("metadata", {}).get("test_size")
+    }
 
 @router.get("/recommendations-hub")
 def get_recommendations_hub_data():

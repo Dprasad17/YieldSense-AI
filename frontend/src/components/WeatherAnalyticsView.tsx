@@ -1,57 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { CloudRain, Sun, Thermometer, Wind } from 'lucide-react';
+import { useWeather } from '../hooks/queries';
+import { formatCount } from '../lib/format';
+import { useGlobalFilters } from '../store/filters';
+import { ErrorState, LoadingState, SampleDataPill } from './ui/States';
 
-interface WeatherProps {
-  apiBaseUrl?: string;
-}
+/** Used until the user picks a region in the global context. */
+const DEFAULT_REGION = 'India';
 
-export const WeatherAnalyticsView: React.FC<WeatherProps> = ({ apiBaseUrl = 'http://localhost:8000' }) => {
-  const [selectedRegion, setSelectedRegion] = useState('India');
-  const [availableRegions, setAvailableRegions] = useState<string[]>([
-    'India', 'United States', 'Brazil', 'China', 'France', 'Germany', 'Mexico', 'Egypt', 'Australia', 'South Africa'
-  ]);
+export const WeatherAnalyticsView: React.FC = () => {
+  const { filters, setFilters } = useGlobalFilters();
+  const selectedRegion = filters.region || DEFAULT_REGION;
+  const setSelectedRegion = (region: string) => setFilters({ region });
   const [isLiveMode, setIsLiveMode] = useState(false);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchWeather(selectedRegion, isLiveMode);
-  }, [selectedRegion, isLiveMode]);
-
-  const fetchWeather = async (region: string, live: boolean = false) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const url = `${apiBaseUrl}/api/weather/analysis?region=${encodeURIComponent(region)}${live ? '&live=true' : ''}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        // Fallback fetch all data to get valid regions
-        const fallbackRes = await fetch(`${apiBaseUrl}/api/weather/analysis`);
-        if (fallbackRes.ok) {
-          const fullData = await fallbackRes.json();
-          if (fullData.available_regions?.length) {
-            setAvailableRegions(fullData.available_regions);
-            const firstRegion = fullData.available_regions[0];
-            setSelectedRegion(firstRegion);
-            return fetchWeather(firstRegion, live);
-          }
-        }
-        const errJson = await response.json();
-        throw new Error(errJson.detail || 'Failed to fetch weather analytics');
-      }
-      const json = await response.json();
-      setData(json);
-      if (json.available_regions?.length) {
-        setAvailableRegions(json.available_regions);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Error fetching weather data.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const weatherQuery = useWeather(selectedRegion, isLiveMode);
+  const data = weatherQuery.data;
+  const loading = weatherQuery.isPending;
+  const availableRegions = data?.available_regions?.length ? data.available_regions : [selectedRegion];
   const analytics = data?.analytics;
 
   return (
@@ -129,17 +95,9 @@ export const WeatherAnalyticsView: React.FC<WeatherProps> = ({ apiBaseUrl = 'htt
         </div>
       </div>
 
-      {error && (
-        <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', padding: '1rem', borderRadius: '8px', color: '#fca5a5' }}>
-          {error}
-        </div>
-      )}
+      {weatherQuery.isError && <ErrorState error={weatherQuery.error} onRetry={() => weatherQuery.refetch()} />}
 
-      {loading && (
-        <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '3rem' }}>
-          Loading regional climate telemetry...
-        </div>
-      )}
+      {loading && <LoadingState label="Loading weather analysis…" />}
 
       {analytics && !loading && (
         <>
@@ -213,9 +171,9 @@ export const WeatherAnalyticsView: React.FC<WeatherProps> = ({ apiBaseUrl = 'htt
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>Seasonal Rainfall & Climate Trend</h3>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Precipitation adequacy vs. diurnal temperature variance for {selectedRegion}</span>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Rainfall vs. temperature for {data?.region ?? selectedRegion}</span>
               </div>
-              <span className="badge badge-blue">Telemetry Synced</span>
+              <SampleDataPill reason="Chart shape is illustrative until the seasonal series is computed (Phase 7)." />
             </div>
 
             <div style={{ background: '#0a130d', borderRadius: '10px', padding: '1.25rem', border: '1px solid var(--border-color)', height: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -242,14 +200,14 @@ export const WeatherAnalyticsView: React.FC<WeatherProps> = ({ apiBaseUrl = 'htt
           {/* Regional Climate Summary Banner */}
           <div className="glass-card" style={{ padding: '1.75rem', background: 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(59,130,246,0.06) 100%)' }}>
             <h3 style={{ fontSize: '1.1rem', color: '#ffffff', margin: '0 0 0.75rem 0', fontWeight: 700 }}>
-              Overall Weather Climate Score for {selectedRegion}
+              Overall climate score for {data?.region ?? selectedRegion}
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
               <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#34d399' }}>
                 {analytics.overall_weather_score} <span style={{ fontSize: '1.1rem', color: 'var(--text-muted)', fontWeight: 500 }}>/ 100</span>
               </div>
               <div style={{ flex: 1, minWidth: '240px', fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                Evaluated across <strong style={{ color: '#ffffff' }}>{analytics.record_count}</strong> regional telemetry sample records from dataset source <code style={{ color: '#60a5fa' }}>{data?.data_source}</code>.
+                Based on <strong style={{ color: 'var(--ink)' }}>{formatCount(analytics.record_count)}</strong> {analytics.record_count === 1 ? 'reading' : 'records'} from {isLiveMode ? 'Open-Meteo (live)' : 'the YieldSense dataset'}.
               </div>
             </div>
           </div>

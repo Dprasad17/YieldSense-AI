@@ -1,30 +1,13 @@
 import React, { useState } from 'react';
-import { Sparkles, AlertTriangle, CheckCircle, ShieldAlert, Zap, RefreshCw } from 'lucide-react';
+import { Sparkles, AlertTriangle, CheckCircle, ShieldAlert, Zap } from 'lucide-react';
+import { useRecommendationsHub } from '../hooks/queries';
+import { ErrorState, LoadingState, SampleDataPill } from './ui/States';
 
 export const RecommendationsHubView: React.FC = () => {
   const [dispatchStatus, setDispatchStatus] = useState<string | null>(null);
   const [loadingPivot, setLoadingPivot] = useState(false);
-  const [hubData, setHubData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  React.useEffect(() => {
-    fetchHubData();
-  }, []);
-
-  const fetchHubData = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('http://localhost:8000/api/predict/recommendations-hub');
-      if (res.ok) {
-        const data = await res.json();
-        setHubData(data);
-      }
-    } catch (err) {
-      console.warn("Failed to fetch recommendations hub data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const hubQuery = useRecommendationsHub();
+  const hubData = hubQuery.data;
 
   const handlePivotDispatch = () => {
     setLoadingPivot(true);
@@ -34,15 +17,8 @@ export const RecommendationsHubView: React.FC = () => {
     }, 1200);
   };
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px', color: '#10b981' }}>
-        <RefreshCw className="spin" size={32} />
-      </div>
-    );
-  }
-
-  if (!hubData) return null;
+  if (hubQuery.isPending) return <LoadingState label="Loading recommendations…" />;
+  if (hubQuery.isError || !hubData) return <ErrorState error={hubQuery.error} onRetry={() => hubQuery.refetch()} />;
 
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
@@ -54,8 +30,9 @@ export const RecommendationsHubView: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem' }}>
               <Sparkles className="gradient-text-green" size={26} />
               <h2 style={{ fontSize: '1.35rem', color: '#ffffff', margin: 0, fontWeight: 800 }}>
-                AI Prescriptive Mitigation & Agricultural Recommendation Hub
+                AI Recommendations
               </h2>
+              <SampleDataPill reason="Recommendations are fixed examples until the rule engine is computed from real data (Phase 3)." />
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: 0 }}>
               Automated multi-spectral & sensor-derived prescriptive actions. Prioritize intervention windows to insulate yield margins against diurnal extremes.

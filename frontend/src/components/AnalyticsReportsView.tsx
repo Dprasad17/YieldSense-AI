@@ -1,67 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Download, ShieldCheck, Layers } from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { BarChart3, TrendingUp, Download, Layers } from 'lucide-react';
+import { errorMessage } from '../api/client';
+import { useFarmComparison, useReportExport, useSeasonalTrends } from '../hooks/queries';
+import { SampleDataPill } from './ui/States';
 
-interface AnalyticsViewProps {
-  apiBaseUrl?: string;
-}
-
-export const AnalyticsReportsView: React.FC<AnalyticsViewProps> = ({ apiBaseUrl = 'http://localhost:8000' }) => {
-  const [farmData, setFarmData] = useState<any[]>([]);
+export const AnalyticsReportsView: React.FC = () => {
   const [selectedCrop, setSelectedCrop] = useState('All Crops');
   const [exportFormat, setExportFormat] = useState('csv');
-  const [downloading, setDownloading] = useState(false);
+  const cropFilter = selectedCrop !== 'All Crops' ? selectedCrop : '';
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, [selectedCrop]);
-
-  const fetchAnalytics = async () => {
-    try {
-      const cropQuery = selectedCrop !== 'All Crops' ? `?crop_type=${selectedCrop}` : '';
-      const [resSeasonal, resFarms] = await Promise.all([
-        fetch(`${apiBaseUrl}/api/analytics/seasonal-trends${cropQuery}`),
-        fetch(`${apiBaseUrl}/api/analytics/farm-comparison`)
-      ]);
-
-      if (resSeasonal.ok) {
-        await resSeasonal.json();
-      }
-      if (resFarms.ok) {
-        const jsonF = await resFarms.json();
-        setFarmData(jsonF.farm_comparisons || []);
-      }
-    } catch (e) {
-      // Local fallback
-    }
-  };
+  useSeasonalTrends(cropFilter);
+  const farmQuery = useFarmComparison();
+  const farmData = farmQuery.data?.farm_comparisons ?? [];
+  const exportMutation = useReportExport();
+  const downloading = exportMutation.isPending;
 
   const handleExport = async () => {
-    setDownloading(true);
     try {
-      const cropQuery = selectedCrop !== 'All Crops' ? selectedCrop : '';
-      const response = await fetch(`${apiBaseUrl}/api/reports/export`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          format: exportFormat,
-          crop_type: cropQuery || null
-        })
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `YieldSense_AI_${selectedCrop}_Report.${exportFormat}`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
-    } catch (e) {
-      alert('Error downloading report export.');
-    } finally {
-      setDownloading(false);
+      const blob = await exportMutation.mutateAsync({ format: exportFormat, crop_type: cropFilter || null });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `yieldsense-report${cropFilter ? `-${cropFilter.toLowerCase()}` : ''}.${exportFormat}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Report downloaded');
+    } catch (err) {
+      toast.error(`Export failed: ${errorMessage(err)}`);
     }
   };
 
@@ -84,7 +52,7 @@ export const AnalyticsReportsView: React.FC<AnalyticsViewProps> = ({ apiBaseUrl 
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className="badge badge-green"><ShieldCheck size={14} /> Milestone 3 Certified</span>
+            <SampleDataPill reason="Trend and farm comparison are fixed examples until computed from the dataset (Phase 3)." />
           </div>
         </div>
       </div>

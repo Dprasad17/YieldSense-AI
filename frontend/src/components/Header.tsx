@@ -1,180 +1,79 @@
 import React from 'react';
-import { Sprout, BarChart3, Database, UserCheck, RefreshCw, Cpu, CloudRain, Layers, FileText, Sparkles, LogOut } from 'lucide-react';
+import { NavLink, useSearchParams } from 'react-router-dom';
+import { useIsFetching, useQueryClient } from '@tanstack/react-query';
+import { Sprout, RefreshCw, LogOut, UserCircle2 } from 'lucide-react';
+import { NAV_ITEMS } from '../app/navigation';
+import { useAuth, useCan } from '../auth/context';
+import { filtersSearch } from '../store/filters';
 
-interface HeaderProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  currentUser: { username: string; role: string; email: string };
-  onOpenAuthModal: () => void;
-  onRefreshData: () => void;
-  onLogout?: () => void;
-}
+/** Interim top navigation (routes + RBAC). Replaced by the sidebar shell in Phase 5. */
+export const Header: React.FC = () => {
+  const { user, role, logout } = useAuth();
+  const can = useCan();
+  const queryClient = useQueryClient();
+  const isFetching = useIsFetching() > 0;
+  const [params] = useSearchParams();
+  const search = filtersSearch(params);
 
-export const Header: React.FC<HeaderProps> = ({
-  activeTab,
-  setActiveTab,
-  currentUser,
-  onOpenAuthModal,
-  onRefreshData,
-  onLogout
-}) => {
   return (
     <header className="header-bar">
-      {/* Brand Logo */}
       <div className="brand-logo">
-        <div style={{
-          background: 'linear-gradient(135deg, #10b981 0%, #1b5e3f 100%)',
-          padding: '8px',
-          borderRadius: '10px',
-          display: 'flex',
-          boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)'
-        }}>
-          <Sprout size={22} color="#ffffff" />
+        <div style={{ background: 'var(--primary)', padding: 'var(--space-2)', borderRadius: 'var(--radius-sm)', display: 'flex' }}>
+          <Sprout size={22} color="var(--primary-ink)" aria-hidden="true" />
         </div>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', lineHeight: 1 }}>
-            <span className="gradient-text-green">YieldSense</span>
-            <span style={{ color: '#ffffff', fontWeight: 800 }}>AI</span>
-          </div>
-          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: '3px', letterSpacing: '0.02em' }}>
-            Agricultural Productivity Intelligence
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', lineHeight: 1 }}>
+          <span style={{ color: 'var(--ink)', fontWeight: 'var(--weight-bold)' }}>YieldSense</span>
+          <span style={{ color: 'var(--primary)', fontWeight: 'var(--weight-bold)' }}>AI</span>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <nav className="nav-tabs">
-        <button
-          className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          <BarChart3 size={15} />
-          KPI Overview
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'predict' ? 'active' : ''}`}
-          onClick={() => setActiveTab('predict')}
-        >
-          <Cpu size={15} />
-          Yield Predictor
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'weather' ? 'active' : ''}`}
-          onClick={() => setActiveTab('weather')}
-        >
-          <CloudRain size={15} />
-          Weather Analytics
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'soil' ? 'active' : ''}`}
-          onClick={() => setActiveTab('soil')}
-        >
-          <Layers size={15} />
-          Soil Analysis
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'recommendations' ? 'active' : ''}`}
-          onClick={() => setActiveTab('recommendations')}
-        >
-          <Sparkles size={15} />
-          AI Recommendations
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'analytics-reports' ? 'active' : ''}`}
-          onClick={() => setActiveTab('analytics-reports')}
-        >
-          <FileText size={15} />
-          Analytics & Reports
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'dataset' ? 'active' : ''}`}
-          onClick={() => setActiveTab('dataset')}
-        >
-          <Database size={15} />
-          Dataset Explorer
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'eda' ? 'active' : ''}`}
-          onClick={() => setActiveTab('eda')}
-        >
-          <BarChart3 size={15} />
-          EDA Analytics
-        </button>
+      <nav className="nav-tabs" aria-label="Main">
+        {NAV_ITEMS.filter(item => can(item.permission)).map(item => (
+          <NavLink
+            key={item.path}
+            to={{ pathname: `/app/${item.path}`, search }}
+            className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}
+          >
+            <item.icon size={15} aria-hidden="true" />
+            {item.label}
+          </NavLink>
+        ))}
       </nav>
 
-      {/* Action Buttons & Profile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
         <button
-          onClick={onRefreshData}
-          title="Refresh Data"
-          style={{
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid var(--border-color)',
-            color: 'var(--text-muted)',
-            padding: '0.55rem',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.2s ease'
-          }}
+          type="button"
+          onClick={() => queryClient.invalidateQueries()}
+          aria-label="Refresh data"
+          title="Refresh data"
+          className="tab-btn"
+          disabled={isFetching}
         >
-          <RefreshCw size={16} />
+          <RefreshCw size={16} className={isFetching ? 'spin' : undefined} aria-hidden="true" />
         </button>
 
-        <button
-          onClick={onOpenAuthModal}
-          style={{
-            background: 'rgba(16, 185, 129, 0.12)',
-            border: '1px solid rgba(16, 185, 129, 0.35)',
-            color: '#34d399',
-            padding: '0.45rem 0.85rem',
-            borderRadius: '9999px',
-            fontSize: '0.82rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            transition: 'all 0.2s ease'
-          }}
-          title="Switch User Persona / View Account"
-        >
-          <UserCheck size={15} />
-          <span>{currentUser.username}</span>
-          <span style={{
-            background: '#1b5e3f',
-            color: '#93d5ae',
-            padding: '0.15rem 0.55rem',
-            borderRadius: '9999px',
-            fontSize: '0.72rem',
-            fontWeight: 700
-          }}>
-            {currentUser.role === 'Farmer' ? 'Agri Officer' : currentUser.role}
-          </span>
-        </button>
-
-        {onLogout && (
-          <button
-            onClick={onLogout}
-            title="Sign Out"
-            style={{
-              background: 'rgba(239, 68, 68, 0.12)',
-              border: '1px solid rgba(239, 68, 68, 0.35)',
-              color: '#fca5a5',
-              padding: '0.55rem',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <LogOut size={16} />
-          </button>
+        {user && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-sm)' }}>
+            <UserCircle2 size={18} color="var(--muted)" aria-hidden="true" />
+            <span style={{ color: 'var(--ink)', fontWeight: 'var(--weight-medium)' }}>{user.full_name}</span>
+            <span
+              style={{
+                background: 'var(--primary-soft)',
+                color: 'var(--primary)',
+                padding: '0 var(--space-2)',
+                borderRadius: 'var(--radius-full)',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 'var(--weight-semibold)',
+              }}
+            >
+              {role}
+            </span>
+          </div>
         )}
+
+        <button type="button" onClick={logout} className="tab-btn" aria-label="Sign out" title="Sign out">
+          <LogOut size={16} aria-hidden="true" />
+        </button>
       </div>
     </header>
   );

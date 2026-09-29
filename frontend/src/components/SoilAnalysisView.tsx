@@ -1,38 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Layers, TestTube, Droplets, CheckCircle, Info, Sparkles } from 'lucide-react';
+import { useDatasetSummary, useSoil } from '../hooks/queries';
+import { selectSummaryKpis } from '../lib/selectors';
+import { useGlobalFilters } from '../store/filters';
+import { ErrorState, LoadingState } from './ui/States';
 
-interface SoilProps {
-  apiBaseUrl?: string;
-}
+/** Used until the user picks a crop in the global context. */
+const DEFAULT_CROP = 'Wheat';
 
-export const SoilAnalysisView: React.FC<SoilProps> = ({ apiBaseUrl = 'http://localhost:8000' }) => {
-  const [selectedCrop, setSelectedCrop] = useState('Wheat');
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export const SoilAnalysisView: React.FC = () => {
+  const { filters, setFilters } = useGlobalFilters();
+  const selectedCrop = filters.crop || DEFAULT_CROP;
+  const setSelectedCrop = (crop: string) => setFilters({ crop });
+  const crops = selectSummaryKpis(useDatasetSummary().data)?.crops ?? [selectedCrop];
 
-  useEffect(() => {
-    fetchSoil(selectedCrop);
-  }, [selectedCrop]);
-
-  const fetchSoil = async (crop: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/soil/assessment?crop_type=${encodeURIComponent(crop)}`);
-      if (!response.ok) {
-        const errJson = await response.json();
-        throw new Error(errJson.detail || 'Failed to fetch soil assessment');
-      }
-      const json = await response.json();
-      setData(json);
-    } catch (err: any) {
-      setError(err.message || 'Error fetching soil data.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const soilQuery = useSoil(selectedCrop);
+  const data = soilQuery.data;
+  const loading = soilQuery.isPending;
   const metrics = data?.soil_metrics;
 
   return (
@@ -68,9 +52,10 @@ export const SoilAnalysisView: React.FC<SoilProps> = ({ apiBaseUrl = 'http://loc
         <select
           value={selectedCrop}
           onChange={(e) => setSelectedCrop(e.target.value)}
+          aria-label="Crop"
           style={{
-            background: '#0c1610',
-            color: '#ffffff',
+            background: 'var(--surface-2)',
+            color: 'var(--ink)',
             border: '1px solid var(--border-color)',
             padding: '0.65rem 1.25rem',
             borderRadius: '8px',
@@ -80,8 +65,8 @@ export const SoilAnalysisView: React.FC<SoilProps> = ({ apiBaseUrl = 'http://loc
             outline: 'none'
           }}
         >
-          {['Wheat', 'Rice', 'Maize', 'Soybeans', 'Potatoes', 'Cassava', 'Sweet potatoes', 'Plantains', 'Yams', 'Sorghum'].map(c => (
-            <option key={c} value={c} style={{ background: '#0c1610', color: '#ffffff' }}>{c}</option>
+          {crops.map(c => (
+            <option key={c} value={c}>{c}</option>
           ))}
         </select>
         <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
@@ -89,19 +74,11 @@ export const SoilAnalysisView: React.FC<SoilProps> = ({ apiBaseUrl = 'http://loc
         </span>
       </div>
 
-      {error && (
-        <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', padding: '1rem', borderRadius: '8px', color: '#fca5a5' }}>
-          {error}
-        </div>
-      )}
+      {soilQuery.isError && <ErrorState error={soilQuery.error} onRetry={() => soilQuery.refetch()} />}
 
-      {loading && (
-        <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '3rem' }}>
-          Loading crop-aware soil health assessment...
-        </div>
-      )}
+      {loading && <LoadingState label="Loading soil assessment…" />}
 
-      {metrics && !loading && (
+      {data && metrics && !loading && (
         <>
           {/* Main Metric Cards Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>

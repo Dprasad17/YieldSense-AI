@@ -1,35 +1,29 @@
 import React from 'react';
-import { BarChart2, TrendingUp, Layers, Droplets, TestTube } from 'lucide-react';
+import { BarChart2, TrendingUp, Layers, TestTube } from 'lucide-react';
+import { useEdaMetrics } from '../hooks/queries';
+import { formatCount, formatIndex, formatRainfall, formatYield, formatYieldWithUnit } from '../lib/format';
+import { describeList, selectCropRanking, selectTopCrop, selectYieldStats } from '../lib/selectors';
+import { usePreferences } from '../store/preferences';
+import { ErrorState, LoadingState, SampleDataPill } from './ui/States';
 
-interface EdaDashboardProps {
-  metrics: {
-    total_records?: number;
-    overall_stats?: Record<string, { mean: number; min: number; max: number; std: number }>;
-    crop_breakdown?: Record<string, { count: number; avg_yield: number }>;
-    top_crop_by_yield?: string;
-  };
-}
+const RANKING_SIZE = 5;
 
-export const EdaDashboard: React.FC<EdaDashboardProps> = ({ metrics }) => {
-  const totalRecords = metrics.total_records || 28242;
-  const breakdown = metrics.crop_breakdown || {};
-  const cropList = Object.entries(breakdown).map(([crop, data], idx) => {
-    const colors = ['#10b981', '#34d399', '#3b82f6', '#f59e0b', '#c084fc', '#60a5fa', '#f43f5e', '#a855f7', '#06b6d4', '#eab308'];
-    return {
-      crop,
-      yield: Math.round(data.avg_yield),
-      count: data.count,
-      color: colors[idx % colors.length]
-    };
-  });
+export const EdaDashboard: React.FC = () => {
+  const edaQuery = useEdaMetrics();
+  const { unit } = usePreferences();
 
-  const displayCrops = cropList.length > 0 ? cropList.slice(0, 5) : [
-    { crop: 'Potato', yield: 19980, count: 4276, color: '#10b981' },
-    { crop: 'Cassava', yield: 15048, count: 2045, color: '#34d399' },
-    { crop: 'Rice', yield: 4073, count: 3388, color: '#3b82f6' },
-    { crop: 'Maize', yield: 3631, count: 4121, color: '#f59e0b' },
-    { crop: 'Wheat', yield: 3012, count: 3857, color: '#c084fc' }
-  ];
+  if (edaQuery.isPending) return <LoadingState label="Loading analysis…" />;
+  if (edaQuery.isError) return <ErrorState error={edaQuery.error} onRetry={() => edaQuery.refetch()} />;
+
+  const metrics = edaQuery.data;
+  const totalRecords = metrics.total_records;
+  const ranking = selectCropRanking(metrics.crop_breakdown);
+  const topCrop = selectTopCrop(metrics.crop_breakdown);
+  const yieldStats = selectYieldStats(metrics);
+  const rainfall = metrics.overall_stats?.rainfall_mm;
+  const ph = metrics.overall_stats?.soil_pH;
+  const shownRanking = ranking.slice(0, RANKING_SIZE);
+  const maxYield = shownRanking[0]?.avgYield ?? 1;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
@@ -45,23 +39,23 @@ export const EdaDashboard: React.FC<EdaDashboardProps> = ({ metrics }) => {
               </h2>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: 0 }}>
-              Statistical distributions, correlation heatmaps, and agricultural factor dependencies across {totalRecords.toLocaleString()} farm records.
+              Statistical distributions, correlation heatmaps, and agricultural factor dependencies across {formatCount(totalRecords)} farm records.
             </p>
           </div>
 
           <span className="badge badge-green" style={{ fontSize: '0.82rem', padding: '0.4rem 0.85rem' }}>
-            {totalRecords.toLocaleString()} Dataset Samples Analyzed
+            {formatCount(totalRecords)} records analysed
           </span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginTop: '1.25rem' }}>
-          {displayCrops.map((item) => (
-            <div key={item.crop} style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{item.crop}</div>
-              <div className="num-tabular" style={{ fontSize: '1.35rem', fontWeight: 800, color: item.color, margin: '0.25rem 0' }}>
-                {item.yield.toLocaleString()} <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>kg/ha</span>
+          {ranking.map(item => (
+            <div key={item.crop} style={{ background: 'var(--surface-2)', padding: 'var(--space-4)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', fontWeight: 'var(--weight-medium)' }}>{item.crop}</div>
+              <div className="num-tabular" style={{ fontSize: 'var(--text-xl)', fontWeight: 'var(--weight-semibold)', color: 'var(--ink)', margin: 'var(--space-1) 0' }}>
+                {formatYield(item.avgYield, unit)} <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{unit} mean</span>
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{item.count.toLocaleString()} farms analyzed</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{formatCount(item.count)} records</div>
             </div>
           ))}
         </div>
@@ -77,7 +71,11 @@ export const EdaDashboard: React.FC<EdaDashboardProps> = ({ metrics }) => {
               <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>Crop Yield Distribution</h3>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>KDE & Frequency histogram showing yield spread (kg/ha)</span>
             </div>
-            <span className="badge badge-green"><TrendingUp size={12} /> Mean: 4,312 kg/ha</span>
+            <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {yieldStats && <span className="badge badge-green" style={{ whiteSpace: 'nowrap' }}><TrendingUp size={12} /> Mean {formatYieldWithUnit(yieldStats.mean, unit)}</span>}
+              {yieldStats && <span className="badge badge-blue" style={{ whiteSpace: 'nowrap' }}>Median {formatYieldWithUnit(yieldStats.median, unit)}</span>}
+              <SampleDataPill reason="Bars are illustrative until the histogram is computed from the dataset (Phase 8)." />
+            </div>
           </div>
 
           <div style={{ background: '#0a130d', borderRadius: '10px', padding: '1.25rem', border: '1px solid var(--border-color)', height: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -107,11 +105,13 @@ export const EdaDashboard: React.FC<EdaDashboardProps> = ({ metrics }) => {
               <path d="M 50 110 Q 140 10, 180 5 T 340 115" fill="none" stroke="#34d399" strokeWidth="3" />
             </svg>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', paddingLeft: '30px', paddingRight: '20px' }}>
-              <span>2,500 kg/ha</span>
-              <span>3,500 kg/ha</span>
-              <span style={{ color: '#34d399', fontWeight: 700 }}>4,312 (Avg)</span>
-              <span>5,200 kg/ha</span>
-              <span>6,000 kg/ha</span>
+              {yieldStats?.isRightSkewed ? (
+                <span>
+                  Right-skewed: the mean is {yieldStats.meanToMedian.toFixed(1)}× the median, pulled up by high-yield root crops. The median is the better &ldquo;typical&rdquo; value.
+                </span>
+              ) : (
+                <span>Mean and median are close, so the distribution is roughly symmetric.</span>
+              )}
             </div>
           </div>
         </div>
@@ -121,20 +121,20 @@ export const EdaDashboard: React.FC<EdaDashboardProps> = ({ metrics }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>Average Productivity by Crop</h3>
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Comparing Wheat, Rice, Maize, Soybean & Cotton</span>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Top {shownRanking.length} of {ranking.length} crops by mean yield: {describeList(shownRanking.map(c => c.crop), RANKING_SIZE)}</span>
             </div>
-            <span className="badge badge-blue"><Layers size={12} /> Top: Rice (4,450 kg/ha)</span>
+            {topCrop && <span className="badge badge-blue" style={{ whiteSpace: 'nowrap' }}><Layers size={12} /> Top: {topCrop.crop} ({formatYieldWithUnit(topCrop.avgYield, unit)})</span>}
           </div>
 
           <div style={{ background: '#0a130d', borderRadius: '10px', padding: '1.25rem', border: '1px solid var(--border-color)', height: '220px', display: 'flex', flexDirection: 'column', gap: '0.75rem', justifyContent: 'center' }}>
-            {displayCrops.map((c, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {shownRanking.map(c => (
+              <div key={c.crop} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <span style={{ width: '85px', fontSize: '0.8rem', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.crop}</span>
                 <div style={{ flex: 1, height: '14px', background: 'rgba(255,255,255,0.06)', borderRadius: '9999px', overflow: 'hidden' }}>
-                  <div style={{ width: `${Math.min(100, Math.max(10, (c.yield / 22000) * 100))}%`, height: '100%', background: c.color, borderRadius: '9999px' }}></div>
+                  <div style={{ width: `${(c.avgYield / maxYield) * 100}%`, height: '100%', background: 'var(--data-vegetation)', borderRadius: 'var(--radius-full)' }}></div>
                 </div>
-                <span className="num-tabular" style={{ fontSize: '0.8rem', fontWeight: 800, color: c.color, width: '90px', textAlign: 'right' }}>
-                  {c.yield.toLocaleString()} <span style={{ fontSize: '0.68rem', color: 'var(--text-dim)' }}>kg/ha</span>
+                <span className="num-tabular" style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-semibold)', color: 'var(--ink)', width: '110px', textAlign: 'right' }}>
+                  {formatYield(c.avgYield, unit)} <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{unit}</span>
                 </span>
               </div>
             ))}
@@ -148,7 +148,7 @@ export const EdaDashboard: React.FC<EdaDashboardProps> = ({ metrics }) => {
               <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>Seasonal Rainfall vs. Yield</h3>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Scatter plot with linear regression trend</span>
             </div>
-            <span className="badge badge-amber"><Droplets size={12} /> Positive Correlation</span>
+            <SampleDataPill reason="Points and trend line are illustrative until computed from the dataset (Phase 8)." />
           </div>
 
           <div style={{ background: '#0a130d', borderRadius: '10px', padding: '1.25rem', border: '1px solid var(--border-color)', height: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -171,10 +171,9 @@ export const EdaDashboard: React.FC<EdaDashboardProps> = ({ metrics }) => {
               ))}
             </svg>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', paddingLeft: '30px', paddingRight: '20px' }}>
-              <span>50 mm Rainfall</span>
-              <span>150 mm</span>
-              <span>250 mm (Optimum)</span>
-              <span>350 mm+</span>
+              <span>Min {formatRainfall(rainfall?.min)}</span>
+              <span>Median {formatRainfall(rainfall?.median)}</span>
+              <span>Max {formatRainfall(rainfall?.max)}</span>
             </div>
           </div>
         </div>
@@ -186,7 +185,10 @@ export const EdaDashboard: React.FC<EdaDashboardProps> = ({ metrics }) => {
               <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>Soil pH Impact Curve</h3>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Evaluating acidity/alkalinity impact on crop yield</span>
             </div>
-            <span className="badge badge-purple"><TestTube size={12} /> Optimal: pH 6.0 – 7.2</span>
+            <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              <span className="badge badge-purple" style={{ whiteSpace: 'nowrap' }}><TestTube size={12} /> Optimal: pH 6.0–7.2</span>
+              <SampleDataPill reason="Curve is illustrative until computed from the dataset (Phase 8). The optimal band is a general agronomic reference." />
+            </div>
           </div>
 
           <div style={{ background: '#0a130d', borderRadius: '10px', padding: '1.25rem', border: '1px solid var(--border-color)', height: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -200,9 +202,9 @@ export const EdaDashboard: React.FC<EdaDashboardProps> = ({ metrics }) => {
               <circle cx="210" cy="18" r="5" fill="#34d399" />
             </svg>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', paddingLeft: '30px', paddingRight: '20px' }}>
-              <span>pH 4.5 (Acidic)</span>
-              <span style={{ color: '#34d399', fontWeight: 700 }}>pH 6.5 (Optimal Zone)</span>
-              <span>pH 8.5 (Alkaline)</span>
+              <span>Min pH {formatIndex(ph?.min)}</span>
+              <span>Median pH {formatIndex(ph?.median)}</span>
+              <span>Max pH {formatIndex(ph?.max)}</span>
             </div>
           </div>
         </div>

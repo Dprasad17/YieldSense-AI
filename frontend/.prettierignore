@@ -1,0 +1,16 @@
+dist
+node_modules
+package-lock.json
+
+# Legacy screens: formatted as each one is rebuilt (Phases 6–8), then removed from this list.
+src/styles/index.css
+src/components/MetricCards.tsx
+src/components/YieldPredictor.tsx
+src/components/WeatherAnalyticsView.tsx
+src/components/SoilAnalysisView.tsx
+src/components/RecommendationsHubView.tsx
+src/components/AnalyticsReportsView.tsx
+src/components/DataExplorer.tsx
+src/components/EdaDashboard.tsx
+src/components/LoginPage.tsx
+src/components/Header.tsx

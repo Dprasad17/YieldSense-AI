@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Cpu, Award, AlertTriangle, Activity, BarChart2, CheckCircle, RefreshCw, Sparkles, ShieldAlert, CheckSquare, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { Cpu, Award, AlertTriangle, Activity, BarChart2, CheckCircle, RefreshCw, Sparkles, ShieldAlert, CheckSquare } from 'lucide-react';
+import type { AIInsights, PredictionInput, PredictionResult } from '../api/types';
+import { errorMessage } from '../api/client';
+import { Can } from '../auth/guards';
+import { useActiveModel, useInsights, useModelMetrics, usePredict } from '../hooks/queries';
+import { formatCount, formatIndex, formatLatency, formatYield } from '../lib/format';
+import { normalizeModelName, selectModelRows } from '../lib/selectors';
+import { usePreferences } from '../store/preferences';
 
-interface PredictorProps {
-  apiBaseUrl?: string;
-}
-
-interface AIInsightsData {
-  ai_insights: string;
-  risk_alerts: string[];
-  recommendations: string[];
-  llm_provider: string;
-}
-
-export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://localhost:8000' }) => {
+export const YieldPredictor: React.FC = () => {
+  const { unit } = usePreferences();
   const [formData, setFormData] = useState({
     crop_type: 'Wheat',
     region: 'India',
@@ -30,32 +27,19 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
     NDVI_index: 0.68
   });
 
-  const [loading, setLoading] = useState(false);
-  const [prediction, setPrediction] = useState<{
-    predicted_yield_kg_ha: number;
-    productivity_rating: string;
-    risk_rating: string;
-  } | null>(null);
-  const [aiInsights, setAiInsights] = useState<AIInsightsData | null>(null);
+  const predictMutation = usePredict();
+  const insightsMutation = useInsights();
+  const activeModelQuery = useActiveModel();
+  const modelMetricsQuery = useModelMetrics();
+
+  const [prediction, setPrediction] = useState<PredictionResult | null>(null);
+  const [aiInsights, setAiInsights] = useState<AIInsights | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const loading = predictMutation.isPending;
 
-  const [modelMetrics, setModelMetrics] = useState<any>(null);
-
-  useEffect(() => {
-    fetchModelMetrics();
-  }, []);
-
-  const fetchModelMetrics = async () => {
-    try {
-      const res = await fetch(`${apiBaseUrl}/api/predict/models`);
-      if (res.ok) {
-        const data = await res.json();
-        setModelMetrics(data);
-      }
-    } catch (err) {
-      console.warn("Model comparison metrics offline or unavailable");
-    }
-  };
+  const activeModel = activeModelQuery.data;
+  const activeModelName = activeModel ? normalizeModelName(activeModel.name).name : null;
+  const modelRows = selectModelRows(modelMetricsQuery.data);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -65,49 +49,25 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
     setPrediction(null);
     setAiInsights(null);
 
+    const input = formData as PredictionInput;
     try {
-      // 1. Fetch ML Prediction Result
-      const response = await fetch(`${apiBaseUrl}/api/predict`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      setPrediction(await predictMutation.mutateAsync(input));
+    } catch (err) {
+      setError(errorMessage(err));
+      return;
+    }
 
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.detail || 'Failed to generate prediction');
-      }
-
-      const result = await response.json();
-      setPrediction(result);
-
-      // 2. Fetch AI Insights & Risk Alerts
-      try {
-        const insightsRes = await fetch(`${apiBaseUrl}/api/predict/insights`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        });
-
-        if (insightsRes.ok) {
-          const insightsData = await insightsRes.json();
-          setAiInsights(insightsData);
-        }
-      } catch (insightErr) {
-        console.warn("AI Insights service unavailable:", insightErr);
-      }
-
-    } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred during prediction.');
-    } finally {
-      setLoading(false);
+    // AI insights are a bonus: a failure here must not hide the prediction.
+    try {
+      setAiInsights(await insightsMutation.mutateAsync(input));
+    } catch {
+      setAiInsights(null);
     }
   };
 
@@ -321,10 +281,10 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
                     Predicted Crop Yield
                   </div>
                   <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#ffffff', margin: '0.2rem 0' }}>
-                    {prediction.predicted_yield_kg_ha.toLocaleString()} <span style={{ fontSize: '1.1rem', fontWeight: 500, color: '#34d399' }}>kg/ha</span>
+                    <span className="num">{formatYield(prediction.predicted_yield_kg_ha, unit)}</span> <span style={{ fontSize: 'var(--text-lg)', fontWeight: 'var(--weight-medium)', color: 'var(--primary)' }}>{unit}</span>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Inferred via Production Best Model (Linear Regression)
+                    {activeModel ? `${activeModelName} · R² ${formatIndex(activeModel.r2)} · RMSE ${formatCount(activeModel.rmse)} kg/ha` : 'Model details unavailable'}
                   </div>
                 </div>
 
@@ -399,63 +359,65 @@ export const YieldPredictor: React.FC<PredictorProps> = ({ apiBaseUrl = 'http://
             </div>
           )}
 
-          {/* Model Comparison Metrics Card */}
-          <div className="glass-card" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.05rem', color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <BarChart2 size={18} color="#60a5fa" />
-                Model Evaluation Metrics (Held-out Test Set)
+          {/* Model comparison (agronomist/admin). Farmers see the served model in the result card. */}
+          <Can permission="models">
+          <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+              <h3 style={{ fontSize: 'var(--text-lg)', color: 'var(--ink)', margin: 0, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                <BarChart2 size={18} color="var(--data-model)" aria-hidden="true" />
+                Model comparison (held-out test set)
               </h3>
-              <button onClick={fetchModelMetrics} className="tab-btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
-                <RefreshCw size={12} /> Refresh
+              <button type="button" onClick={() => modelMetricsQuery.refetch()} className="tab-btn" aria-label="Refresh model metrics">
+                <RefreshCw size={12} aria-hidden="true" /> Refresh
               </button>
             </div>
 
-            {modelMetrics && (
+            {modelMetricsQuery.isError && (
+              <p style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)', margin: 0 }}>{errorMessage(modelMetricsQuery.error)}</p>
+            )}
+
+            {modelRows.length > 0 && (
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)', textAlign: 'left' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                      <th style={{ padding: '0.5rem' }}>Model Algorithm</th>
-                      <th style={{ padding: '0.5rem' }}>RMSE (kg/ha)</th>
-                      <th style={{ padding: '0.5rem' }}>MAE (kg/ha)</th>
-                      <th style={{ padding: '0.5rem' }}>R² Score</th>
-                      <th style={{ padding: '0.5rem' }}>Latency</th>
+                    <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--muted)' }}>
+                      <th style={{ padding: 'var(--space-2)' }}>Model</th>
+                      <th style={{ padding: 'var(--space-2)', textAlign: 'right' }}>R²</th>
+                      <th style={{ padding: 'var(--space-2)', textAlign: 'right' }}>RMSE (kg/ha)</th>
+                      <th style={{ padding: 'var(--space-2)', textAlign: 'right' }}>MAE (kg/ha)</th>
+                      <th style={{ padding: 'var(--space-2)', textAlign: 'right' }}>Latency</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {['Linear Regression', 'Ridge Regression', 'Random Forest', 'XGBoost', 'LightGBM', 'Dummy Regressor (Mean)'].map(modelName => {
-                      const m = modelMetrics[modelName];
-                      if (!m) return null;
-                      const isBest = modelMetrics.best_model === modelName;
-
-                      return (
-                        <tr key={modelName} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: isBest ? 'rgba(16, 185, 129, 0.08)' : 'transparent' }}>
-                          <td style={{ padding: '0.55rem', fontWeight: isBest ? 700 : 400, color: isBest ? '#34d399' : '#ffffff', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                            {isBest && <CheckCircle size={14} color="#34d399" />}
-                            {modelName}
-                          </td>
-                          <td style={{ padding: '0.55rem', color: isBest ? '#34d399' : 'var(--text-main)' }}>{m.rmse}</td>
-                          <td style={{ padding: '0.55rem', color: 'var(--text-muted)' }}>{m.mae}</td>
-                          <td style={{ padding: '0.55rem', color: 'var(--text-muted)' }}>{m.r2}</td>
-                          <td style={{ padding: '0.55rem', color: 'var(--text-muted)' }}>{m.inference_latency_ms} ms</td>
-                        </tr>
-                      );
-                    })}
+                    {modelRows.map(m => (
+                      <tr
+                        key={m.key}
+                        aria-current={m.isSelected ? 'true' : undefined}
+                        style={{ borderBottom: '1px solid var(--border)', background: m.isSelected ? 'var(--primary-soft)' : 'transparent' }}
+                      >
+                        <td style={{ padding: 'var(--space-2)', fontWeight: m.isSelected ? 'var(--weight-semibold)' : 'var(--weight-regular)', color: 'var(--ink)' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+                            {m.isSelected && <CheckCircle size={14} color="var(--primary)" aria-label="Selected model" />}
+                            {m.name}
+                            {m.tuning && <span style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>· {m.tuning}</span>}
+                            {m.isBaseline && <span style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>· baseline</span>}
+                          </span>
+                        </td>
+                        <td className="num" style={{ padding: 'var(--space-2)', textAlign: 'right', color: 'var(--ink)' }}>{formatIndex(m.r2)}</td>
+                        <td className="num" style={{ padding: 'var(--space-2)', textAlign: 'right', color: 'var(--muted)' }}>{formatCount(m.rmse)}</td>
+                        <td className="num" style={{ padding: 'var(--space-2)', textAlign: 'right', color: 'var(--muted)' }}>{formatCount(m.mae)}</td>
+                        <td className="num" style={{ padding: 'var(--space-2)', textAlign: 'right', color: 'var(--muted)' }}>{formatLatency(m.inference_latency_ms)}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                  <div>
-                    * Primary Selection Criterion: Lowest Test RMSE. Best Model selected: <strong style={{ color: '#34d399' }}>{modelMetrics.best_model}</strong>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', background: 'rgba(59, 130, 246, 0.1)', padding: '0.4rem 0.75rem', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.25)', color: '#93c5fd', fontSize: '0.75rem' }}>
-                    <Info size={14} color="#60a5fa" />
-                    <span><strong>Methodological Disclosure:</strong> Metrics evaluated on Tier B agronomically-enriched validation pipeline. See <code>docs/milestone2_yield_prediction_report.md</code> for Tier A baseline.</span>
-                  </div>
-                </div>
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', margin: 'var(--space-3) 0 0' }}>
+                  Highlighted: the model serving predictions, chosen for the lowest test RMSE.
+                </p>
               </div>
             )}
           </div>
+          </Can>
 
         </div>
 

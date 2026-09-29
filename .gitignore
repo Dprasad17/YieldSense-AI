@@ -14,3 +14,6 @@ dist/
 # User Environment
 .env
 .DS_Store
+
+# Runtime user store (contains password hashes)
+backend/app/api/users_db.json
