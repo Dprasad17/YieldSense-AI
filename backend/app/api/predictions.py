@@ -9,38 +9,42 @@ from backend.app.api.schemas import ActiveModel, Page, context_filters
 from backend.app.core.errors import ERROR_RESPONSES, AppError
 from backend.app.core.security import is_privileged, require_agronomist, require_user
 from backend.app.services import insights, notifications, store
-from backend.app.services.dataset import Filters
+from backend.app.services.dataset import Filters, year_range
 from backend.app.services.llm_service import llm_service
-from backend.app.services.ml_service import METRICS_PATH, active_model_summary, ml_service
+from backend.app.services.ml_service import active_model_summary, load_card, ml_service
 
 router = APIRouter(prefix="/api/predict", tags=["Yield Predictions & AI Insights"], responses=ERROR_RESPONSES)
 history_router = APIRouter(prefix="/api/predictions", tags=["Prediction History"], responses=ERROR_RESPONSES)
 
 
 class YieldPredictionRequest(BaseModel):
+    # Model inputs: the features the served model was trained on.
     crop_type: str = Field(..., json_schema_extra={"example": "Wheat"})
     region: str = Field(..., json_schema_extra={"example": "India"})
-    irrigation_type: str = Field(..., json_schema_extra={"example": "Drip"})
-    fertilizer_type: str = Field(..., json_schema_extra={"example": "Urea"})
-    crop_disease_status: str = Field(..., json_schema_extra={"example": "None"})
-    soil_pH: float = Field(..., ge=3.0, le=10.0)
-    soil_moisture_percent: float = Field(..., alias="soil_moisture_%", ge=0.0, le=100.0)
-    temperature_C: float = Field(..., ge=-10.0, le=60.0)
+    year: Optional[int] = Field(None, ge=1950, le=2100, description="Season year. Defaults to the latest year in the dataset.")
     rainfall_mm: float = Field(..., ge=0.0, le=5000.0)
-    humidity_percent: float = Field(..., alias="humidity_%", ge=0.0, le=100.0)
-    sunlight_hours: float = Field(..., ge=0.0, le=24.0)
+    temperature_C: float = Field(..., ge=-10.0, le=60.0)
     pesticide_usage_ml: float = Field(..., ge=0.0)
     total_days: int = Field(..., ge=1, le=400)
-    NDVI_index: float = Field(..., ge=0.0, le=1.0)
+    # Field conditions: optional; used for risk flags and insights, not by the model.
+    irrigation_type: Optional[str] = Field(None, json_schema_extra={"example": "Drip"})
+    fertilizer_type: Optional[str] = Field(None, json_schema_extra={"example": "Urea"})
+    crop_disease_status: Optional[str] = Field(None, json_schema_extra={"example": "None"})
+    soil_pH: Optional[float] = Field(None, ge=3.0, le=10.0)
+    soil_moisture_percent: Optional[float] = Field(None, alias="soil_moisture_%", ge=0.0, le=100.0)
+    humidity_percent: Optional[float] = Field(None, alias="humidity_%", ge=0.0, le=100.0)
+    sunlight_hours: Optional[float] = Field(None, ge=0.0, le=24.0)
     farm_id: Optional[int] = Field(None, description="Link the prediction to one of your farms")
     record_code: Optional[str] = Field(None, max_length=32, description="Link the prediction to a dataset record")
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
     def features(self) -> dict:
-        data = self.model_dump(by_alias=True)
+        data = self.model_dump(by_alias=True, exclude_none=True)
         data.pop("farm_id", None)
         data.pop("record_code", None)
+        if data.get("year") is None:
+            data["year"] = year_range()[1]
         return data
 
 
@@ -100,7 +104,7 @@ class Recommendation(BaseModel):
     title: str
     action: str
     action_label: str
-    impact_kg_ha: float
+    impact_kg_ha: Optional[float]
     impact_basis: str
     deadline_days: int
     deadline: str
@@ -152,10 +156,25 @@ def _run_prediction(request: YieldPredictionRequest) -> dict:
 
 @router.post("", response_model=YieldPredictionResponse)
 def predict_crop_yield(request: YieldPredictionRequest, user: dict = Depends(require_user)):
-    """Predicts yield with a P10–P90 interval (spread of the forest's trees) and saves it to history."""
+    """Predicts yield with a P10–P90 interval (split-conformal, out-of-time residuals) and saves it to history."""
     result = _run_prediction(request)
     saved = store.save_prediction(user["username"], request.features(), result, active_model_summary(), request.farm_id, request.record_code)
     return {**saved, "risk_flags": result["risk_flags"]}
+
+
+class WhatIfResponse(BaseModel):
+    predicted_yield_kg_ha: float
+    low_kg_ha: float
+    high_kg_ha: float
+    productivity_rating: Literal["Low", "Medium", "High"]
+    risk_rating: Literal["Low", "Medium", "High"]
+    risk_flags: list[str]
+
+
+@router.post("/what-if", response_model=WhatIfResponse)
+def predict_scenario(request: YieldPredictionRequest, _user: dict = Depends(require_user)):
+    """Same prediction as POST /api/predict, but not saved to history (for what-if scenarios)."""
+    return _run_prediction(request)
 
 
 @router.post("/insights", response_model=AIInsightsResponse)
@@ -165,12 +184,12 @@ def generate_prediction_insights(request: YieldPredictionRequest, _user: dict = 
 
 
 @router.get("/models")
-def get_model_performance_metrics(_user: dict = Depends(require_agronomist)) -> dict:
-    """Full comparison of trained models (models/model_performance_metrics.json)."""
-    if not os.path.exists(METRICS_PATH):
-        raise AppError(404, "Model performance metrics not found. Please train models first.")
-    with open(METRICS_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+def get_model_card(_user: dict = Depends(require_agronomist)) -> dict:
+    """Model card of the served model: every model on every split, selection rule, interval, features."""
+    card = load_card()
+    if not card:
+        raise AppError(404, "Model card not found. Train the models with scripts/train_models_v2.py.")
+    return card
 
 
 @router.get("/models/active", response_model=ActiveModel)
@@ -189,7 +208,7 @@ def get_recommendations_hub(f: Filters = Depends(context_filters), farm_id: Opti
 
         f = farm_filters(farm_id, user, f.crop)
     """Rule-based recommendations for the selected region and crop. Thresholds from core/agronomy_rules;
-    impacts are Random Forest estimates; only the rationale text is written by the LLM (with a fallback)."""
+    impacts come from the served model when the rule's feature is a model input; only the rationale text is written by the LLM (with a fallback)."""
     hub = insights.recommendations(f)
     recs = hub["recommendations"]
     tasks = {t["recommendation_id"]: t for t in store.tasks_for_user(user["username"], [r["id"] for r in recs])}

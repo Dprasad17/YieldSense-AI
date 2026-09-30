@@ -36,7 +36,8 @@ import {
   Skeleton,
 } from '../../components/ui';
 import { ErrorState } from '../../components/ui/States';
-import { useDatasetSummary, useRecords, useRegions } from '../../hooks/queries';
+import { ProvenanceBadge, ProvenanceLegend } from '../../components/Provenance';
+import { useDatasetSummary, useProvenance, useRecords, useRegions } from '../../hooks/queries';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { formatCount, formatIndex, formatNumber, formatRange, formatYield } from '../../lib/format';
 import { setPrefill } from '../../lib/localStore';
@@ -53,6 +54,14 @@ function diseaseTone(v: string) {
   return d === 'none' ? 'success' : d === 'mild' ? 'info' : d === 'moderate' ? 'warning' : 'danger';
 }
 
+/** Table column id -> dataset column in the provenance registry. */
+const SOURCE_COLUMN: Record<string, string> = {
+  yield: 'yield_kg_per_hectare',
+  moisture: 'soil_moisture_%',
+  ndvi: 'NDVI_index',
+  disease: 'crop_disease_status',
+};
+
 export function DatasetPage() {
   const navigate = useNavigate();
   const { filters, setFilters } = useGlobalFilters();
@@ -68,6 +77,11 @@ export function DatasetPage() {
   const [density, setDensity] = useState<Density>(defaultDensity);
   const [jump, setJump] = useState('');
   const [selected, setSelected] = useState<CropRecord | null>(null);
+  const provenance = useProvenance().data;
+  const provenanceOf = useMemo(() => {
+    const byColumn = new Map((provenance?.columns ?? []).map(c => [c.column, c]));
+    return (columnId: string) => byColumn.get(SOURCE_COLUMN[columnId] ?? columnId);
+  }, [provenance]);
 
   const q = useRecords({
     page,
@@ -200,12 +214,12 @@ export function DatasetPage() {
       soil_pH: r.soil_pH,
       'soil_moisture_%': r['soil_moisture_%'],
       temperature_C: r.temperature_C,
-      rainfall_mm: Math.min(2000, r.rainfall_mm),
+      rainfall_mm: r.rainfall_mm,
       'humidity_%': r['humidity_%'],
       sunlight_hours: r.sunlight_hours,
       pesticide_usage_ml: r.pesticide_usage_ml,
       total_days: r.total_days,
-      NDVI_index: r.NDVI_index,
+      year: r.year ?? undefined,
     });
     navigate('/app/predict');
   };
@@ -239,6 +253,11 @@ export function DatasetPage() {
       <PageHeader
         title="Dataset Explorer"
         description="Search, filter and inspect every record. Select a row to see all fields or send it to the predictor."
+        meta={
+          <span title="Column provenance: hover a header badge for its origin">
+            <ProvenanceLegend />
+          </span>
+        }
       />
 
       <Card>
@@ -357,6 +376,7 @@ export function DatasetPage() {
                           >
                             <button type="button" className={ui.sortBtn} onClick={h.column.getToggleSortingHandler()}>
                               {flexRender(h.column.columnDef.header, h.getContext())}
+                              <ProvenanceBadge entry={provenanceOf(h.column.id)} compact />
                               <span aria-hidden="true">{dir === 'asc' ? '↑' : dir === 'desc' ? '↓' : '↕'}</span>
                             </button>
                           </th>
@@ -480,27 +500,29 @@ export function DatasetPage() {
             <dl className={s.dl}>
               {(
                 [
-                  ['Region', selected.region],
-                  ['Crop', selected.crop_type],
-                  [`Yield (${unit})`, formatYield(selected.yield_kg_per_hectare, unit)],
-                  ['Rainfall (mm)', formatNumber(selected.rainfall_mm, 0)],
-                  ['Temperature (°C)', formatNumber(selected.temperature_C, 1)],
-                  ['Humidity (%)', formatNumber(selected['humidity_%'], 1)],
-                  ['Sunlight (h/day)', formatNumber(selected.sunlight_hours, 1)],
-                  ['Soil pH', formatIndex(selected.soil_pH)],
-                  ['Soil moisture (%)', formatNumber(selected['soil_moisture_%'], 1)],
-                  ['NDVI', formatIndex(selected.NDVI_index)],
-                  ['Irrigation', selected.irrigation_type],
-                  ['Fertilizer', selected.fertilizer_type],
-                  ['Pesticide (ml)', formatNumber(selected.pesticide_usage_ml, 0)],
-                  ['Disease', selected.crop_disease_status || 'None'],
-                  ['Sowing date', selected.sowing_date],
-                  ['Harvest date', selected.harvest_date],
-                  ['Duration (days)', String(selected.total_days)],
-                ] as [string, string][]
-              ).map(([k, v]) => (
+                  ['Region', selected.region, 'region'],
+                  ['Crop', selected.crop_type, 'crop_type'],
+                  [`Yield (${unit})`, formatYield(selected.yield_kg_per_hectare, unit), 'yield_kg_per_hectare'],
+                  ['Rainfall (mm)', formatNumber(selected.rainfall_mm, 0), 'rainfall_mm'],
+                  ['Temperature (°C)', formatNumber(selected.temperature_C, 1), 'temperature_C'],
+                  ['Humidity (%)', formatNumber(selected['humidity_%'], 1), 'humidity_%'],
+                  ['Sunlight (h/day)', formatNumber(selected.sunlight_hours, 1), 'sunlight_hours'],
+                  ['Soil pH', formatIndex(selected.soil_pH), 'soil_pH'],
+                  ['Soil moisture (%)', formatNumber(selected['soil_moisture_%'], 1), 'soil_moisture_%'],
+                  ['NDVI', formatIndex(selected.NDVI_index), 'NDVI_index'],
+                  ['Irrigation', selected.irrigation_type, 'irrigation_type'],
+                  ['Fertilizer', selected.fertilizer_type, 'fertilizer_type'],
+                  ['Pesticides (index)', formatNumber(selected.pesticide_usage_ml, 0), 'pesticide_usage_ml'],
+                  ['Disease', selected.crop_disease_status || 'None', 'crop_disease_status'],
+                  ['Sowing date', selected.sowing_date, 'sowing_date'],
+                  ['Harvest date', selected.harvest_date, 'harvest_date'],
+                  ['Duration (days)', String(selected.total_days), 'total_days'],
+                ] as [string, string, string][]
+              ).map(([k, v, col]) => (
                 <div key={k} style={{ display: 'contents' }}>
-                  <dt>{k}</dt>
+                  <dt>
+                    {k} <ProvenanceBadge entry={provenanceOf(col)} compact />
+                  </dt>
                   <dd>{v}</dd>
                 </div>
               ))}

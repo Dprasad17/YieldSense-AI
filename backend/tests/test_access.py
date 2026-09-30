@@ -44,7 +44,7 @@ def test_every_api_route_is_protected(client):
 def test_public_stats_is_aggregate_only(client):
     body = client.get("/api/public/stats").json()
     assert body["record_count"] == 28242 and body["crop_count"] == 10 and body["region_count"] == 101
-    assert body["model_name"] == "Random Forest (GridSearchCV)"
+    assert body["model_name"] == "XGBoost"
     assert set(body) == {"record_count", "crop_count", "region_count", "year_min", "year_max", "model_name", "r2", "rmse", "mae"}
 
 

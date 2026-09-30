@@ -149,8 +149,8 @@ def risk_level(score: int) -> str:
     return "Critical"
 
 
-def soil_health_index(crop: str, ph: float, moisture: float, ndvi: float) -> float:
-    """0–1: share of the crop's optimal pH / moisture / NDVI ranges the values fall in,
+def soil_health_index(crop: str, ph: float, moisture: float) -> float:
+    """0–1: how well pH and moisture sit in the crop's optimal ranges (NDVI is excluded: it is derived from yield),
     with partial credit that decays with distance outside the range."""
     r = rules_for(crop)
     if not r:
@@ -164,4 +164,4 @@ def soil_health_index(crop: str, ph: float, moisture: float, ndvi: float) -> flo
         dist = (rng.low - value) if value < rng.low else (value - rng.high)
         return max(0.0, 1.0 - dist / width)
 
-    return round((score("soil_pH", ph) + score("soil_moisture_%", moisture) + score("NDVI_index", ndvi)) / 3, 3)
+    return round((score("soil_pH", ph) + score("soil_moisture_%", moisture)) / 2, 3)

@@ -3,20 +3,9 @@
  * Every "top", "count", "mean" and ranking shown anywhere in the app comes from here,
  * so no screen can contradict another.
  */
-import type { CropBreakdownEntry, DatasetSummary, EdaMetrics, ModelMetricsResponse, ModelScore } from '../api/types';
+import type { CropBreakdownEntry, DatasetSummary, EdaMetrics } from '../api/types';
 
 // ---------------------------------------------------------------- models
-
-export interface ModelRow extends ModelScore {
-  /** Key exactly as it appears in the metrics JSON. */
-  key: string;
-  /** Human name without tuning suffix: "Random Forest". */
-  name: string;
-  /** Tuning method if the key carried one: "GridSearchCV". */
-  tuning: string | null;
-  isSelected: boolean;
-  isBaseline: boolean;
-}
 
 /**
  * Splits "Random Forest (GridSearchCV)" into { name: "Random Forest", tuning: "GridSearchCV" }.
@@ -26,39 +15,6 @@ export function normalizeModelName(key: string): { name: string; tuning: string 
   const match = /^(.*?)\s*\((GridSearchCV|RandomizedSearchCV|Optuna|tuned)\)\s*$/i.exec(key);
   if (match) return { name: match[1].trim(), tuning: match[2] };
   return { name: key.trim(), tuning: null };
-}
-
-function isModelScore(value: unknown): value is ModelScore {
-  if (!value || typeof value !== 'object') return false;
-  const v = value as Record<string, unknown>;
-  return typeof v.r2 === 'number' && typeof v.rmse === 'number' && typeof v.mae === 'number';
-}
-
-/** All models in the metrics payload, best R² first, with the served model flagged. */
-export function selectModelRows(metrics: ModelMetricsResponse | null | undefined): ModelRow[] {
-  if (!metrics) return [];
-  const best = typeof metrics.best_model === 'string' ? metrics.best_model : null;
-  return Object.entries(metrics)
-    .filter((entry): entry is [string, ModelScore] => isModelScore(entry[1]))
-    .map(([key, score]) => {
-      const { name, tuning } = normalizeModelName(key);
-      return {
-        key,
-        name,
-        tuning,
-        mae: score.mae,
-        rmse: score.rmse,
-        r2: score.r2,
-        inference_latency_ms: score.inference_latency_ms,
-        isSelected: key === best,
-        isBaseline: /dummy|baseline/i.test(key),
-      };
-    })
-    .sort((a, b) => b.r2 - a.r2);
-}
-
-export function selectActiveModelRow(metrics: ModelMetricsResponse | null | undefined): ModelRow | null {
-  return selectModelRows(metrics).find(r => r.isSelected) ?? null;
 }
 
 // ---------------------------------------------------------------- crops

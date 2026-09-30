@@ -147,6 +147,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/data/provenance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Column Provenance
+         * @description Where each dataset column comes from (real / synthetic / derived) and whether the model uses it.
+         */
+        get: operations["get_column_provenance_api_data_provenance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analytics/metrics": {
         parameters: {
             query?: never;
@@ -254,9 +274,29 @@ export interface paths {
         put?: never;
         /**
          * Predict Crop Yield
-         * @description Predicts yield with a P10–P90 interval (spread of the forest's trees) and saves it to history.
+         * @description Predicts yield with a P10–P90 interval (split-conformal, out-of-time residuals) and saves it to history.
          */
         post: operations["predict_crop_yield_api_predict_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predict/what-if": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Predict Scenario
+         * @description Same prediction as POST /api/predict, but not saved to history (for what-if scenarios).
+         */
+        post: operations["predict_scenario_api_predict_what_if_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -288,10 +328,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Model Performance Metrics
-         * @description Full comparison of trained models (models/model_performance_metrics.json).
+         * Get Model Card
+         * @description Model card of the served model: every model on every split, selection rule, interval, features.
          */
-        get: operations["get_model_performance_metrics_api_predict_models_get"];
+        get: operations["get_model_card_api_predict_models_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -874,12 +914,22 @@ export interface components {
         ActiveModel: {
             /** Name */
             name: string;
+            /** Version */
+            version?: string | null;
+            /** Target */
+            target?: string | null;
+            /** Split */
+            split?: string | null;
             /** R2 */
             r2: number;
             /** Rmse */
             rmse: number;
             /** Mae */
             mae: number;
+            /** Mape */
+            mape?: number | null;
+            /** Interval Coverage */
+            interval_coverage?: number | null;
             /** Inference Latency Ms */
             inference_latency_ms?: number | null;
             /** Test Size */
@@ -962,6 +1012,26 @@ export interface components {
             farm_id?: number | null;
             /** File */
             file: string;
+        };
+        /** ColumnProvenance */
+        ColumnProvenance: {
+            /** Column */
+            column: string;
+            /** Label */
+            label: string;
+            /** Unit */
+            unit: string;
+            /**
+             * Provenance
+             * @enum {string}
+             */
+            provenance: "real" | "synthetic" | "derived";
+            /** Origin */
+            origin: string;
+            /** Note */
+            note: string;
+            /** Used By Model */
+            used_by_model: boolean;
         };
         /** ContextClimate */
         ContextClimate: {
@@ -1641,6 +1711,13 @@ export interface components {
             email?: string | null;
             notification_prefs?: components["schemas"]["NotificationPrefs"] | null;
         };
+        /** ProvenanceRegistry */
+        ProvenanceRegistry: {
+            /** Source Dataset */
+            source_dataset: string;
+            /** Columns */
+            columns: components["schemas"]["ColumnProvenance"][];
+        };
         /** PublicStats */
         PublicStats: {
             /** Record Count */
@@ -1698,7 +1775,7 @@ export interface components {
             /** Action Label */
             action_label: string;
             /** Impact Kg Ha */
-            impact_kg_ha: number;
+            impact_kg_ha: number | null;
             /** Impact Basis */
             impact_basis: string;
             /** Deadline Days */
@@ -2203,6 +2280,27 @@ export interface components {
             /** Fetched At */
             fetched_at: string | null;
         };
+        /** WhatIfResponse */
+        WhatIfResponse: {
+            /** Predicted Yield Kg Ha */
+            predicted_yield_kg_ha: number;
+            /** Low Kg Ha */
+            low_kg_ha: number;
+            /** High Kg Ha */
+            high_kg_ha: number;
+            /**
+             * Productivity Rating
+             * @enum {string}
+             */
+            productivity_rating: "Low" | "Medium" | "High";
+            /**
+             * Risk Rating
+             * @enum {string}
+             */
+            risk_rating: "Low" | "Medium" | "High";
+            /** Risk Flags */
+            risk_flags: string[];
+        };
         /** YearPoint */
         YearPoint: {
             /** Year */
@@ -2227,38 +2325,41 @@ export interface components {
              */
             region: string;
             /**
-             * Irrigation Type
-             * @example Drip
+             * Year
+             * @description Season year. Defaults to the latest year in the dataset.
              */
-            irrigation_type: string;
-            /**
-             * Fertilizer Type
-             * @example Urea
-             */
-            fertilizer_type: string;
-            /**
-             * Crop Disease Status
-             * @example None
-             */
-            crop_disease_status: string;
-            /** Soil Ph */
-            soil_pH: number;
-            /** Soil Moisture % */
-            "soil_moisture_%": number;
-            /** Temperature C */
-            temperature_C: number;
+            year?: number | null;
             /** Rainfall Mm */
             rainfall_mm: number;
-            /** Humidity % */
-            "humidity_%": number;
-            /** Sunlight Hours */
-            sunlight_hours: number;
+            /** Temperature C */
+            temperature_C: number;
             /** Pesticide Usage Ml */
             pesticide_usage_ml: number;
             /** Total Days */
             total_days: number;
-            /** Ndvi Index */
-            NDVI_index: number;
+            /**
+             * Irrigation Type
+             * @example Drip
+             */
+            irrigation_type?: string | null;
+            /**
+             * Fertilizer Type
+             * @example Urea
+             */
+            fertilizer_type?: string | null;
+            /**
+             * Crop Disease Status
+             * @example None
+             */
+            crop_disease_status?: string | null;
+            /** Soil Ph */
+            soil_pH?: number | null;
+            /** Soil Moisture % */
+            "soil_moisture_%"?: number | null;
+            /** Humidity % */
+            "humidity_%"?: number | null;
+            /** Sunlight Hours */
+            sunlight_hours?: number | null;
             /**
              * Farm Id
              * @description Link the prediction to one of your farms
@@ -2840,6 +2941,62 @@ export interface operations {
             };
         };
     };
+    get_column_provenance_api_data_provenance_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvenanceRegistry"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     get_eda_metrics_api_analytics_metrics_get: {
         parameters: {
             query?: never;
@@ -3208,6 +3365,66 @@ export interface operations {
             };
         };
     };
+    predict_scenario_api_predict_what_if_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["YieldPredictionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WhatIfResponse"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     generate_prediction_insights_api_predict_insights_post: {
         parameters: {
             query?: never;
@@ -3268,7 +3485,7 @@ export interface operations {
             };
         };
     };
-    get_model_performance_metrics_api_predict_models_get: {
+    get_model_card_api_predict_models_get: {
         parameters: {
             query?: never;
             header?: never;

@@ -115,7 +115,6 @@ Analyze the following agricultural telemetry data and yield forecast:
 - Humidity: {payload.get('humidity_%')}%, Sunlight: {payload.get('sunlight_hours')} hrs
 - Irrigation: {payload.get('irrigation_type')}, Fertilizer: {payload.get('fertilizer_type')}
 - Disease Status: {payload.get('crop_disease_status')}
-- NDVI Index: {payload.get('NDVI_index')}
 
 Provide a JSON object with:
 "ai_insights": String summary of yield driver performance,
@@ -146,7 +145,6 @@ Provide a JSON object with:
                 ("temperature_C", "Temperature", "°C", "Plan heat-tolerant varieties or shift sowing to a cooler window.", "Protect the root zone from cold with mulching."),
                 ("soil_pH", "Soil pH", "", "Apply agricultural lime to raise pH toward the optimal band.", "Incorporate elemental sulfur or gypsum to lower pH."),
                 ("soil_moisture_%", "Soil moisture", "%", "Schedule irrigation to lift root-zone moisture into the optimal band.", "Improve drainage; moisture is above the optimal band."),
-                ("NDVI_index", "NDVI", "", "Check nutrition and canopy health; vigour is below top-yield fields.", None),
             ]
             for feature, label, unit, low_action, high_action in checks:
                 value = payload.get(feature)

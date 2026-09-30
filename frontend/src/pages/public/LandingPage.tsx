@@ -70,7 +70,7 @@ const PIPELINE = [
   ['Collect', 'Historical yields from FAOSTAT via Kaggle, plus live weather.'],
   ['Clean', 'Deduplicate, fix types and handle missing values.'],
   ['Analyze', 'Distributions, crop rankings and factor relationships.'],
-  ['Predict', 'A tuned Random Forest estimates yield from 14 inputs.'],
+  ['Predict', 'An XGBoost model, tested on unseen years, estimates yield with a P10–P90 range.'],
   ['Act', 'Recommendations turn predictions into field actions.'],
 ];
 
@@ -231,7 +231,7 @@ function Preview() {
           <BarChart3 size={18} color="var(--data-model)" />
           <div style={{ fontSize: 'var(--text-sm)' }}>
             <div style={{ fontWeight: 'var(--weight-semibold)' }}>Predicted yield</div>
-            <div style={{ color: 'var(--muted)' }}>Random Forest · 14 inputs</div>
+            <div style={{ color: 'var(--muted)' }}>XGBoost · 7 model inputs</div>
           </div>
         </div>
       </div>

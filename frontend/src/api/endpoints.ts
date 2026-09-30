@@ -26,7 +26,9 @@ import type {
   UploadsPage,
   CropRecord,
   MeResponse,
-  ModelMetricsResponse,
+  ModelCard,
+  ProvenanceRegistry,
+  WhatIfResult,
   Notification,
   NotificationPage,
   PredictionInput,
@@ -66,6 +68,7 @@ export const publicApi = {
 
 export const dataApi = {
   summary: () => apiRequest<DatasetSummary>('/api/data/summary'),
+  provenance: () => apiRequest<ProvenanceRegistry>('/api/data/provenance'),
   records: (q: Q & { page: number; page_size: number; search?: string }) =>
     apiRequest<RecordsPage>('/api/data/records', { query: q }),
 };
@@ -81,9 +84,11 @@ export const analyticsApi = {
 
 export const predictApi = {
   predict: (input: PredictionInput) => apiRequest<PredictionResult>('/api/predict', { method: 'POST', body: input }),
+  /** Scenario prediction that is not saved to history. */
+  whatIf: (input: PredictionInput) => apiRequest<WhatIfResult>('/api/predict/what-if', { method: 'POST', body: input }),
   insights: (input: PredictionInput) =>
     apiRequest<AIInsights>('/api/predict/insights', { method: 'POST', body: input }),
-  models: () => apiRequest<ModelMetricsResponse>('/api/predict/models'),
+  modelCard: () => apiRequest<ModelCard>('/api/predict/models'),
   activeModel: () => apiRequest<ActiveModel>('/api/predict/models/active'),
   recommendationsHub: (q: Q) => apiRequest<RecommendationsHub>('/api/predict/recommendations-hub', { query: q }),
   history: (q: { page: number; page_size: number; crop?: string; region?: string; farm_id?: string }) =>

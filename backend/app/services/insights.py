@@ -51,20 +51,22 @@ def seasonal_trends(f: Filters) -> dict:
     forecast = None
     if series:
         last_year = series[-1]["year"]
-        basis = _sample(df[df["year"] == last_year], 2000)
-        per_tree = ml_service.tree_predictions(basis)  # (trees, rows)
-        tree_means = per_tree.mean(axis=1)
+        basis = _sample(df[df["year"] == last_year], 2000).copy()
+        basis["year"] = last_year + 1
+        preds = ml_service.predict_frame(basis)
+        lows, highs = ml_service.interval(preds)
         forecast = {
             "year": last_year + 1,
-            "mean_kg_ha": round(float(ml_service.predict_frame(basis).mean()), 2),
-            "p10_kg_ha": round(float(np.percentile(tree_means, 10)), 2),
-            "p90_kg_ha": round(float(np.percentile(tree_means, 90)), 2),
+            "mean_kg_ha": round(float(preds.mean()), 2),
+            "p10_kg_ha": round(float(np.mean(lows)), 2),
+            "p90_kg_ha": round(float(np.mean(highs)), 2),
             "basis_year": last_year,
             "basis_records": int(len(basis)),
             "method": (
-                f"Mean Random Forest prediction over {len(basis):,} records from {last_year}, the latest year. "
-                "The model has no time input, so this is the expected yield under the latest year's conditions. "
-                "Band: P10–P90 of the individual trees' mean predictions."
+                f"Mean {ml_service.name} prediction for {last_year + 1} over {len(basis):,} records, using their "
+                f"{last_year} rainfall, temperature and pesticide values. Band: mean of each record's P10–P90 interval "
+                "(split-conformal residuals from the 2009–2013 out-of-time test). Tree models do not extrapolate trends "
+                "past the last training year."
             ),
         }
     years = [p["year"] for p in series]
@@ -101,9 +103,7 @@ def farm_comparison(f: Filters, limit: int, sort: str) -> dict:
                 "crop_type": row["crop_type"],
                 "year": int(row["year"]),
                 "yield_kg_ha": round(float(row["yield_kg_per_hectare"]), 2),
-                "soil_health_index": ar.soil_health_index(
-                    row["crop_type"], float(row["soil_pH"]), float(row["soil_moisture_%"]), float(row["NDVI_index"])
-                ),
+                "soil_health_index": ar.soil_health_index(row["crop_type"], float(row["soil_pH"]), float(row["soil_moisture_%"])),
                 "soil_pH": float(row["soil_pH"]),
                 "soil_moisture_percent": float(row["soil_moisture_%"]),
                 "ndvi": float(row["NDVI_index"]),
@@ -271,8 +271,11 @@ def parse_recommendation_id(rec_id: str) -> Optional[Filters]:
     return Filters.of(region, crop) if ok_r and ok_c else None
 
 
-def _impact(df: pd.DataFrame, mask: pd.Series, adjust) -> float:
-    """Model-estimated mean gain (kg/ha) on affected records when `adjust` fixes the feature."""
+def _impact(df: pd.DataFrame, mask: pd.Series, adjust, feature: str) -> Optional[float]:
+    """Model-estimated mean gain (kg/ha) on affected records when `adjust` fixes the feature.
+    None when the feature is not a model input (synthetic columns): the model can't estimate it."""
+    if feature not in ml_service.features:
+        return None
     affected = df[mask]
     if affected.empty:
         return 0.0
@@ -282,7 +285,10 @@ def _impact(df: pd.DataFrame, mask: pd.Series, adjust) -> float:
     return float(np.mean(delta))
 
 
-def _severity(impact: float, baseline: float, share: float) -> str:
+def _severity(impact: Optional[float], baseline: float, share: float) -> str:
+    if impact is None:
+        # Not modelled: severity from how many records are affected.
+        return "high" if share >= 0.5 else "medium" if share >= 0.2 else "info"
     rel = impact / baseline if baseline > 0 else 0.0
     if impact <= 0 or rel < 0.01:
         return "info"
@@ -323,8 +329,6 @@ FEATURE_RULES = [
      "Create liming task", "Soil-test, then apply agricultural lime to raise pH into the optimal band."),
     ("ph_high", "soil_pH", "high", "fertilizer", "Soil too alkaline for this crop",
      "Create amendment task", "Soil-test, then apply elemental sulfur or gypsum to lower pH."),
-    ("low_vigour", "NDVI_index", "low", "fertilizer", "Crop vigour (NDVI) below top-yield fields",
-     "Create scouting task", "Scout for nutrient deficiency and adjust the fertiliser plan."),
     ("rainfall_deficit", "rainfall_mm", "low", "irrigation", "Seasonal rainfall below the optimal band",
      "Create irrigation task", "Plan supplemental irrigation for the driest weeks of the season."),
 ]
@@ -352,7 +356,7 @@ def recommendations(f: Filters) -> dict:
         if not trigger:
             continue
         label, unit = ar.FEATURES[feature]
-        impact = _impact(df, mask, _clip_to_optimal(feature))
+        impact = _impact(df, mask, _clip_to_optimal(feature), feature)
         share = float(mask.mean())
         recs.append(
             _rec(rule, f, category, title, action_label, action, impact, baseline, share, area, crop_label,
@@ -366,7 +370,7 @@ def recommendations(f: Filters) -> dict:
             frame["crop_disease_status"] = "None"
             return frame
 
-        impact = _impact(df, disease_mask, cure)
+        impact = _impact(df, disease_mask, cure, "crop_disease_status")
         recs.append(
             _rec("disease_pressure", f, "disease_pest", "Moderate or severe disease in many records",
                  "Create scouting task", "Increase scouting and treat confirmed outbreaks early.",
@@ -378,7 +382,7 @@ def recommendations(f: Filters) -> dict:
         rec["rationale"], rec["rationale_source"] = llm_service.write_rationale(rec)
         del rec["crop_label"]
 
-    recs.sort(key=lambda r: (SEVERITY_ORDER[r["severity"]], -r["impact_kg_ha"]))
+    recs.sort(key=lambda r: (SEVERITY_ORDER[r["severity"]], -(r["impact_kg_ha"] or 0.0)))
     return {
         "scope": f.describe(),
         "record_count": int(len(df)),
@@ -410,8 +414,13 @@ def _rec(rule, f, category, title, action_label, action, impact, baseline, share
         "title": title,
         "action": action,
         "action_label": action_label,
-        "impact_kg_ha": round(float(impact), 1),
-        "impact_basis": "Random Forest estimate: mean change in predicted yield on affected records when the value is moved into the optimal band.",
+        "impact_kg_ha": None if impact is None else round(float(impact), 1),
+        "impact_basis": (
+            "Not estimated: this column is synthetic in the dataset and is not a model input. "
+            "Severity reflects the share of records outside the optimal band."
+            if impact is None
+            else f"{ml_service.name} estimate: mean change in predicted yield on affected records when the value is moved into the optimal band."
+        ),
         "deadline_days": days,
         "deadline": (date.today() + timedelta(days=days)).isoformat(),
         "affected_area": area,
@@ -463,7 +472,7 @@ def soil_assessment(f: Filters) -> dict:
     ph, moist, ndvi = (float(df[c].mean()) for c in ("soil_pH", "soil_moisture_%", "NDVI_index"))
     ph_rng, m_rng, n_rng = r.optimal["soil_pH"], r.optimal["soil_moisture_%"], r.optimal["NDVI_index"]
     health = float(
-        np.mean([ar.soil_health_index(f.crop, a, b, c) for a, b, c in df[["soil_pH", "soil_moisture_%", "NDVI_index"]].to_numpy()])
+        np.mean([ar.soil_health_index(f.crop, a, b) for a, b in df[["soil_pH", "soil_moisture_%"]].to_numpy()])
     )
     ph_status = "Optimal" if ph_rng.contains(ph) else ("Acidic" if ph < ph_rng.low else "Alkaline")
     sufficiency = float((df["soil_moisture_%"] >= m_rng.low).mean() * 100)
@@ -494,18 +503,18 @@ def soil_assessment(f: Filters) -> dict:
             "status": status(ndvi, n_rng, lower_is_bad_only=True),
             "finding": f"Average NDVI {ndvi:.2f} vs top-yield band {n_rng.low:g}–{n_rng.high:g}",
             "action": "Canopy vigour is on track." if ndvi >= n_rng.low else "Check nutrition and canopy health.",
-            "why": "NDVI is the strongest single yield signal in this dataset.",
+            "why": "Reference only: NDVI in this dataset is derived from the yield itself, so it is not used by the model or the health index.",
         },
     ]
 
     suitability = []
     for crop in sorted(get_df()["crop_type"].unique()):
-        idx = ar.soil_health_index(crop, ph, moist, ndvi)
+        idx = ar.soil_health_index(crop, ph, moist)
         cr = ar.rules_for(crop)
         assert cr is not None
         reasons = [
             f"{ar.FEATURES[k][0]} {'in' if cr.optimal[k].contains(v) else 'outside'} {cr.optimal[k].low:g}–{cr.optimal[k].high:g}"
-            for k, v in (("soil_pH", ph), ("soil_moisture_%", moist), ("NDVI_index", ndvi))
+            for k, v in (("soil_pH", ph), ("soil_moisture_%", moist))
         ]
         suitability.append({"crop": crop, "suitability_index": idx, "reasons": reasons})
     suitability.sort(key=lambda s: (-s["suitability_index"], s["crop"]))

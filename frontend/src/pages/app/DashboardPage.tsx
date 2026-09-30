@@ -168,7 +168,7 @@ export function DashboardPage() {
                 icon={Leaf}
                 accent="var(--data-vegetation)"
                 subtitle={`${scope} · mean`}
-                info="NDVI ranges from 0 to 1; higher means denser, healthier vegetation."
+                info="Reference only: NDVI in this dataset is derived from the yield rank, so the model does not use it."
               />
             </>
           ) : (
@@ -371,7 +371,8 @@ export function DashboardPage() {
                       </div>
                       <p className={s.muted} style={{ margin: 'var(--space-2) 0 0' }}>
                         {r.action}{' '}
-                        {r.impact_kg_ha > 0 &&
+                        {r.impact_kg_ha != null &&
+                          r.impact_kg_ha > 0 &&
                           `Estimated +${formatYieldWithUnit(r.impact_kg_ha, unit)} on affected records.`}
                       </p>
                     </li>

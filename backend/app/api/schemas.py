@@ -41,8 +41,13 @@ def context_filters(
 
 class ActiveModel(BaseModel):
     name: str
+    version: Optional[str] = None
+    target: Optional[str] = None
+    split: Optional[str] = None
     r2: float
     rmse: float
     mae: float
+    mape: Optional[float] = None
+    interval_coverage: Optional[float] = None
     inference_latency_ms: Optional[float] = None
     test_size: Optional[int] = None

@@ -21,19 +21,46 @@ export type SeasonalTrends = S['SeasonalTrends'];
 export type FarmComparison = S['FarmComparison'];
 
 /** /api/predict/models: model name → scores, plus a few non-model keys. Untyped JSON artifact. */
-export type ModelMetricsResponse = Record<string, unknown> & {
-  best_model?: string;
-  metadata?: { dataset_size?: number; train_size?: number; test_size?: number; features?: string[] };
-};
-export interface ModelScore {
+export type SplitKey = 'random' | 'temporal' | 'unseen_region';
+/** One model × target × split evaluation from models/v2/model_card.json. */
+export interface ModelResult {
+  model: string;
+  target: 'raw' | 'log1p';
+  split: SplitKey;
   mae: number;
   rmse: number;
   r2: number;
-  inference_latency_ms: number;
+  mape: number;
+  latency_p50_ms: number;
+  latency_p95_ms: number;
+  interval_coverage: number;
+  train_rows: number;
+  test_rows: number;
 }
+/** Model card served by GET /api/predict/models (written by scripts/train_models_v2.py). */
+export interface ModelCard {
+  name: string;
+  version: string;
+  trained_at: string;
+  selected: { model: string; target: 'raw' | 'log1p'; split: SplitKey; metrics: ModelResult };
+  selection_rule: string;
+  features: { categorical: string[]; numeric: string[] };
+  excluded_features: { feature: string; reason: string }[];
+  permutation_importance: { feature: string; importance: number; std: number; synthetic: boolean; kept: boolean }[];
+  splits: Record<SplitKey, string>;
+  results: ModelResult[];
+  interval: { method: string; space: string; residual_q10: number; residual_q90: number };
+  data: { rows: number; years: [number, number]; regions: number; crops: number };
+  previous_model?: { model: string; r2: number; rmse: number; mae: number; note: string };
+  intended_use: string;
+  limitations: string[];
+}
+export type ProvenanceRegistry = S['ProvenanceRegistry'];
+export type ColumnProvenance = S['ColumnProvenance'];
+export type WhatIfResult = S['WhatIfResponse'];
 export type ActiveModel = S['ActiveModel'];
 
-export type PredictionInput = Omit<S['YieldPredictionRequest'], 'farm_id'> & { farm_id?: string | null };
+export type PredictionInput = S['YieldPredictionRequest'];
 export type PredictionResult = S['YieldPredictionResponse'];
 export type PredictionRecord = S['PredictionRecord'];
 export type PredictionsPage = S['Page_PredictionRecord_'];

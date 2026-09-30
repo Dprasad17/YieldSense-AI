@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
@@ -111,3 +111,28 @@ def get_sample_record(crop: Optional[str] = Query(None), region: Optional[str] =
 
         raise AppError(404, "No records match these filters.")
     return records_to_dicts(df.sample(1))[0]
+
+
+class ColumnProvenance(BaseModel):
+    column: str
+    label: str
+    unit: str
+    provenance: Literal["real", "synthetic", "derived"]
+    origin: str
+    note: str
+    used_by_model: bool
+
+
+class ProvenanceRegistry(BaseModel):
+    source_dataset: str
+    columns: list[ColumnProvenance]
+
+
+@router.get("/provenance", response_model=ProvenanceRegistry)
+def get_column_provenance(_user: dict = Depends(require_user)):
+    """Where each dataset column comes from (real / synthetic / derived) and whether the model uses it."""
+    from backend.app.core import provenance
+    from backend.app.services.ml_service import ml_service
+
+    features = ml_service.features if ml_service.is_ready() else []
+    return {"source_dataset": provenance.SOURCE_DATASET, "columns": provenance.registry(features)}

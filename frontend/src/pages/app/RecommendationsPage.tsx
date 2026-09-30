@@ -98,11 +98,17 @@ export function RecommendationsPage() {
           <p style={{ margin: 0 }}>{r.action}</p>
           <div
             className={s.num}
-            style={{ color: r.impact_kg_ha > 0 ? 'var(--success)' : 'var(--muted)' }}
+            style={{ color: (r.impact_kg_ha ?? 0) > 0 ? 'var(--success)' : 'var(--muted)' }}
             title={r.impact_basis}
           >
-            Expected impact: {r.impact_kg_ha > 0 ? '+' : ''}
-            {formatYield(r.impact_kg_ha, unit)} {unit} on affected records
+            {r.impact_kg_ha == null ? (
+              <>Impact not estimated: this column isn’t a model input (synthetic in the dataset).</>
+            ) : (
+              <>
+                Expected impact: {r.impact_kg_ha > 0 ? '+' : ''}
+                {formatYield(r.impact_kg_ha, unit)} {unit} on affected records
+              </>
+            )}
           </div>
           <div className={s.tile}>
             <div className={s.small} style={{ marginBottom: 'var(--space-1)' }}>

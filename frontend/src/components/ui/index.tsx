@@ -939,7 +939,7 @@ export function InsightCallout({ children }: { children: ReactNode }) {
   );
 }
 
-/** "Random Forest · R² 0.94 · RMSE 2,003" */
+/** "XGBoost · R² 0.95 · RMSE 2,096" */
 export function ModelChip({
   name,
   r2,

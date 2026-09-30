@@ -94,14 +94,19 @@ export function useFarmComparison(q: ContextQuery & { limit?: number; sort?: 'yi
 }
 
 /** Full model comparison. Only fetched for roles allowed to see model performance. */
-export function useModelMetrics() {
+export function useModelCard() {
   const can = useCan();
   return useQuery({
     queryKey: queryKeys.models,
-    queryFn: predictApi.models,
+    queryFn: predictApi.modelCard,
     enabled: can('models'),
     staleTime: 10 * 60_000,
   });
+}
+
+/** Column provenance registry (real / synthetic / derived, and whether the model uses each column). */
+export function useProvenance() {
+  return useQuery({ queryKey: ['provenance'], queryFn: dataApi.provenance, staleTime: 60 * 60_000 });
 }
 
 /** The model that serves predictions. Available to every role. */

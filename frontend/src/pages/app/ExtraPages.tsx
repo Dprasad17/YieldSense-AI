@@ -6,9 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   BookOpen,
-  Clock,
   Cpu,
-  Gauge,
   History,
   Keyboard,
   Monitor,
@@ -20,7 +18,6 @@ import {
   Trash2,
   UserCircle2,
 } from 'lucide-react';
-import { BarCompareChart, ChartCard } from '../../components/charts';
 import {
   Badge,
   Banner,
@@ -37,15 +34,13 @@ import {
   SegmentedControl,
   Select,
   Skeleton,
-  StatCard,
   Switch,
   type Column,
 } from '../../components/ui';
 import { ratingTone } from '../../components/ui/helpers';
-import { ErrorState } from '../../components/ui/States';
 import { useAuth } from '../../auth/context';
-import { useDatasetSummary, useModelMetrics, useRegions } from '../../hooks/queries';
-import { formatCount, formatIndex, formatLatency, formatYield, formatYieldWithUnit } from '../../lib/format';
+import { useDatasetSummary, useRegions } from '../../hooks/queries';
+import { formatCount, formatIndex, formatYield, formatYieldWithUnit } from '../../lib/format';
 import {
   clearRecent,
   deleteRecent,
@@ -55,196 +50,9 @@ import {
   setPrefill,
   type SavedPrediction,
 } from '../../lib/localStore';
-import { selectModelRows, type ModelRow } from '../../lib/selectors';
 import { YIELD_UNITS, type YieldUnit } from '../../lib/units';
 import { usePreferences, type Density, type ThemePreference } from '../../store/preferences';
 import s from './app.module.css';
-
-// ================================================================ Model performance
-
-export function ModelPerformancePage() {
-  const q = useModelMetrics();
-  const rows = selectModelRows(q.data);
-  const best = rows.find(r => r.isSelected);
-  const meta = q.data?.metadata;
-  const tuning = (q.data?.gridsearch_cv_tuning ?? null) as Record<string, Record<string, number>> | null;
-
-  const columns: Column<ModelRow>[] = [
-    {
-      key: 'name',
-      header: 'Model',
-      render: r => (
-        <span style={{ fontWeight: r.isSelected ? 600 : 400 }}>
-          {r.name}
-          {r.tuning && <span className={s.small}> · {r.tuning}</span>}
-          {r.isSelected && (
-            <>
-              {' '}
-              <Badge tone="success">In use</Badge>
-            </>
-          )}
-          {r.isBaseline && (
-            <>
-              {' '}
-              <Badge>Baseline</Badge>
-            </>
-          )}
-        </span>
-      ),
-    },
-    { key: 'r2', header: 'R²', align: 'right', render: r => formatIndex(r.r2), sortValue: r => r.r2 },
-    { key: 'rmse', header: 'RMSE (kg/ha)', align: 'right', render: r => formatCount(r.rmse), sortValue: r => r.rmse },
-    { key: 'mae', header: 'MAE (kg/ha)', align: 'right', render: r => formatCount(r.mae), sortValue: r => r.mae },
-    {
-      key: 'lat',
-      header: 'Latency',
-      align: 'right',
-      render: r => formatLatency(r.inference_latency_ms),
-      sortValue: r => r.inference_latency_ms,
-    },
-  ];
-
-  if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
-  return (
-    <div className={s.page}>
-      <PageHeader
-        title="Model performance"
-        description="How the trained models compare on data they never saw during training."
-        meta={
-          meta?.test_size ? (
-            <Badge>
-              {formatCount(meta.test_size)} test records · {formatCount(meta.dataset_size)} total
-            </Badge>
-          ) : undefined
-        }
-      />
-      <div className={s.kpis}>
-        {best ? (
-          <>
-            <StatCard
-              label="R² (in use)"
-              value={formatIndex(best.r2)}
-              icon={Gauge}
-              accent="var(--data-model)"
-              subtitle={best.name}
-              info="Share of yield variation the model explains. 1.00 is perfect."
-            />
-            <StatCard
-              label="RMSE"
-              value={formatCount(best.rmse)}
-              unit="kg/ha"
-              subtitle="Typical error, penalising big misses"
-            />
-            <StatCard label="MAE" value={formatCount(best.mae)} unit="kg/ha" subtitle="Average absolute error" />
-            <StatCard
-              label="Latency"
-              value={formatLatency(best.inference_latency_ms)}
-              icon={Clock}
-              subtitle="Per prediction"
-            />
-          </>
-        ) : (
-          Array.from({ length: 4 }, (_, i) => (
-            <Card key={i}>
-              <Skeleton height={80} />
-            </Card>
-          ))
-        )}
-      </div>
-      <div className={s.grid}>
-        <div className={s.s7}>
-          <Card>
-            <CardHeader title="Model comparison" subtitle="Sorted by R² · the highlighted model serves predictions" />
-            {rows.length ? (
-              <DataTable caption="Model comparison" columns={columns} rows={rows} rowKey={r => r.key} />
-            ) : (
-              <Skeleton height={240} />
-            )}
-          </Card>
-        </div>
-        <div className={s.s5}>
-          <ChartCard
-            title="R² by model"
-            subtitle="Higher is better"
-            summary={best ? `${best.name} has the highest R² at ${formatIndex(best.r2)}.` : 'Loading.'}
-            insight={
-              best && rows.length > 1
-                ? `${best.name} beats the next model by ${formatIndex(best.r2 - rows[1].r2)} R².`
-                : undefined
-            }
-          >
-            {(c, h) =>
-              rows.length ? (
-                <BarCompareChart
-                  data={rows.filter(r => !r.isBaseline).map(r => ({ label: r.name, value: r.r2 }))}
-                  colors={c}
-                  height={h}
-                  color={c['data-model']}
-                  fy={v => v.toFixed(2)}
-                />
-              ) : (
-                <Skeleton height={h} />
-              )
-            }
-          </ChartCard>
-        </div>
-        <div className={s.s7}>
-          <Card>
-            <CardHeader title="How to read these metrics" />
-            <ul className={s.list}>
-              <li>
-                <strong>R²</strong> — how much of the variation in yield the model explains, from 0 to 1. Above 0.9 is
-                strong.
-              </li>
-              <li>
-                <strong>RMSE</strong> — the typical size of an error in kg/ha. Large misses count more.
-              </li>
-              <li>
-                <strong>MAE</strong> — the average error in kg/ha, treating every miss equally.
-              </li>
-              <li>
-                <strong>Latency</strong> — time to produce one prediction.
-              </li>
-              <li>
-                <strong>Baseline</strong> — always predicts the average; any useful model must beat it.
-              </li>
-            </ul>
-          </Card>
-        </div>
-        <div className={s.s5}>
-          <Card>
-            <CardHeader title="Methodology" subtitle="Training setup reported by the model pipeline" />
-            {meta ? (
-              <dl className={s.dl}>
-                <dt>Records</dt>
-                <dd>{formatCount(meta.dataset_size)}</dd>
-                <dt>Training / test</dt>
-                <dd>
-                  {formatCount(meta.train_size)} / {formatCount(meta.test_size)}
-                </dd>
-                <dt>Input features</dt>
-                <dd>{meta.features?.length ?? '—'}</dd>
-                {tuning &&
-                  Object.entries(tuning).map(([k, params]) => (
-                    <div key={k} style={{ display: 'contents' }}>
-                      <dt>{k.replace(/_best_params$/, '').replace(/_/g, ' ')}</dt>
-                      <dd>
-                        {Object.entries(params)
-                          .map(([p, v]) => `${p}=${v}`)
-                          .join(', ')}
-                      </dd>
-                    </div>
-                  ))}
-              </dl>
-            ) : (
-              <Skeleton height={120} />
-            )}
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ================================================================ Prediction report (print)
 
@@ -262,21 +70,23 @@ export function PredictionReportPage() {
     );
   }
   const { input, result, insights } = report;
+  const na = (v: unknown, fmt: (x: never) => string = String as never) =>
+    v == null || v === '' ? 'Not recorded' : fmt(v as never);
   const rows: [string, string][] = [
     ['Crop', input.crop_type],
     ['Region', input.region],
-    ['Disease status', input.crop_disease_status],
-    ['Soil pH', formatIndex(input.soil_pH)],
-    ['Soil moisture', `${input['soil_moisture_%']}%`],
-    ['Temperature', `${input.temperature_C} °C`],
+    ['Season year', na(input.year)],
     ['Rainfall', `${formatCount(input.rainfall_mm)} mm`],
-    ['Humidity', `${input['humidity_%']}%`],
-    ['Sunlight', `${input.sunlight_hours} h/day`],
-    ['Irrigation', input.irrigation_type],
-    ['Fertilizer', input.fertilizer_type],
-    ['Pesticide', `${formatCount(input.pesticide_usage_ml)} ml`],
+    ['Temperature', `${input.temperature_C} °C`],
+    ['Pesticides (index)', formatCount(input.pesticide_usage_ml)],
     ['Growing period', `${input.total_days} days`],
-    ['NDVI', formatIndex(input.NDVI_index)],
+    ['Disease status', na(input.crop_disease_status)],
+    ['Soil pH', na(input.soil_pH, (x: number) => formatIndex(x))],
+    ['Soil moisture', na(input['soil_moisture_%'], (x: number) => `${x}%`)],
+    ['Humidity', na(input['humidity_%'], (x: number) => `${x}%`)],
+    ['Sunlight', na(input.sunlight_hours, (x: number) => `${x} h/day`)],
+    ['Irrigation', na(input.irrigation_type)],
+    ['Fertilizer', na(input.fertilizer_type)],
   ];
   return (
     <div data-theme="light" style={{ background: 'var(--surface-2)', minHeight: '100vh', padding: 'var(--space-6)' }}>
@@ -770,7 +580,7 @@ export function SettingsPage() {
 const FAQ: [string, string][] = [
   [
     'How is the predicted yield calculated?',
-    'A Random Forest model trained on 28,242 historical records combines your 14 inputs (crop, region, soil, weather and farm operations) to estimate yield per hectare.',
+    'An XGBoost model trained on 28,242 country-level FAOSTAT records uses 7 inputs (crop, region, year, rainfall, temperature, pesticides and growing period) to estimate yield per hectare, with a P10–P90 range. Field conditions such as soil and irrigation add risk flags but do not change the estimate.',
   ],
   [
     'Why does my region or crop change on every screen?',
@@ -795,7 +605,10 @@ const FAQ: [string, string][] = [
 ];
 
 const GLOSSARY: [string, string][] = [
-  ['NDVI', 'Normalised Difference Vegetation Index, 0–1. Higher values mean denser, healthier vegetation.'],
+  [
+    'NDVI',
+    'Normalised Difference Vegetation Index, 0–1. In this dataset it is derived from the yield itself, so it is shown for reference and not used by the model.',
+  ],
   ['R²', 'Share of variation in yield a model explains, 0–1. Higher is better.'],
   ['RMSE', 'Root mean squared error: typical prediction error in kg/ha, weighting large misses more.'],
   ['MAE', 'Mean absolute error: the average prediction error in kg/ha.'],
@@ -854,10 +667,19 @@ export function HelpPage() {
           <Card>
             <CardHeader title="How predictions work" />
             <ol style={{ margin: 0, paddingLeft: 'var(--space-5)', lineHeight: 1.7 }}>
-              <li>You describe the field: crop, region, soil, weather and farm operations.</li>
+              <li>
+                You enter the model inputs: crop, region, season year, rainfall, temperature, pesticides and growing
+                period.
+              </li>
               <li>The inputs are encoded exactly as during training.</li>
-              <li>The Random Forest averages the estimates of many decision trees.</li>
-              <li>You get yield in kg/ha, a productivity class and a risk rating.</li>
+              <li>
+                The XGBoost model adds up many small decision trees; the P10–P90 range comes from its errors on
+                2009–2013, years it never saw in training.
+              </li>
+              <li>
+                You get yield in kg/ha with a likely range, a productivity class, and a risk rating from any field
+                conditions you add.
+              </li>
               <li>An insight summarises what drives the estimate and what to watch.</li>
             </ol>
           </Card>

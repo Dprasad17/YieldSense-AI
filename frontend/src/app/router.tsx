@@ -24,7 +24,7 @@ const screens = {
   analytics: named(() => import('../pages/app/AnalyticsPage'), 'AnalyticsPage'),
   data: named(() => import('../pages/app/DatasetPage'), 'DatasetPage'),
   eda: named(() => import('../pages/app/EdaPage'), 'EdaPage'),
-  models: named(app, 'ModelPerformancePage'),
+  models: named(() => import('../pages/app/ModelsPage'), 'ModelPerformancePage'),
   history: named(app, 'HistoryPage'),
   settings: named(app, 'SettingsPage'),
   help: named(app, 'HelpPage'),

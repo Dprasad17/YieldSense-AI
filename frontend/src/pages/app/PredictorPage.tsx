@@ -37,42 +37,107 @@ const IRRIGATION = ['Drip', 'Sprinkler', 'Flood', 'Rainfed'];
 const FERTILIZER = ['NPK 15-15-15', 'Urea', 'Organic Compost', 'DAP'];
 const DISEASE = ['None', 'Mild', 'Moderate', 'Severe'];
 
-const DEFAULTS: PredictionInput = {
+/**
+ * Form state. Model inputs are required; field conditions are optional ('' or NaN = not recorded)
+ * and only feed the risk flags and insights, never the model.
+ */
+interface FormValues {
+  crop_type: string;
+  region: string;
+  year: number;
+  rainfall_mm: number;
+  temperature_C: number;
+  pesticide_usage_ml: number;
+  total_days: number;
+  irrigation_type: string;
+  fertilizer_type: string;
+  crop_disease_status: string;
+  soil_pH: number;
+  'soil_moisture_%': number;
+  'humidity_%': number;
+  sunlight_hours: number;
+}
+
+const MODEL_KEYS = [
+  'crop_type',
+  'region',
+  'year',
+  'rainfall_mm',
+  'temperature_C',
+  'pesticide_usage_ml',
+  'total_days',
+] as const satisfies readonly (keyof FormValues)[];
+const CONDITION_KEYS = [
+  'irrigation_type',
+  'fertilizer_type',
+  'crop_disease_status',
+  'soil_pH',
+  'soil_moisture_%',
+  'humidity_%',
+  'sunlight_hours',
+] as const satisfies readonly (keyof FormValues)[];
+
+const DEFAULTS: FormValues = {
   crop_type: 'Wheat',
   region: 'India',
+  year: 2013,
+  rainfall_mm: 850,
+  temperature_C: 24.5,
+  pesticide_usage_ml: 450,
+  total_days: 125,
   irrigation_type: 'Drip',
   fertilizer_type: 'Urea',
   crop_disease_status: 'None',
   soil_pH: 6.5,
   'soil_moisture_%': 40,
-  temperature_C: 24.5,
-  rainfall_mm: 850,
   'humidity_%': 60,
   sunlight_hours: 7.4,
-  pesticide_usage_ml: 450,
-  total_days: 125,
-  NDVI_index: 0.62,
 };
+
+const EMPTY_CONDITIONS: Pick<FormValues, (typeof CONDITION_KEYS)[number]> = {
+  irrigation_type: '',
+  fertilizer_type: '',
+  crop_disease_status: '',
+  soil_pH: NaN,
+  'soil_moisture_%': NaN,
+  'humidity_%': NaN,
+  sunlight_hours: NaN,
+};
+
+const zNum = () => z.number({ message: 'Enter a number.' });
+const optionalNumber = (min: number, max: number, msg: string) => z.number().min(min, msg).max(max, msg).optional();
 
 // Ranges accepted by the prediction endpoint.
 const schema = z.object({
   crop_type: z.string().min(1, 'Choose a crop.'),
   region: z.string().min(1, 'Choose a region.'),
-  irrigation_type: z.string().min(1),
-  fertilizer_type: z.string().min(1),
-  crop_disease_status: z.string().min(1),
-  soil_pH: z.number({ message: 'Enter a number.' }).min(3, 'Between 3 and 10.').max(10, 'Between 3 and 10.'),
-  'soil_moisture_%': z.number({ message: 'Enter a number.' }).min(0, '0–100%.').max(100, '0–100%.'),
-  temperature_C: z.number({ message: 'Enter a number.' }).min(-10, '−10 to 60 °C.').max(60, '−10 to 60 °C.'),
-  rainfall_mm: z.number({ message: 'Enter a number.' }).min(0, '0–2,000 mm.').max(2000, '0–2,000 mm.'),
-  'humidity_%': z.number({ message: 'Enter a number.' }).min(0, '0–100%.').max(100, '0–100%.'),
-  sunlight_hours: z.number({ message: 'Enter a number.' }).min(0, '0–24 h.').max(24, '0–24 h.'),
-  pesticide_usage_ml: z.number({ message: 'Enter a number.' }).min(0, 'Cannot be negative.'),
-  total_days: z.number({ message: 'Enter a number.' }).int('Whole days.').min(1, '1–365 days.').max(365, '1–365 days.'),
-  NDVI_index: z.number({ message: 'Enter a number.' }).min(0, '0–1.').max(1, '0–1.'),
+  year: zNum().int('Whole year.').min(1990, '1990–2030.').max(2030, '1990–2030.'),
+  rainfall_mm: zNum().min(0, '0–5,000 mm.').max(5000, '0–5,000 mm.'),
+  temperature_C: zNum().min(-10, '−10 to 60 °C.').max(60, '−10 to 60 °C.'),
+  pesticide_usage_ml: zNum().min(0, 'Cannot be negative.'),
+  total_days: zNum().int('Whole days.').min(1, '1–365 days.').max(365, '1–365 days.'),
+  irrigation_type: z.string().optional(),
+  fertilizer_type: z.string().optional(),
+  crop_disease_status: z.string().optional(),
+  soil_pH: optionalNumber(3, 10, 'Between 3 and 10.'),
+  'soil_moisture_%': optionalNumber(0, 100, '0–100%.'),
+  'humidity_%': optionalNumber(0, 100, '0–100%.'),
+  sunlight_hours: optionalNumber(0, 24, '0–24 h.'),
 });
 
-type Key = keyof PredictionInput;
+/** Request body: model inputs as entered; field conditions only when recorded. */
+function toRequest(v: FormValues, farmId?: number): PredictionInput {
+  const body: Record<string, unknown> = {};
+  for (const k of MODEL_KEYS) body[k] = v[k];
+  for (const k of CONDITION_KEYS) {
+    const value = v[k];
+    if (typeof value === 'string' ? value !== '' : Number.isFinite(value)) body[k] = value;
+  }
+  if (farmId) body.farm_id = farmId;
+  return body as unknown as PredictionInput;
+}
+
+type Key = keyof FormValues;
 type Errors = Partial<Record<Key, string>>;
 
 function parseRange(text?: string): [number, number] | null {
@@ -193,15 +258,19 @@ export function PredictorPage() {
   const insightsM = useInsights();
   const formRef = useRef<HTMLFormElement>(null);
 
-  const [values, setValues] = useState<PredictionInput>(() => ({
+  const farmId = filters.farm ? Number(filters.farm) : undefined;
+  const summary = useDatasetSummary().data;
+  const lastYear = summary?.year_max ?? 2013;
+  const [values, setValues] = useState<FormValues>(() => ({
     ...DEFAULTS,
     ...(filters.crop ? { crop_type: filters.crop } : {}),
     ...(filters.region ? { region: filters.region } : {}),
-    ...(takePrefill() ?? {}),
+    ...((takePrefill() ?? {}) as Partial<FormValues>),
   }));
   const [errors, setErrors] = useState<Errors>({});
-  const [open, setOpen] = useState({ crop: true, soil: true, weather: true, ops: true });
+  const [open, setOpen] = useState({ model: true, conditions: true });
   const [result, setResult] = useState<{ input: PredictionInput; result: PredictionResult } | null>(null);
+  const [conditionsOn, setConditionsOn] = useState(true);
   const [insights, setInsights] = useState<AIInsights | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [loadingSample, setLoadingSample] = useState(false);
@@ -209,29 +278,29 @@ export function PredictorPage() {
   const soil = useSoil(values.crop_type).data;
   const phBand = parseRange(soil?.soil_metrics?.optimal_pH_range as string | undefined);
 
-  const set = <K extends Key>(k: K, v: PredictionInput[K]) => {
+  const set = <K extends Key>(k: K, v: FormValues[K]) => {
     setValues(prev => ({ ...prev, [k]: v }));
     setErrors(e => ({ ...e, [k]: undefined }));
   };
   const num = (k: Key) => (e: React.ChangeEvent<HTMLInputElement>) =>
     set(k, (e.target.value === '' ? NaN : Number(e.target.value)) as never);
 
+  const effective = useMemo(() => (conditionsOn ? values : { ...values, ...EMPTY_CONDITIONS }), [values, conditionsOn]);
+
   const validity = useMemo(() => {
-    const r = schema.safeParse(values);
+    const r = schema.safeParse(toRequest(effective));
     const bad = new Set(r.success ? [] : r.error.issues.map(i => i.path[0] as Key));
-    const ok = (keys: Key[]) => keys.filter(k => !bad.has(k)).length;
+    const recorded = toRequest(effective) as unknown as Record<string, unknown>;
     return {
-      total: 14 - bad.size,
-      crop: ok(['crop_type', 'region', 'crop_disease_status']),
-      soil: ok(['soil_pH', 'soil_moisture_%']),
-      weather: ok(['temperature_C', 'rainfall_mm', 'humidity_%', 'sunlight_hours']),
-      ops: ok(['irrigation_type', 'fertilizer_type', 'pesticide_usage_ml', 'total_days', 'NDVI_index']),
+      model: MODEL_KEYS.filter(k => !bad.has(k)).length,
+      conditions: CONDITION_KEYS.filter(k => k in recorded && !bad.has(k)).length,
     };
-  }, [values]);
+  }, [effective]);
 
   const run = async (e?: React.SyntheticEvent) => {
     e?.preventDefault();
-    const parsed = schema.safeParse(values);
+    const body = toRequest(effective, farmId);
+    const parsed = schema.safeParse(body);
     if (!parsed.success) {
       const errs: Errors = {};
       for (const i of parsed.error.issues) errs[i.path[0] as Key] ??= i.message;
@@ -242,9 +311,9 @@ export function PredictorPage() {
     setFormError(null);
     setInsights(null);
     try {
-      const res = await predict.mutateAsync(values);
-      setResult({ input: values, result: res });
-      insightsM.mutateAsync(values).then(setInsights, () => setInsights(null));
+      const res = await predict.mutateAsync(body);
+      setResult({ input: body, result: res });
+      insightsM.mutateAsync(body).then(setInsights, () => setInsights(null));
     } catch (err) {
       setFormError(errorMessage(err));
     }
@@ -258,18 +327,18 @@ export function PredictorPage() {
       setValues({
         crop_type: rec.crop_type,
         region: rec.region,
+        year: rec.year ?? lastYear,
+        rainfall_mm: rec.rainfall_mm,
+        temperature_C: rec.temperature_C,
+        pesticide_usage_ml: rec.pesticide_usage_ml,
+        total_days: rec.total_days,
         irrigation_type: rec.irrigation_type,
         fertilizer_type: rec.fertilizer_type,
         crop_disease_status: rec.crop_disease_status || 'None',
         soil_pH: rec.soil_pH,
         'soil_moisture_%': rec['soil_moisture_%'],
-        temperature_C: rec.temperature_C,
-        rainfall_mm: Math.min(2000, rec.rainfall_mm),
         'humidity_%': rec['humidity_%'],
         sunlight_hours: rec.sunlight_hours,
-        pesticide_usage_ml: rec.pesticide_usage_ml,
-        total_days: rec.total_days,
-        NDVI_index: rec.NDVI_index,
       });
       setErrors({});
       toast.success(`Loaded record ${rec.farm_id}`);
@@ -281,16 +350,13 @@ export function PredictorPage() {
   };
 
   // ---------------------------------------------------------------- what-if
-  const [whatIf, setWhatIf] = useState({ rain: 0, temp: 0, fertilizer: '' });
+  const [whatIf, setWhatIf] = useState({ rain: 0, temp: 0, pest: 0 });
   const debounced = useDebouncedValue(whatIf, 500);
   const [scenario, setScenario] = useState<{ value: number | null; loading: boolean; error?: string }>({
     value: null,
     loading: false,
   });
-  const changed =
-    debounced.rain !== 0 ||
-    debounced.temp !== 0 ||
-    (debounced.fertilizer !== '' && debounced.fertilizer !== result?.input.fertilizer_type);
+  const changed = debounced.rain !== 0 || debounced.temp !== 0 || debounced.pest !== 0;
 
   useEffect(() => {
     if (!result || !changed) return;
@@ -298,14 +364,15 @@ export function PredictorPage() {
     const base = result.input;
     const input: PredictionInput = {
       ...base,
-      rainfall_mm: Math.max(0, Math.min(2000, Math.round(base.rainfall_mm * (1 + debounced.rain / 100)))),
+      rainfall_mm: Math.max(0, Math.min(5000, Math.round(base.rainfall_mm * (1 + debounced.rain / 100)))),
       temperature_C: Math.round((base.temperature_C + debounced.temp) * 10) / 10,
-      fertilizer_type: debounced.fertilizer || base.fertilizer_type,
+      pesticide_usage_ml: Math.max(0, Math.round(base.pesticide_usage_ml * (1 + debounced.pest / 100))),
+      farm_id: undefined,
     };
     Promise.resolve()
       .then(() => {
         if (!cancelled) setScenario(sc => ({ ...sc, loading: true, error: undefined }));
-        return predictApi.predict(input);
+        return predictApi.whatIf(input);
       })
       .then(
         r => !cancelled && setScenario({ value: r.predicted_yield_kg_ha, loading: false }),
@@ -340,18 +407,19 @@ export function PredictorPage() {
   };
 
   const reset = () => {
-    setValues(DEFAULTS);
+    setValues({ ...DEFAULTS, year: lastYear });
+    setConditionsOn(true);
     setErrors({});
     setResult(null);
     setInsights(null);
-    setWhatIf({ rain: 0, temp: 0, fertilizer: '' });
+    setWhatIf({ rain: 0, temp: 0, pest: 0 });
   };
 
   return (
     <div className={s.page}>
       <PageHeader
         title="Yield Predictor"
-        description="Describe the field and season to estimate yield per hectare."
+        description="Model inputs drive the estimate; field conditions add risk flags and advice."
         meta={
           activeModel &&
           (can('models') ? (
@@ -379,23 +447,19 @@ export function PredictorPage() {
 
       <div className={s.grid}>
         <form ref={formRef} className={`${s.s7} ${s.stack}`} onSubmit={run} noValidate aria-label="Prediction inputs">
-          <div className={s.between}>
-            <span className={s.muted}>
-              <strong className={s.num} style={{ color: 'var(--ink)' }}>
-                {validity.total} of 14
-              </strong>{' '}
-              fields complete
-            </span>
-          </div>
           {formError && <Banner tone="danger">{formError}</Banner>}
 
           <Section
-            title="Crop & region"
-            count={validity.crop}
-            total={3}
-            open={open.crop}
-            onToggle={() => setOpen(o => ({ ...o, crop: !o.crop }))}
+            title="Model inputs"
+            count={validity.model}
+            total={MODEL_KEYS.length}
+            open={open.model}
+            onToggle={() => setOpen(o => ({ ...o, model: !o.model }))}
           >
+            <p className={`${s.small} ${s.full}`} style={{ margin: 0 }}>
+              The {modelName ?? 'yield model'} uses exactly these {MODEL_KEYS.length} values. They are country-level
+              figures in the training data (FAOSTAT), so enter values for the region, not a single field.
+            </p>
             <FormField label="Crop" htmlFor="p-crop" error={errors.crop_type}>
               <Select
                 id="p-crop"
@@ -412,66 +476,26 @@ export function PredictorPage() {
                 options={regions.length ? regions : [values.region]}
               />
             </FormField>
-            <FormField label="Disease status" htmlFor="p-disease">
-              <Select
-                id="p-disease"
-                value={values.crop_disease_status}
-                onChange={e => set('crop_disease_status', e.target.value)}
-                options={DISEASE}
-              />
-            </FormField>
-          </Section>
-
-          <Section
-            title="Soil"
-            count={validity.soil}
-            total={2}
-            open={open.soil}
-            onToggle={() => setOpen(o => ({ ...o, soil: !o.soil }))}
-          >
-            <SliderField
-              id="p-ph"
-              label="Soil pH"
-              value={values.soil_pH}
-              onChange={v => set('soil_pH', v)}
-              min={3}
-              max={10}
-              step={0.1}
-              band={phBand}
-              error={errors.soil_pH}
-            />
-            <SliderField
-              id="p-moist"
-              label="Soil moisture"
-              value={values['soil_moisture_%']}
-              onChange={v => set('soil_moisture_%', v)}
-              min={0}
-              max={100}
-              step={0.5}
-              suffix="%"
-              error={errors['soil_moisture_%']}
-            />
-          </Section>
-
-          <Section
-            title="Weather"
-            count={validity.weather}
-            total={4}
-            open={open.weather}
-            onToggle={() => setOpen(o => ({ ...o, weather: !o.weather }))}
-          >
-            <FormField label="Temperature" htmlFor="p-temp" error={errors.temperature_C} hint="−10 to 60 °C">
+            <FormField
+              label="Season year"
+              htmlFor="p-year"
+              error={errors.year}
+              hint={
+                values.year > lastYear
+                  ? `After ${lastYear} the model holds the ${lastYear} level (no trend extrapolation)`
+                  : `Training data covers ${summary?.year_min ?? 1990}–${lastYear}`
+              }
+            >
               <Input
-                id="p-temp"
+                id="p-year"
                 type="number"
-                step={0.5}
-                value={Number.isFinite(values.temperature_C) ? values.temperature_C : ''}
-                onChange={num('temperature_C')}
-                suffix="°C"
-                invalid={!!errors.temperature_C}
+                step={1}
+                value={Number.isFinite(values.year) ? values.year : ''}
+                onChange={num('year')}
+                invalid={!!errors.year}
               />
             </FormField>
-            <FormField label="Rainfall" htmlFor="p-rain" error={errors.rainfall_mm} hint="Season total, 0–2,000 mm">
+            <FormField label="Rainfall" htmlFor="p-rain" error={errors.rainfall_mm} hint="Average annual, 0–5,000 mm">
               <Input
                 id="p-rain"
                 type="number"
@@ -482,63 +506,34 @@ export function PredictorPage() {
                 invalid={!!errors.rainfall_mm}
               />
             </FormField>
-            <SliderField
-              id="p-hum"
-              label="Humidity"
-              value={values['humidity_%']}
-              onChange={v => set('humidity_%', v)}
-              min={0}
-              max={100}
-              step={1}
-              suffix="%"
-              error={errors['humidity_%']}
-            />
-            <FormField label="Sunlight" htmlFor="p-sun" error={errors.sunlight_hours} hint="Hours per day">
+            <FormField
+              label="Temperature"
+              htmlFor="p-temp"
+              error={errors.temperature_C}
+              hint="Average annual, −10 to 60 °C"
+            >
               <Input
-                id="p-sun"
+                id="p-temp"
                 type="number"
-                step={0.1}
-                value={Number.isFinite(values.sunlight_hours) ? values.sunlight_hours : ''}
-                onChange={num('sunlight_hours')}
-                suffix="h/day"
-                invalid={!!errors.sunlight_hours}
+                step={0.5}
+                value={Number.isFinite(values.temperature_C) ? values.temperature_C : ''}
+                onChange={num('temperature_C')}
+                suffix="°C"
+                invalid={!!errors.temperature_C}
               />
             </FormField>
-          </Section>
-
-          <Section
-            title="Farm operations"
-            count={validity.ops}
-            total={5}
-            open={open.ops}
-            onToggle={() => setOpen(o => ({ ...o, ops: !o.ops }))}
-          >
-            <FormField label="Irrigation" htmlFor="p-irr">
-              <Select
-                id="p-irr"
-                value={values.irrigation_type}
-                onChange={e => set('irrigation_type', e.target.value)}
-                options={IRRIGATION}
-              />
-            </FormField>
-            <FormField label="Fertilizer" htmlFor="p-fert">
-              <Select
-                id="p-fert"
-                value={values.fertilizer_type}
-                onChange={e => set('fertilizer_type', e.target.value)}
-                options={
-                  FERTILIZER.includes(values.fertilizer_type) ? FERTILIZER : [values.fertilizer_type, ...FERTILIZER]
-                }
-              />
-            </FormField>
-            <FormField label="Pesticide use" htmlFor="p-pest" error={errors.pesticide_usage_ml}>
+            <FormField
+              label="Pesticide use"
+              htmlFor="p-pest"
+              error={errors.pesticide_usage_ml}
+              hint="Dataset index: national tonnes × 100"
+            >
               <Input
                 id="p-pest"
                 type="number"
                 step={10}
                 value={Number.isFinite(values.pesticide_usage_ml) ? values.pesticide_usage_ml : ''}
                 onChange={num('pesticide_usage_ml')}
-                suffix="ml"
                 invalid={!!errors.pesticide_usage_ml}
               />
             </FormField>
@@ -553,18 +548,111 @@ export function PredictorPage() {
                 invalid={!!errors.total_days}
               />
             </FormField>
-            <div className={s.full}>
-              <SliderField
-                id="p-ndvi"
-                label="Vegetation index (NDVI)"
-                value={values.NDVI_index}
-                onChange={v => set('NDVI_index', v)}
-                min={0}
-                max={1}
-                step={0.01}
-                error={errors.NDVI_index}
-              />
+          </Section>
+
+          <Section
+            title="Field conditions (optional)"
+            count={validity.conditions}
+            total={CONDITION_KEYS.length}
+            open={open.conditions}
+            onToggle={() => setOpen(o => ({ ...o, conditions: !o.conditions }))}
+          >
+            <div className={`${s.full} ${s.between}`}>
+              <p className={s.small} style={{ margin: 0 }}>
+                Not used by the model (these columns are synthetic in the training data). They drive the risk flags and
+                the AI insight.
+              </p>
+              <label className={s.row} style={{ gap: 'var(--space-2)', whiteSpace: 'nowrap' }}>
+                <input
+                  type="checkbox"
+                  checked={conditionsOn}
+                  onChange={e => setConditionsOn(e.target.checked)}
+                  aria-label="Include field conditions"
+                />
+                Include
+              </label>
             </div>
+            {conditionsOn && (
+              <>
+                <FormField label="Irrigation" htmlFor="p-irr">
+                  <Select
+                    id="p-irr"
+                    value={values.irrigation_type}
+                    onChange={e => set('irrigation_type', e.target.value)}
+                    options={IRRIGATION}
+                    placeholder="Not recorded"
+                  />
+                </FormField>
+                <FormField label="Fertilizer" htmlFor="p-fert">
+                  <Select
+                    id="p-fert"
+                    value={values.fertilizer_type}
+                    onChange={e => set('fertilizer_type', e.target.value)}
+                    options={
+                      !values.fertilizer_type || FERTILIZER.includes(values.fertilizer_type)
+                        ? FERTILIZER
+                        : [values.fertilizer_type, ...FERTILIZER]
+                    }
+                    placeholder="Not recorded"
+                  />
+                </FormField>
+                <FormField label="Disease status" htmlFor="p-disease">
+                  <Select
+                    id="p-disease"
+                    value={values.crop_disease_status}
+                    onChange={e => set('crop_disease_status', e.target.value)}
+                    options={DISEASE}
+                    placeholder="Not recorded"
+                  />
+                </FormField>
+                <FormField label="Sunlight" htmlFor="p-sun" error={errors.sunlight_hours} hint="Hours per day">
+                  <Input
+                    id="p-sun"
+                    type="number"
+                    step={0.1}
+                    value={Number.isFinite(values.sunlight_hours) ? values.sunlight_hours : ''}
+                    onChange={num('sunlight_hours')}
+                    suffix="h/day"
+                    invalid={!!errors.sunlight_hours}
+                  />
+                </FormField>
+                <SliderField
+                  id="p-ph"
+                  label="Soil pH"
+                  value={values.soil_pH}
+                  onChange={v => set('soil_pH', v)}
+                  min={3}
+                  max={10}
+                  step={0.1}
+                  band={phBand}
+                  error={errors.soil_pH}
+                />
+                <SliderField
+                  id="p-moist"
+                  label="Soil moisture"
+                  value={values['soil_moisture_%']}
+                  onChange={v => set('soil_moisture_%', v)}
+                  min={0}
+                  max={100}
+                  step={0.5}
+                  suffix="%"
+                  error={errors['soil_moisture_%']}
+                />
+                <div className={s.full}>
+                  <SliderField
+                    id="p-hum"
+                    label="Humidity"
+                    value={values['humidity_%']}
+                    onChange={v => set('humidity_%', v)}
+                    min={0}
+                    max={100}
+                    step={1}
+                    suffix="%"
+                    error={errors['humidity_%']}
+                  />
+                </div>
+              </>
+            )}
           </Section>
 
           <Button type="submit" variant="primary" size="lg" icon={Cpu} loading={predict.isPending}>
@@ -600,7 +688,17 @@ export function PredictorPage() {
                   <span className={s.big}>{formatYield(result.result.predicted_yield_kg_ha, unit)}</span>{' '}
                   <span className={s.muted}>{unit}</span>
                   <div className={s.small} style={{ marginTop: 'var(--space-1)' }}>
-                    Predicted yield{modelName ? ` · ${modelName}` : ''}
+                    Likely range (P10–P90):{' '}
+                    <span className={s.num}>
+                      {formatYield(result.result.low_kg_ha, unit)}–{formatYield(result.result.high_kg_ha, unit)}
+                    </span>{' '}
+                    {unit}
+                  </div>
+                  <div className={s.small}>
+                    {result.result.model_name}
+                    {result.result.model_version ? ` v${result.result.model_version}` : ''} · season{' '}
+                    {result.result.year ?? lastYear}
+                    {result.result.risk_flags.length > 0 && ` · risk flags: ${result.result.risk_flags.join(', ')}`}
                   </div>
                 </div>
                 <div className={s.row}>
@@ -710,13 +808,22 @@ export function PredictorPage() {
                     <Slider.Thumb className={s.sliderThumb} aria-label="Temperature change" />
                   </Slider.Root>
                 </FormField>
-                <FormField label="Fertilizer" htmlFor="wi-fert">
-                  <Select
-                    id="wi-fert"
-                    value={whatIf.fertilizer || result.input.fertilizer_type}
-                    onChange={e => setWhatIf(w => ({ ...w, fertilizer: e.target.value }))}
-                    options={FERTILIZER}
-                  />
+                <FormField label={`Pesticide use ${whatIf.pest >= 0 ? '+' : ''}${whatIf.pest}%`} htmlFor="wi-pest">
+                  <Slider.Root
+                    id="wi-pest"
+                    className={s.slider}
+                    value={[whatIf.pest]}
+                    min={-50}
+                    max={50}
+                    step={5}
+                    onValueChange={v => setWhatIf(w => ({ ...w, pest: v[0] }))}
+                    aria-label="Pesticide change"
+                  >
+                    <Slider.Track className={s.sliderTrack}>
+                      <Slider.Range className={s.sliderRange} />
+                    </Slider.Track>
+                    <Slider.Thumb className={s.sliderThumb} aria-label="Pesticide change" />
+                  </Slider.Root>
                 </FormField>
                 <div className={s.tile}>
                   {!changed ? (
@@ -740,7 +847,7 @@ export function PredictorPage() {
                     </div>
                   ) : null}
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => setWhatIf({ rain: 0, temp: 0, fertilizer: '' })}>
+                <Button size="sm" variant="ghost" onClick={() => setWhatIf({ rain: 0, temp: 0, pest: 0 })}>
                   Reset scenario
                 </Button>
               </div>

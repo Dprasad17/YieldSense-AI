@@ -5,7 +5,7 @@ PREDICT_BODY = {
     "crop_type": "Rice", "region": "India", "irrigation_type": "Drip", "fertilizer_type": "Urea",
     "crop_disease_status": "None", "soil_pH": 6.2, "soil_moisture_%": 40, "temperature_C": 25,
     "rainfall_mm": 1100, "humidity_%": 60, "sunlight_hours": 7.4, "pesticide_usage_ml": 450,
-    "total_days": 130, "NDVI_index": 0.65, "record_code": "FARM00001",
+    "total_days": 130, "year": 2013, "record_code": "FARM00001",
 }
 
 
@@ -48,7 +48,7 @@ def test_predict_saves_history_with_interval(client, auth):
     res = client.post("/api/predict", json=PREDICT_BODY, headers=auth("farmer"))
     assert res.status_code == 200
     p = res.json()
-    assert p["low_kg_ha"] <= p["predicted_yield_kg_ha"] <= p["high_kg_ha"] and p["model_name"].startswith("Random Forest")
+    assert p["low_kg_ha"] <= p["predicted_yield_kg_ha"] <= p["high_kg_ha"] and p["model_name"] == "XGBoost" and p["model_version"] == "2.0.0"
 
     mine = client.get("/api/predictions", headers=auth("farmer")).json()
     assert any(i["id"] == p["id"] for i in mine["items"])
@@ -164,3 +164,52 @@ def test_admin_user_management_and_audit(client, auth):
     client.patch("/api/admin/users/promoteme", json={"active": False}, headers=h)
     assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {tok}"}).status_code == 403
     assert client.post("/api/auth/login", json={"username": "promoteme", "password": "secret12"}).status_code == 403
+
+
+def test_predict_rejects_ndvi_and_field_conditions_are_optional(client, auth):
+    res = client.post("/api/predict", json={**PREDICT_BODY, "NDVI_index": 0.6}, headers=auth("farmer"))
+    assert res.status_code == 422
+    minimal = {k: PREDICT_BODY[k] for k in ("crop_type", "region", "rainfall_mm", "temperature_C", "pesticide_usage_ml", "total_days")}
+    p = client.post("/api/predict", json=minimal, headers=auth("farmer")).json()
+    assert p["year"] == 2013 and p["low_kg_ha"] <= p["predicted_yield_kg_ha"] <= p["high_kg_ha"]
+
+
+def test_prediction_matches_served_bundle(client, auth):
+    import joblib
+    import pandas as pd
+
+    bundle = joblib.load("models/v2/model.pkl")
+    body = {**PREDICT_BODY, "year": 2010}
+    expected = float(bundle["pipeline"].predict(pd.DataFrame([{f: body[f] for f in bundle["features"]}]))[0])
+    p = client.post("/api/predict", json=body, headers=auth("farmer")).json()
+    assert abs(p["predicted_yield_kg_ha"] - round(max(expected, 0), 2)) < 0.01
+    assert abs(p["high_kg_ha"] - p["predicted_yield_kg_ha"] - bundle["residual_q90"]) < 0.02
+
+
+def test_model_card_and_provenance(client, auth):
+    assert client.get("/api/predict/models", headers=auth("farmer")).status_code == 403
+    card = client.get("/api/predict/models", headers=auth("agronomist")).json()
+    assert card["selected"]["model"] == "XGBoost" and {r["split"] for r in card["results"]} == {"random", "temporal", "unseen_region"}
+    assert "NDVI_index" not in card["features"]["numeric"]
+    active = client.get("/api/predict/models/active", headers=auth("farmer")).json()
+    assert active["name"] == "XGBoost" and active["split"] == "temporal" and active["r2"] == card["selected"]["metrics"]["r2"]
+    reg = client.get("/api/data/provenance", headers=auth("farmer")).json()
+    cols = {c["column"]: c for c in reg["columns"]}
+    assert cols["NDVI_index"]["provenance"] == "derived" and not cols["NDVI_index"]["used_by_model"]
+    assert cols["rainfall_mm"]["provenance"] == "real" and cols["rainfall_mm"]["used_by_model"]
+    assert cols["soil_pH"]["provenance"] == "synthetic" and not cols["soil_pH"]["used_by_model"]
+    assert cols["total_days"]["provenance"] == "synthetic" and cols["total_days"]["used_by_model"]
+
+
+def test_recommendation_impact_only_for_model_features(client, auth):
+    hub = client.get("/api/predict/recommendations-hub", headers=auth("farmer")).json()
+    for r in hub["recommendations"]:
+        modelled = r["rule"] in ("heat_stress", "rainfall_deficit")
+        assert (r["impact_kg_ha"] is not None) == modelled, r["rule"]
+        assert r["rule"] != "low_vigour"
+
+
+def test_forecast_uses_year_feature(client, auth):
+    t = client.get("/api/analytics/seasonal-trends?crop=Wheat", headers=auth("farmer")).json()
+    f = t["forecast"]
+    assert f["year"] == 2014 and f["p10_kg_ha"] <= f["mean_kg_ha"] <= f["p90_kg_ha"] and "XGBoost" in f["method"]
