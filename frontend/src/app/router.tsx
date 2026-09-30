@@ -25,7 +25,9 @@ const screens = {
   data: named(() => import('../pages/app/DatasetPage'), 'DatasetPage'),
   eda: named(() => import('../pages/app/EdaPage'), 'EdaPage'),
   models: named(() => import('../pages/app/ModelsPage'), 'ModelPerformancePage'),
-  history: named(app, 'HistoryPage'),
+  history: named(() => import('../pages/app/ActivityPages'), 'HistoryPage'),
+  notifications: named(() => import('../pages/app/ActivityPages'), 'NotificationsPage'),
+  risk: named(() => import('../pages/app/RiskPage'), 'RiskPage'),
   settings: named(app, 'SettingsPage'),
   help: named(app, 'HelpPage'),
   farms: named(() => import('../pages/app/FarmPages'), 'FarmsPage'),
@@ -40,6 +42,7 @@ const SignInPage = named(pub, 'SignInPage');
 const RegisterPage = named(pub, 'RegisterPage');
 const SessionExpiredPage = named(pub, 'SessionExpiredPage');
 const PredictionReportPage = named(app, 'PredictionReportPage');
+const ProductivityReportPage = named(() => import('../pages/app/ProductivityReport'), 'ProductivityReportPage');
 const DesignSystemPage = named(() => import('../pages/DesignSystemPage'), 'DesignSystemPage');
 
 function screen(path: string, permission: Permission, Screen: ComponentType) {
@@ -64,6 +67,14 @@ export const router = createBrowserRouter([
       { path: '/session-expired', element: <SessionExpiredPage /> },
       { path: '/403', element: <ForbiddenPage /> },
       { path: '/design-system', element: <DesignSystemPage /> },
+      {
+        path: '/report/productivity',
+        element: (
+          <ProtectedRoute permission="analytics">
+            <ProductivityReportPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: '/report/prediction',
         element: (
@@ -96,6 +107,8 @@ export const router = createBrowserRouter([
               screen('farms/:id', 'farms', screens.farm),
               screen('collect', 'farms', screens.collect),
               screen('users', 'users', screens.users),
+              screen('risk', 'risk', screens.risk),
+              screen('notifications', 'notifications', screens.notifications),
               { path: '*', element: <NotFoundPage /> },
             ],
           },

@@ -27,6 +27,8 @@ import type {
   CropRecord,
   MeResponse,
   ModelCard,
+  MyFarmsResponse,
+  ClimateTrend,
   ProvenanceRegistry,
   WhatIfResult,
   Notification,
@@ -80,11 +82,14 @@ export const analyticsApi = {
   seasonalTrends: (q: Q) => apiRequest<SeasonalTrends>('/api/analytics/seasonal-trends', { query: q }),
   farmComparison: (q: Q & { limit?: number; sort?: 'yield_desc' | 'yield_asc' }) =>
     apiRequest<FarmComparison>('/api/analytics/farm-comparison', { query: q }),
+  myFarms: () => apiRequest<MyFarmsResponse>('/api/analytics/my-farms'),
 };
 
 export const predictApi = {
   predict: (input: PredictionInput) => apiRequest<PredictionResult>('/api/predict', { method: 'POST', body: input }),
   /** Scenario prediction that is not saved to history. */
+  deletePrediction: (id: string) =>
+    apiRequest<void>(`/api/predictions/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   whatIf: (input: PredictionInput) => apiRequest<WhatIfResult>('/api/predict/what-if', { method: 'POST', body: input }),
   insights: (input: PredictionInput) =>
     apiRequest<AIInsights>('/api/predict/insights', { method: 'POST', body: input }),
@@ -105,6 +110,7 @@ export const recommendationsApi = {
 export const weatherApi = {
   analysis: (region: string, live: boolean) =>
     apiRequest<WeatherResponse>('/api/weather/analysis', { query: { region, live: live || undefined } }),
+  climateTrend: (region: string) => apiRequest<ClimateTrend>('/api/weather/climate-trend', { query: { region } }),
 };
 
 export const soilApi = {

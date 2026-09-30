@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { ChevronDown, Download, Printer, TrendingUp } from 'lucide-react';
 import { errorMessage } from '../../api/client';
-import type { FarmComparison } from '../../api/types';
-import { ChartCard, TrendChart, type TrendPoint } from '../../components/charts';
+import type { FarmComparison, MyFarmComparison } from '../../api/types';
+import { ChartCard, GroupedBarChart, TrendChart, type TrendPoint } from '../../components/charts';
 import {
   Badge,
   Button,
@@ -23,7 +23,7 @@ import {
 } from '../../components/ui';
 import { ratingTone, sortRows } from '../../components/ui/helpers';
 import { ErrorState } from '../../components/ui/States';
-import { contextQuery, useFarmComparison, useReportExport, useSeasonalTrends } from '../../hooks/queries';
+import { contextQuery, useFarmComparison, useMyFarms, useReportExport, useSeasonalTrends } from '../../hooks/queries';
 import {
   formatCount,
   formatDeltaPercent,
@@ -32,6 +32,7 @@ import {
   formatYield,
   formatYieldWithUnit,
 } from '../../lib/format';
+import { convertYield } from '../../lib/units';
 import { useGlobalFilters } from '../../store/filters';
 import { usePreferences } from '../../store/preferences';
 import s from './app.module.css';
@@ -53,9 +54,10 @@ export function AnalyticsPage() {
   const { filters } = useGlobalFilters();
   const ctx = contextQuery(filters);
   const [order, setOrder] = useState<Sort>('yield_desc');
-  const trends = useSeasonalTrends(ctx);
+  const trends = useSeasonalTrends({ ...ctx, year_from: undefined, year_to: undefined });
   const farmsQ = useFarmComparison({ ...ctx, limit: 25, sort: order });
   const exportM = useReportExport();
+  const myFarms = useMyFarms();
   const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null);
   const [selected, setSelected] = useState<Farm | null>(null);
 
@@ -158,6 +160,32 @@ export function AnalyticsPage() {
     }
   };
 
+  const myFarmColumns: Column<MyFarmComparison>[] = [
+    {
+      key: 'name',
+      header: 'Farm',
+      render: f => (
+        <span>
+          <strong>{f.name}</strong>
+          <span className={s.small}> · {f.region}</span>
+        </span>
+      ),
+    },
+    { key: 'season', header: 'Latest', render: f => (f.latest_year ? `${f.latest_year} · ${f.latest_crop}` : '—') },
+    { key: 'yield', header: unit, align: 'right', render: f => formatYield(f.latest_yield_kg_ha, unit) },
+    { key: 'ref', header: 'Reference', align: 'right', render: f => formatYield(f.reference_kg_ha, unit) },
+    {
+      key: 'delta',
+      header: 'Δ',
+      align: 'right',
+      render: f =>
+        f.delta_pct == null ? (
+          '—'
+        ) : (
+          <Badge tone={f.delta_pct >= 0 ? 'success' : 'warning'}>{formatDeltaPercent(f.delta_pct)}</Badge>
+        ),
+    },
+  ];
   return (
     <div className={s.page}>
       <PageHeader
@@ -242,7 +270,7 @@ export function AnalyticsPage() {
       ) : (
         <ChartCard
           title={first && last ? `Yield by year (${first.year}–${last.year})` : 'Yield by year'}
-          subtitle="Mean yield per sowing year; the dashed point is the model’s expectation under the latest year’s conditions, with a P10–P90 band"
+          subtitle="Mean yield per year; the dashed point is the model’s prediction for the next year, with a P10–P90 band"
           info={forecast?.method}
           summary={
             first && last
@@ -277,6 +305,66 @@ export function AnalyticsPage() {
           }
         </ChartCard>
       )}
+
+      <Card>
+        <CardHeader
+          title="Your farms vs the regional reference"
+          subtitle="Latest recorded season of each farm against the dataset mean for the same region, crop and year"
+          info={myFarms.data?.method}
+        />
+        {myFarms.isError ? (
+          <ErrorState error={myFarms.error} onRetry={() => myFarms.refetch()} />
+        ) : myFarms.isPending ? (
+          <Skeleton height={220} />
+        ) : myFarms.data.farms.length === 0 ? (
+          <p className={s.muted} style={{ margin: 0 }}>
+            No farms yet. Add one under Farms to compare it with the reference data.
+          </p>
+        ) : (
+          <div className={s.grid}>
+            <div className={s.s6}>
+              <DataTable
+                caption="Farms vs reference"
+                compact
+                columns={myFarmColumns}
+                rows={myFarms.data.farms}
+                rowKey={f => String(f.farm_id)}
+              />
+            </div>
+            <div className={s.s6}>
+              <ChartCard
+                title="Latest season vs reference"
+                subtitle={unit}
+                summary={`${myFarms.data.farms.length} farms compared with the dataset reference.`}
+                legend={[
+                  { label: 'Farm', color: 'data-vegetation' },
+                  { label: 'Reference', color: 'muted' },
+                ]}
+                height={240}
+              >
+                {(c, h) => (
+                  <GroupedBarChart
+                    data={myFarms.data.farms
+                      .filter(f => f.latest_yield_kg_ha != null)
+                      .map(f => ({
+                        label: f.name,
+                        farm: convertYield(f.latest_yield_kg_ha ?? 0, unit),
+                        reference: convertYield(f.reference_kg_ha ?? 0, unit),
+                      }))}
+                    colors={c}
+                    height={h}
+                    fy={v => (unit === 't/ha' ? v.toFixed(2) : Math.round(v).toLocaleString())}
+                    series={[
+                      { key: 'farm', label: 'Farm', color: c['data-vegetation'] },
+                      { key: 'reference', label: 'Reference', color: c.muted },
+                    ]}
+                  />
+                )}
+              </ChartCard>
+            </div>
+          </div>
+        )}
+      </Card>
 
       <Card>
         <CardHeader

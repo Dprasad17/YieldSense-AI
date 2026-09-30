@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { ALL_NAV_ITEMS, FOOTER_ITEMS, NAV_GROUPS } from '../../app/navigation';
+import { NotificationBell } from './NotificationBell';
 import { ProductTour } from './ProductTour';
 import { useAuth, useCan } from '../../auth/context';
 import { useDatasetSummary, useFarms, useRegions } from '../../hooks/queries';
@@ -153,16 +154,34 @@ function ContextSwitcher() {
   const farms = useFarms({ page: 1, page_size: 100, mine: true }).data?.items ?? [];
   const crops = useDatasetSummary().data?.crops_supported;
   const sortedCrops = useMemo(() => [...(crops ?? [])].sort((a, b) => a.localeCompare(b)), [crops]);
+  const summary = useDatasetSummary().data;
+  const years = useMemo(() => {
+    if (!summary) return [];
+    const out: string[] = [];
+    for (let y = summary.year_max; y >= summary.year_min; y--) out.push(String(y));
+    return out;
+  }, [summary]);
   return (
     <Popover
       align="start"
       trigger={
-        <button type="button" className={s.context} title="Change region, crop and units" data-tour="context">
+        <button
+          type="button"
+          className={s.context}
+          title="Change farm, region, crop, year and units"
+          data-tour="context"
+        >
           <span className="sr-only">Context: </span>
           <SlidersHorizontal size={15} aria-hidden="true" />
           <span className={s.contextText}>
             {farms.find(f => String(f.id) === filters.farm)?.name ?? (filters.region || 'All regions')}{' '}
             <span className={s.contextSep}>·</span> {filters.crop || 'All crops'}
+            {filters.year && (
+              <>
+                {' '}
+                <span className={s.contextSep}>·</span> {filters.year}
+              </>
+            )}
           </span>
         </button>
       }
@@ -198,6 +217,15 @@ function ContextSwitcher() {
             placeholder="All crops"
           />
         </FormField>
+        <FormField label="Year" htmlFor="ctx-year" hint="Dataset seasons; trends always show every year">
+          <Select
+            id="ctx-year"
+            value={filters.year}
+            onChange={e => setFilters({ year: e.target.value })}
+            options={years}
+            placeholder="All years"
+          />
+        </FormField>
         <div>
           <div
             style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-medium)', marginBottom: 'var(--space-1)' }}
@@ -214,8 +242,8 @@ function ContextSwitcher() {
         <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
           Applies to every screen that supports these filters. The selection is kept in the URL, so views can be shared.
         </p>
-        {(filters.region || filters.crop || filters.farm) && (
-          <Button size="sm" variant="ghost" onClick={() => setFilters({ farm: '', region: '', crop: '' })}>
+        {(filters.region || filters.crop || filters.farm || filters.year) && (
+          <Button size="sm" variant="ghost" onClick={() => setFilters({ farm: '', region: '', crop: '', year: '' })}>
             Clear filters
           </Button>
         )}
@@ -536,6 +564,7 @@ export function AppShell() {
                 <Kbd>{isMac ? '⌘' : 'Ctrl'} K</Kbd>
               </button>
               <SyncStatus />
+              <NotificationBell />
               <ThemeToggle />
               <UserMenu />
             </div>

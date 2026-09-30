@@ -189,7 +189,20 @@ class CropSuitability(BaseModel):
     reasons: list[str]
 
 
+class OptimalBand(BaseModel):
+    feature: str
+    label: str
+    unit: str
+    observed: float
+    optimal_low: float
+    optimal_high: float
+    status: Literal["optimal", "below", "above"]
+    share_in_band: float
+    provenance: Optional[str]
+
+
 class SoilAssessment(BaseModel):
+    optimal_bands: list[OptimalBand]
     status_claim: str
     crop_type: str
     scope: str
@@ -265,6 +278,38 @@ def get_region_coordinates(region: str = Query(..., min_length=2, max_length=80)
     except LiveWeatherUnavailable as e:
         raise AppError(404, str(e))
     return {"region": region, "latitude": c["lat"], "longitude": c["lon"], "label": c["name"]}
+
+
+class ClimateYear(BaseModel):
+    year: int
+    temperature_C: float
+    precipitation_mm: float
+
+
+class DatasetClimateYear(BaseModel):
+    year: int
+    temperature_C: float
+    rainfall_mm: float
+
+
+class ClimateTrend(BaseModel):
+    region: str
+    location: Optional[dict]
+    archive_source: Optional[str]
+    archive: list[ClimateYear]
+    dataset: list[DatasetClimateYear]
+    temperature_trend_C_per_decade: Optional[float]
+    precipitation_trend_mm_per_decade: Optional[float]
+    note: str
+    error: Optional[str]
+
+
+@weather_router.get("/climate-trend", response_model=ClimateTrend)
+def get_climate_trend(region: str = Query(..., min_length=2, max_length=80), _user: dict = Depends(require_user)):
+    """Yearly climate for a region: ERA5 reanalysis (Open-Meteo archive, cached) plus the dataset's yearly values."""
+    from backend.app.services.weather_service import climate_trend
+
+    return climate_trend(region)
 
 
 @weather_router.get("/analysis", response_model=WeatherResponse)

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CloudRain, Droplets, Sun, Thermometer, Wind } from 'lucide-react';
-import { ChartCard, ComposedRainTempChart, GroupedBarChart } from '../../components/charts';
+import { ChartCard, ComposedRainTempChart, GroupedBarChart, MultiLineChart } from '../../components/charts';
 import {
   Badge,
   Banner,
@@ -13,7 +13,7 @@ import {
   Skeleton,
 } from '../../components/ui';
 import { ErrorState } from '../../components/ui/States';
-import { useWeather, useWeatherOverview } from '../../hooks/queries';
+import { useClimateTrend, useWeather, useWeatherOverview } from '../../hooks/queries';
 import { formatCount, formatNumber, formatPercent, formatRainfall, formatTemperature } from '../../lib/format';
 import { useGlobalFilters } from '../../store/filters';
 import s from './app.module.css';
@@ -69,6 +69,8 @@ export function WeatherPage() {
   const [mode, setMode] = useState<Mode>('dataset');
   const q = useWeather(region, mode === 'live');
   const overview = useWeatherOverview().data?.analytics;
+  const climate = useClimateTrend(region);
+  const climateData = climate.data;
   const data = q.data;
   const a = data?.analytics;
   const live = data?.mode === 'live';
@@ -362,6 +364,67 @@ export function WeatherPage() {
             </Card>
           </div>
         )}
+        <div className={s.s12}>
+          {climate.isError ? (
+            <ErrorState error={climate.error} onRetry={() => climate.refetch()} />
+          ) : (
+            <ChartCard
+              title={`Yearly climate trend · ${region}`}
+              subtitle={
+                climateData?.archive.length
+                  ? `ERA5 reanalysis at ${climateData.location?.label ?? region}, ${climateData.archive[0].year}–${climateData.archive[climateData.archive.length - 1].year}: annual precipitation (bars) and mean temperature (line)`
+                  : 'Dataset values for this region (the climate archive is unavailable)'
+              }
+              info={climateData ? `${climateData.archive_source ?? 'Dataset only'}. ${climateData.note}` : undefined}
+              summary={
+                climateData?.temperature_trend_C_per_decade != null
+                  ? `Mean temperature changed by ${climateData.temperature_trend_C_per_decade.toFixed(2)} °C per decade.`
+                  : 'Loading.'
+              }
+              insight={
+                climateData?.temperature_trend_C_per_decade != null
+                  ? `Trend: ${climateData.temperature_trend_C_per_decade >= 0 ? '+' : ''}${climateData.temperature_trend_C_per_decade.toFixed(2)} °C and ${
+                      (climateData.precipitation_trend_mm_per_decade ?? 0) >= 0 ? '+' : ''
+                    }${formatCount(climateData.precipitation_trend_mm_per_decade)} mm of precipitation per decade (linear fit).`
+                  : (climateData?.error ?? undefined)
+              }
+              legend={
+                climateData?.archive.length
+                  ? [
+                      { label: 'Precipitation', color: 'data-water' },
+                      { label: 'Mean temperature', color: 'data-temperature' },
+                    ]
+                  : [{ label: 'Dataset temperature', color: 'data-temperature' }]
+              }
+              height={300}
+            >
+              {(c, h) =>
+                !climateData ? (
+                  <Skeleton height={h} />
+                ) : climateData.archive.length ? (
+                  <ComposedRainTempChart
+                    data={climateData.archive.map(a => ({
+                      label: String(a.year),
+                      rain: a.precipitation_mm,
+                      temp: a.temperature_C,
+                    }))}
+                    colors={c}
+                    height={h}
+                  />
+                ) : (
+                  <MultiLineChart
+                    data={climateData.dataset.map(d => ({ x: d.year, temperature: d.temperature_C }))}
+                    colors={c}
+                    height={h}
+                    fx={v => String(v)}
+                    fy={v => `${v.toFixed(1)} °C`}
+                    series={[{ key: 'temperature', label: 'Temperature', color: c['data-temperature'] }]}
+                  />
+                )
+              }
+            </ChartCard>
+          )}
+        </div>
       </div>
     </div>
   );

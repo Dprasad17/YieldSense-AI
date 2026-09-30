@@ -3,20 +3,20 @@ import { applyFilters, filtersSearch, readFilters } from './filters';
 
 describe('global filters in the URL', () => {
   it('reads missing params as "all"', () => {
-    expect(readFilters(new URLSearchParams(''))).toEqual({ region: '', crop: '', season: '', farm: '' });
+    expect(readFilters(new URLSearchParams(''))).toEqual({ region: '', crop: '', year: '', farm: '' });
     expect(readFilters(new URLSearchParams('region=India&crop=Rice'))).toEqual({
       region: 'India',
       crop: 'Rice',
-      season: '',
+      year: '',
       farm: '',
     });
   });
 
   it('applies a patch, drops empty values and keeps unrelated params', () => {
-    const next = applyFilters(new URLSearchParams('region=India&crop=Rice&page=3'), { crop: '', season: 'Kharif' });
+    const next = applyFilters(new URLSearchParams('region=India&crop=Rice&page=3'), { crop: '', year: '2010' });
     expect(next.get('region')).toBe('India');
     expect(next.has('crop')).toBe(false);
-    expect(next.get('season')).toBe('Kharif');
+    expect(next.get('year')).toBe('2010');
     expect(next.get('page')).toBe('3');
   });
 

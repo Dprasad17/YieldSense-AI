@@ -19,8 +19,15 @@ import type { ContextQuery, PredictionInput, RecommendationAction } from '../api
 import { useCan } from '../auth/context';
 
 /** Turns the global filters (empty = all) into API query params. */
-export function contextQuery(f: { region?: string; crop?: string; farm?: string }): ContextQuery {
-  return { region: f.region || undefined, crop: f.crop || undefined, farm_id: f.farm ? Number(f.farm) : undefined };
+export function contextQuery(f: { region?: string; crop?: string; farm?: string; year?: string }): ContextQuery {
+  const year = f.year ? Number(f.year) : undefined;
+  return {
+    region: f.region || undefined,
+    crop: f.crop || undefined,
+    farm_id: f.farm ? Number(f.farm) : undefined,
+    year_from: year,
+    year_to: year,
+  };
 }
 
 export const queryKeys = {
@@ -141,6 +148,29 @@ export function usePredictionHistory(p: {
     queryKey: queryKeys.history(p),
     queryFn: () => predictApi.history(p),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useDeletePrediction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: predictApi.deletePrediction,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['predictions'] }),
+  });
+}
+
+/** Real farms against the dataset's regional reference. */
+export function useMyFarms() {
+  return useQuery({ queryKey: ['analytics', 'my-farms'], queryFn: analyticsApi.myFarms });
+}
+
+/** Yearly climate (ERA5 archive + dataset) for a region. */
+export function useClimateTrend(region: string) {
+  return useQuery({
+    queryKey: ['weather', 'climate-trend', region],
+    queryFn: () => weatherApi.climateTrend(region),
+    enabled: !!region,
+    staleTime: 60 * 60_000,
   });
 }
 

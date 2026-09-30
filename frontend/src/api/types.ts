@@ -58,6 +58,10 @@ export interface ModelCard {
 export type ProvenanceRegistry = S['ProvenanceRegistry'];
 export type ColumnProvenance = S['ColumnProvenance'];
 export type WhatIfResult = S['WhatIfResponse'];
+export type MyFarmsResponse = S['MyFarmsResponse'];
+export type MyFarmComparison = S['MyFarmComparison'];
+export type ClimateTrend = S['ClimateTrend'];
+export type OptimalBand = S['OptimalBand'];
 export type ActiveModel = S['ActiveModel'];
 
 export type PredictionInput = S['YieldPredictionRequest'];

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { CheckCircle2, ChevronDown, ChevronUp, ClipboardPlus, Clock, Sparkles, X } from 'lucide-react';
 import { errorMessage } from '../../api/client';
@@ -10,14 +11,16 @@ import {
   CardHeader,
   ConfirmDialog,
   EmptyState,
+  FormField,
   PageHeader,
   SegmentedControl,
+  Select,
   Skeleton,
   Tabs,
   type Tone,
 } from '../../components/ui';
 import { ErrorState } from '../../components/ui/States';
-import { contextQuery, useRecommendationAction, useRecommendationsHub } from '../../hooks/queries';
+import { contextQuery, useFarms, useRecommendationAction, useRecommendationsHub } from '../../hooks/queries';
 import { formatCount, formatNumber, formatPercent, formatYield } from '../../lib/format';
 import { useGlobalFilters } from '../../store/filters';
 import { usePreferences } from '../../store/preferences';
@@ -46,11 +49,14 @@ type View = 'active' | 'all';
 
 export function RecommendationsPage() {
   const { unit } = usePreferences();
-  const { filters } = useGlobalFilters();
+  const { filters, setFilters } = useGlobalFilters();
+  const [params] = useSearchParams();
+  const farms = useFarms({ page: 1, page_size: 100, mine: true }).data?.items ?? [];
   const q = useRecommendationsHub(contextQuery(filters));
   const act = useRecommendationAction();
   const hub = q.data;
-  const [tab, setTab] = useState('all');
+  const [tab, setTab] = useState(() => params.get('category') ?? 'all');
+  const [severity, setSeverity] = useState<Severity | 'all'>('all');
   const [view, setView] = useState<View>('active');
   const [openWhy, setOpenWhy] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<Recommendation | null>(null);
@@ -60,9 +66,14 @@ export function RecommendationsPage() {
     !r.task ||
     r.task.status === 'open' ||
     (r.task.status === 'snoozed' && !!r.task.snooze_until && new Date(r.task.snooze_until) < new Date());
-  const visible = view === 'active' ? recs.filter(isActive) : recs;
-  const categories = Array.from(new Set(recs.map(r => r.category)));
+  const visible = (view === 'active' ? recs.filter(isActive) : recs).filter(
+    r => severity === 'all' || r.severity === severity,
+  );
+  const categories = Array.from(
+    new Set([...recs.map(r => r.category), ...(tab in CATEGORY ? [tab as Recommendation['category']] : [])]),
+  );
   const provenance = recs[0]?.rationale_source;
+  const live = !!provenance?.startsWith('Groq');
 
   const run = async (r: Recommendation, action: RecommendationAction) => {
     try {
@@ -84,6 +95,9 @@ export function RecommendationsPage() {
             <span className={s.small} style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
               <Clock size={12} aria-hidden="true" /> Due in {r.deadline_days} days · {r.deadline}
             </span>
+            <Badge tone={r.rationale_source.startsWith('Groq') ? 'model' : 'neutral'} title={r.rationale_source}>
+              {r.rationale_source.startsWith('Groq') ? 'AI rationale' : 'Rule-based rationale (fallback)'}
+            </Badge>
             {r.task && (
               <Badge tone="info">
                 {STATUS_LABEL[r.task.status]}
@@ -226,6 +240,13 @@ export function RecommendationsPage() {
               {hub?.scope ?? `${filters.region || 'All regions'} · ${filters.crop || 'All crops'}`}
             </Badge>
             {hub && <Badge>{formatCount(hub.record_count)} records analysed</Badge>}
+            {provenance && (
+              <Badge tone={live ? 'model' : 'warning'} title={provenance}>
+                {live
+                  ? `Live AI rationale · ${provenance.replace('Groq · ', 'Groq ')}`
+                  : 'AI unavailable · rule-based fallback'}
+              </Badge>
+            )}
           </>
         }
         actions={
@@ -240,6 +261,50 @@ export function RecommendationsPage() {
           />
         }
       />
+
+      <Card>
+        <div className={s.row} style={{ alignItems: 'flex-end' }}>
+          <div style={{ flex: '1 1 220px' }}>
+            <FormField label="Farm" htmlFor="rec-farm">
+              <Select
+                id="rec-farm"
+                value={filters.farm}
+                onChange={e => {
+                  const f = farms.find(x => String(x.id) === e.target.value);
+                  setFilters(f ? { farm: String(f.id), region: f.region, crop: f.crops[0] ?? '' } : { farm: '' });
+                }}
+                options={farms.map(f => ({ value: String(f.id), label: `${f.name} · ${f.region}` }))}
+                placeholder="Reference dataset (no farm)"
+              />
+            </FormField>
+          </div>
+          <div style={{ flex: '1 1 180px' }}>
+            <FormField label="Severity" htmlFor="rec-sev">
+              <Select
+                id="rec-sev"
+                value={severity === 'all' ? '' : severity}
+                onChange={e => setSeverity((e.target.value || 'all') as Severity | 'all')}
+                options={(Object.keys(SEVERITY) as Severity[]).map(k => ({ value: k, label: SEVERITY[k].label }))}
+                placeholder="All severities"
+              />
+            </FormField>
+          </div>
+          <div style={{ flex: '1 1 180px' }}>
+            <FormField label="Category" htmlFor="rec-cat">
+              <Select
+                id="rec-cat"
+                value={tab === 'all' ? '' : tab}
+                onChange={e => setTab(e.target.value || 'all')}
+                options={(Object.keys(CATEGORY) as Recommendation['category'][]).map(k => ({
+                  value: k,
+                  label: CATEGORY[k],
+                }))}
+                placeholder="All categories"
+              />
+            </FormField>
+          </div>
+        </div>
+      </Card>
 
       {q.isError && <ErrorState error={q.error} onRetry={() => q.refetch()} />}
 

@@ -15,6 +15,8 @@ import {
   LayoutDashboard,
   Layers,
   Sparkles,
+  ShieldAlert,
+  Bell,
   type LucideProps,
 } from 'lucide-react';
 import type { Permission } from '../auth/permissions';
@@ -73,6 +75,13 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         permission: 'recommendations',
         keywords: 'ai advice actions',
       },
+      {
+        path: 'risk',
+        label: 'Risk assessment',
+        icon: ShieldAlert,
+        permission: 'risk',
+        keywords: 'drought flood heat pest matrix anomalies mitigation',
+      },
     ],
   },
   {
@@ -112,7 +121,13 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         permission: 'dataset',
         keywords: 'records table rows',
       },
-      { path: 'history', label: 'Recent predictions', icon: History, permission: 'history', keywords: 'saved history' },
+      {
+        path: 'history',
+        label: 'Prediction history',
+        icon: History,
+        permission: 'history',
+        keywords: 'saved history compare re-run',
+      },
     ],
   },
   {
@@ -124,6 +139,13 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         icon: Gauge,
         permission: 'models',
         keywords: 'r2 rmse mae accuracy',
+      },
+      {
+        path: 'notifications',
+        label: 'Notifications',
+        icon: Bell,
+        permission: 'notifications',
+        keywords: 'alerts inbox unread',
       },
       { path: 'users', label: 'Users & roles', icon: Users, permission: 'users', keywords: 'admin accounts audit' },
     ],

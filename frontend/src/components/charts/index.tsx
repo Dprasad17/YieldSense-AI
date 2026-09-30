@@ -629,3 +629,46 @@ export const GroupedBarChart = memo(function GroupedBarChart({
     </ResponsiveContainer>
   );
 });
+
+/** Several series over one x axis (e.g. share of records breaching each risk threshold by year). */
+export const MultiLineChart = memo(function MultiLineChart({
+  data,
+  colors,
+  height,
+  fx = plain,
+  fy = plain,
+  series,
+}: {
+  data: Record<string, string | number>[];
+  colors: ChartColors;
+  height: number;
+  fx?: Fmt;
+  fy?: Fmt;
+  series: { key: string; label: string; color: string }[];
+}) {
+  const names = Object.fromEntries(series.map(s => [s.key, s.label]));
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <LineChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
+        <CartesianGrid stroke={colors.border} strokeDasharray="3 3" vertical={false} />
+        <XAxis dataKey="x" {...axisProps(colors)} tickFormatter={v => fx(v)} />
+        <YAxis {...axisProps(colors)} tickFormatter={fy} width={56} axisLine={false} />
+        <RTooltip
+          content={({ active, payload, label }) => (
+            <ChartTooltip
+              active={active}
+              payload={payload as unknown as TipPayload[]}
+              label={label as string}
+              fx={fx}
+              fy={fy}
+              names={names}
+            />
+          )}
+        />
+        {series.map(s => (
+          <Line key={s.key} dataKey={s.key} stroke={s.color} strokeWidth={2} dot={false} isAnimationActive={false} />
+        ))}
+      </LineChart>
+    </ResponsiveContainer>
+  );
+});

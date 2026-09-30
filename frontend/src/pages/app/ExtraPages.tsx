@@ -2,30 +2,14 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { errorMessage } from '../../api/client';
 import { authApi, profileApi } from '../../api/endpoints';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import {
-  BookOpen,
-  Cpu,
-  History,
-  Keyboard,
-  Monitor,
-  Moon,
-  Printer,
-  RotateCcw,
-  Search,
-  Sun,
-  Trash2,
-  UserCircle2,
-} from 'lucide-react';
+import { BookOpen, Keyboard, Monitor, Moon, Printer, Search, Sun, UserCircle2 } from 'lucide-react';
 import {
   Badge,
   Banner,
   Button,
   Card,
   CardHeader,
-  ConfirmDialog,
-  DataTable,
   EmptyState,
   FormField,
   Input,
@@ -35,21 +19,12 @@ import {
   Select,
   Skeleton,
   Switch,
-  type Column,
 } from '../../components/ui';
 import { ratingTone } from '../../components/ui/helpers';
 import { useAuth } from '../../auth/context';
 import { useDatasetSummary, useRegions } from '../../hooks/queries';
-import { formatCount, formatIndex, formatYield, formatYieldWithUnit } from '../../lib/format';
-import {
-  clearRecent,
-  deleteRecent,
-  listRecent,
-  markTourSeen,
-  readReport,
-  setPrefill,
-  type SavedPrediction,
-} from '../../lib/localStore';
+import { formatCount, formatIndex, formatYield } from '../../lib/format';
+import { markTourSeen, readReport } from '../../lib/localStore';
 import { YIELD_UNITS, type YieldUnit } from '../../lib/units';
 import { usePreferences, type Density, type ThemePreference } from '../../store/preferences';
 import s from './app.module.css';
@@ -173,136 +148,6 @@ export function PredictionReportPage() {
           local expertise.
         </footer>
       </article>
-    </div>
-  );
-}
-
-// ================================================================ Recent predictions
-
-export function HistoryPage() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const { unit } = usePreferences();
-  const [items, setItems] = useState<SavedPrediction[]>(() => (user ? listRecent(user.username) : []));
-  const [confirmClear, setConfirmClear] = useState(false);
-  const [open, setOpen] = useState<string | null>(null);
-  const refresh = () => user && setItems(listRecent(user.username));
-
-  const columns: Column<SavedPrediction>[] = [
-    { key: 'date', header: 'Saved', render: p => new Date(p.savedAt).toLocaleString(), sortValue: p => p.savedAt },
-    { key: 'crop', header: 'Crop', render: p => <Badge tone="success">{p.input.crop_type}</Badge> },
-    { key: 'region', header: 'Region', render: p => p.input.region },
-    {
-      key: 'yield',
-      header: `Predicted (${unit})`,
-      align: 'right',
-      render: p => formatYield(p.result.predicted_yield_kg_ha, unit),
-    },
-    {
-      key: 'risk',
-      header: 'Risk',
-      render: p => <Badge tone={ratingTone(p.result.risk_rating, false)}>{p.result.risk_rating}</Badge>,
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      render: p => (
-        <span
-          className={s.row}
-          style={{ gap: 'var(--space-1)', flexWrap: 'nowrap' }}
-          onClick={e => e.stopPropagation()}
-        >
-          <Button
-            size="sm"
-            icon={RotateCcw}
-            onClick={() => {
-              setPrefill(p.input);
-              navigate('/app/predict');
-            }}
-          >
-            Re-run
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            icon={Trash2}
-            aria-label="Delete"
-            onClick={() => {
-              if (user) {
-                deleteRecent(user.username, p.id);
-                refresh();
-                toast('Deleted');
-              }
-            }}
-          >
-            Delete
-          </Button>
-        </span>
-      ),
-    },
-  ];
-  const selected = items.find(i => i.id === open);
-
-  return (
-    <div className={s.page}>
-      <PageHeader
-        title="Recent predictions"
-        description="The last 20 predictions you saved. They’re stored in this browser only."
-        meta={<Badge tone="info">Saved on this device</Badge>}
-        actions={
-          items.length ? (
-            <Button variant="ghost" icon={Trash2} onClick={() => setConfirmClear(true)}>
-              Clear all
-            </Button>
-          ) : undefined
-        }
-      />
-      <Card>
-        {items.length ? (
-          <DataTable
-            caption="Recent predictions"
-            columns={columns}
-            rows={items}
-            rowKey={p => p.id}
-            onRowClick={p => setOpen(p.id === open ? null : p.id)}
-          />
-        ) : (
-          <EmptyState
-            icon={History}
-            title="No saved predictions"
-            description="Run a prediction and choose “Save to recent” to keep it here."
-            action={
-              <Button variant="primary" icon={Cpu} onClick={() => navigate('/app/predict')}>
-                Open Yield Predictor
-              </Button>
-            }
-          />
-        )}
-      </Card>
-      {selected && (
-        <Card>
-          <CardHeader
-            title={`${selected.input.crop_type} · ${selected.input.region}`}
-            subtitle={new Date(selected.savedAt).toLocaleString()}
-          />
-          <div className={s.big}>{formatYieldWithUnit(selected.result.predicted_yield_kg_ha, unit)}</div>
-          {selected.insights && <p>{selected.insights.ai_insights}</p>}
-        </Card>
-      )}
-      <ConfirmDialog
-        open={confirmClear}
-        onOpenChange={setConfirmClear}
-        title="Clear all saved predictions?"
-        description="This removes every saved prediction from this browser. It can’t be undone."
-        confirmLabel="Clear all"
-        tone="danger"
-        onConfirm={() => {
-          if (user) clearRecent(user.username);
-          refresh();
-          setConfirmClear(false);
-          toast('Cleared');
-        }}
-      />
     </div>
   );
 }

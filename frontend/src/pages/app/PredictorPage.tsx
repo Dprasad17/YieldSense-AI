@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import * as Slider from '@radix-ui/react-slider';
-import { ChevronDown, ChevronUp, Cpu, Dice5, FileDown, Pencil, RotateCcw, Save, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronUp, Cpu, Dice5, FileDown, History, Pencil, RotateCcw, Sparkles } from 'lucide-react';
 import { errorMessage } from '../../api/client';
 import { predictApi, recordsApi } from '../../api/endpoints';
 import type { AIInsights, PredictionInput, PredictionResult } from '../../api/types';
-import { useAuth, useCan } from '../../auth/context';
+import { useCan } from '../../auth/context';
 import {
   Badge,
   Banner,
@@ -26,7 +26,7 @@ import { ratingTone } from '../../components/ui/helpers';
 import { useActiveModel, useDatasetSummary, useInsights, usePredict, useRegions, useSoil } from '../../hooks/queries';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { formatDeltaPercent, formatYield } from '../../lib/format';
-import { saveRecent, setReport, takePrefill } from '../../lib/localStore';
+import { setReport, takePrefill } from '../../lib/localStore';
 import { normalizeModelName } from '../../lib/selectors';
 import { YIELD_UNITS, type YieldUnit } from '../../lib/units';
 import { useGlobalFilters } from '../../store/filters';
@@ -246,7 +246,6 @@ function Section({
 }
 
 export function PredictorPage() {
-  const { user } = useAuth();
   const can = useCan();
   const navigate = useNavigate();
   const { unit, setUnit } = usePreferences();
@@ -386,12 +385,6 @@ export function PredictorPage() {
   const base = result?.result.predicted_yield_kg_ha ?? 0;
   const delta = scenario.value != null && base > 0 ? ((scenario.value - base) / base) * 100 : null;
   const modelName = activeModel ? normalizeModelName(activeModel.name).name : null;
-
-  const save = () => {
-    if (!result || !user) return;
-    saveRecent(user.username, { input: result.input, result: result.result, insights, modelName });
-    toast.success('Saved to recent predictions on this device');
-  };
 
   const report = () => {
     if (!result) return;
@@ -737,8 +730,8 @@ export function PredictorPage() {
                   <Button size="sm" icon={FileDown} onClick={report}>
                     Download report
                   </Button>
-                  <Button size="sm" icon={Save} onClick={save}>
-                    Save to recent
+                  <Button size="sm" icon={History} onClick={() => navigate('/app/history')} disabled={!can('history')}>
+                    View in history
                   </Button>
                   <Button
                     size="sm"
@@ -855,7 +848,7 @@ export function PredictorPage() {
           )}
           {!result && (
             <Button variant="ghost" onClick={() => navigate('/app/history')} disabled={!can('history')}>
-              View recent predictions
+              View prediction history
             </Button>
           )}
         </aside>

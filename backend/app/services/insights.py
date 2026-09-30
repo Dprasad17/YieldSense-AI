@@ -519,8 +519,29 @@ def soil_assessment(f: Filters) -> dict:
         suitability.append({"crop": crop, "suitability_index": idx, "reasons": reasons})
     suitability.sort(key=lambda s: (-s["suitability_index"], s["crop"]))
 
+    from backend.app.core import provenance
+
+    bands = []
+    for feature, rng in r.optimal.items():
+        observed = float(df[feature].mean())
+        label, unit = ar.FEATURES[feature]
+        bands.append(
+            {
+                "feature": feature,
+                "label": label,
+                "unit": unit,
+                "observed": round(observed, 2),
+                "optimal_low": rng.low,
+                "optimal_high": rng.high,
+                "status": "optimal" if rng.contains(observed) else ("below" if observed < rng.low else "above"),
+                "share_in_band": round(float(((df[feature] >= rng.low) & (df[feature] <= rng.high)).mean()), 4),
+                "provenance": provenance.provenance_of(feature),
+            }
+        )
+
     return {
         "status_claim": "Soil assessment from dataset records",
+        "optimal_bands": bands,
         "crop_type": r.crop,
         "scope": f.describe(),
         "soil_metrics": {

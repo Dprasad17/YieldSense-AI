@@ -1,5 +1,16 @@
 import { CheckCircle2, Info, Layers, Leaf, TestTube, TriangleAlert, XCircle } from 'lucide-react';
-import { Badge, Card, CardHeader, PageHeader, RangeBar, Skeleton, StatCard, type Tone } from '../../components/ui';
+import {
+  Badge,
+  Card,
+  CardHeader,
+  DataTable,
+  PageHeader,
+  RangeBar,
+  Skeleton,
+  StatCard,
+  type Tone,
+} from '../../components/ui';
+import type { OptimalBand } from '../../api/types';
 import { ErrorState } from '../../components/ui/States';
 import { useSoil } from '../../hooks/queries';
 import { formatCount, formatIndex, formatPercent } from '../../lib/format';
@@ -327,6 +338,95 @@ export function SoilPage() {
               </div>
             ) : (
               <Skeleton height={160} />
+            )}
+          </Card>
+        </div>
+        <div className={s.s12}>
+          <Card>
+            <CardHeader
+              title="Optimal bands for every metric"
+              subtitle="Context mean against the P25–P75 band of the crop’s top-quartile-yield records"
+              info="Real = measured country data; Synthetic = generated, not measured. Only rainfall and temperature feed the yield model."
+            />
+            {q.data ? (
+              <DataTable
+                caption="Optimal bands"
+                compact
+                rows={q.data.optimal_bands}
+                rowKey={b => b.feature}
+                columns={[
+                  {
+                    key: 'metric',
+                    header: 'Metric',
+                    render: (b: OptimalBand) => (
+                      <span className={s.row} style={{ gap: 'var(--space-2)', flexWrap: 'nowrap' }}>
+                        <strong>{b.label}</strong>
+                        {b.provenance && (
+                          <Badge
+                            tone={
+                              b.provenance === 'real' ? 'success' : b.provenance === 'synthetic' ? 'warning' : 'info'
+                            }
+                          >
+                            {b.provenance}
+                          </Badge>
+                        )}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'bar',
+                    header: 'Position',
+                    render: (b: OptimalBand) => {
+                      const width = b.optimal_high - b.optimal_low || 1;
+                      const lo = Math.min(b.observed, b.optimal_low) - width;
+                      const hi = Math.max(b.observed, b.optimal_high) + width;
+                      return (
+                        <div style={{ minWidth: 160 }}>
+                          <RangeBar
+                            label={b.label}
+                            value={b.observed}
+                            min={Math.max(0, lo)}
+                            max={hi}
+                            optimalLow={b.optimal_low}
+                            optimalHigh={b.optimal_high}
+                            format={v => formatIndex(v)}
+                          />
+                        </div>
+                      );
+                    },
+                  },
+                  {
+                    key: 'obs',
+                    header: 'Mean',
+                    align: 'right',
+                    render: (b: OptimalBand) =>
+                      `${formatIndex(b.observed)} ${b.unit === 'index' || b.unit === 'pH' ? '' : b.unit}`,
+                  },
+                  {
+                    key: 'band',
+                    header: 'Optimal',
+                    align: 'right',
+                    render: (b: OptimalBand) => `${formatIndex(b.optimal_low)}–${formatIndex(b.optimal_high)}`,
+                  },
+                  {
+                    key: 'status',
+                    header: 'Status',
+                    render: (b: OptimalBand) => (
+                      <Badge tone={b.status === 'optimal' ? 'success' : 'warning'}>
+                        {b.status === 'optimal' ? 'In band' : b.status === 'below' ? 'Below' : 'Above'}
+                      </Badge>
+                    ),
+                  },
+                  {
+                    key: 'share',
+                    header: 'Records in band',
+                    align: 'right',
+                    render: (b: OptimalBand) => formatPercent(b.share_in_band * 100),
+                  },
+                ]}
+              />
+            ) : (
+              <Skeleton height={260} />
             )}
           </Card>
         </div>

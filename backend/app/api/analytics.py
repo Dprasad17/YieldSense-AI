@@ -223,3 +223,92 @@ def get_farm_comparison(
     _user: dict = Depends(require_user),
 ):
     return insights.farm_comparison(f, limit, sort)
+
+
+
+class FarmSeasonPoint(BaseModel):
+    year: int
+    crop_type: str
+    yield_kg_ha: Optional[float]
+    reference_kg_ha: Optional[float]
+
+
+class MyFarmComparison(BaseModel):
+    farm_id: int
+    name: str
+    owner: str
+    region: str
+    area_ha: float
+    seasons: int
+    latest_year: Optional[int]
+    latest_crop: Optional[str]
+    latest_yield_kg_ha: Optional[float]
+    mean_yield_kg_ha: Optional[float]
+    reference_kg_ha: Optional[float]
+    delta_pct: Optional[float]
+    history: list[FarmSeasonPoint]
+
+
+class MyFarmsResponse(BaseModel):
+    farms: list[MyFarmComparison]
+    method: str
+
+
+@router.get("/my-farms", response_model=MyFarmsResponse)
+def get_my_farm_comparison(user: dict = Depends(require_user)):
+    """Real farms (yours; every farm for agronomists and admins) against the dataset's regional mean
+    for the same crop and year (nearest dataset year when the season is newer than the data)."""
+    from sqlalchemy import func, select
+
+    from backend.app.core.security import is_privileged
+    from backend.app.db.models import Farm, User
+    from backend.app.db.session import session_scope
+
+    df = dataset.get_df()
+    ref = df.groupby(["region", "crop_type", "year"])["yield_kg_per_hectare"].mean()
+    last_year = int(df["year"].max())
+
+    def reference(region: str, crop: str, year: int) -> Optional[float]:
+        y = min(year, last_year)
+        for yy in (y, y - 1, y - 2):
+            v = ref.get((region, crop, yy))
+            if v is not None:
+                return round(float(v), 2)
+        return None
+
+    out = []
+    with session_scope() as s:
+        q = select(Farm, User.username).join(User, User.id == Farm.owner_id)
+        if not is_privileged(user):
+            q = q.where(func.lower(User.username) == user["username"].lower())
+        for farm, owner in s.execute(q.order_by(Farm.name).limit(100)).all():
+            history = [
+                {"year": r.year, "crop_type": r.crop_type, "yield_kg_ha": r.yield_kg_ha, "reference_kg_ha": reference(farm.region, r.crop_type, r.year)}
+                for r in sorted(farm.records, key=lambda r: r.year)
+            ]
+            with_yield = [h for h in history if h["yield_kg_ha"] is not None]
+            latest = with_yield[-1] if with_yield else None
+            delta = None
+            if latest and latest["reference_kg_ha"]:
+                delta = round((latest["yield_kg_ha"] - latest["reference_kg_ha"]) / latest["reference_kg_ha"] * 100, 1)
+            out.append(
+                {
+                    "farm_id": farm.id,
+                    "name": farm.name,
+                    "owner": owner,
+                    "region": farm.region,
+                    "area_ha": farm.area_ha,
+                    "seasons": len(history),
+                    "latest_year": latest["year"] if latest else None,
+                    "latest_crop": latest["crop_type"] if latest else None,
+                    "latest_yield_kg_ha": latest["yield_kg_ha"] if latest else None,
+                    "mean_yield_kg_ha": round(sum(h["yield_kg_ha"] for h in with_yield) / len(with_yield), 2) if with_yield else None,
+                    "reference_kg_ha": latest["reference_kg_ha"] if latest else None,
+                    "delta_pct": delta,
+                    "history": history,
+                }
+            )
+    return {
+        "farms": out,
+        "method": f"Reference = dataset mean yield for the farm's region, crop and season year (the latest dataset year, {last_year}, for newer seasons).",
+    }

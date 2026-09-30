@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Any, Dict, Optional
 
+import pandas as pd
+
 from backend.app.services import dataset
 
 
@@ -246,3 +248,97 @@ class WeatherService:
 
 
 weather_service = WeatherService()
+
+
+# ------------------------------------------------------------------ yearly climate trend
+
+ARCHIVE_FIRST_YEAR = 1990
+ARCHIVE_TIMEOUT_S = 25
+
+
+def _archive_json(url: str) -> dict:
+    """ERA5 reanalysis from the Open-Meteo archive, cached in MongoDB for 30 days (past years don't change)."""
+    from datetime import timedelta
+
+    from backend.app.db import mongo
+
+    cached = mongo.cache_get("weather_cache", url)
+    if cached is not None:
+        return cached
+    req = urllib.request.Request(url, headers={"User-Agent": "YieldSenseAI/1.0"})
+    with urllib.request.urlopen(req, timeout=ARCHIVE_TIMEOUT_S) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    mongo.cache_set("weather_cache", url, data, expires_at=datetime.now(timezone.utc) + timedelta(days=30))
+    return data
+
+
+def _slope_per_decade(years: list[int], values: list[float]) -> Optional[float]:
+    import numpy as np
+
+    if len(years) < 5:
+        return None
+    return round(float(np.polyfit(years, values, 1)[0]) * 10, 3)
+
+
+def climate_trend(region: str) -> Dict[str, Any]:
+    """Yearly mean temperature and total precipitation for a region: ERA5 (Open-Meteo archive) at the
+    region's agricultural reference point, next to the dataset's own yearly values for that country."""
+    from backend.app.services.dataset import canonical, get_df
+
+    name = canonical(region, "region") or region
+    df = get_df()
+    rows = df[df["region"] == name]
+    dataset_years = []
+    if len(rows):
+        g = rows.groupby("year").agg(temperature_C=("temperature_C", "mean"), rainfall_mm=("rainfall_mm", "mean"))
+        dataset_years = [
+            {"year": int(y), "temperature_C": round(float(r.temperature_C), 2), "rainfall_mm": round(float(r.rainfall_mm), 1)}
+            for y, r in g.sort_index().iterrows()
+        ]
+
+    archive: list[dict] = []
+    location = None
+    error = None
+    try:
+        coords = weather_service._coordinates(name)
+        location = {"latitude": coords["lat"], "longitude": coords["lon"], "label": coords["name"]}
+        last = datetime.now(timezone.utc).year - 1
+        url = "https://archive-api.open-meteo.com/v1/archive?" + urllib.parse.urlencode(
+            {
+                "latitude": coords["lat"],
+                "longitude": coords["lon"],
+                "start_date": f"{ARCHIVE_FIRST_YEAR}-01-01",
+                "end_date": f"{last}-12-31",
+                "daily": "temperature_2m_mean,precipitation_sum",
+                "timezone": "auto",
+            }
+        )
+        daily = (_archive_json(url).get("daily") or {})
+        frame = pd.DataFrame(
+            {"time": daily.get("time") or [], "t": daily.get("temperature_2m_mean") or [], "p": daily.get("precipitation_sum") or []}
+        )
+        if len(frame):
+            frame["year"] = frame["time"].str.slice(0, 4).astype(int)
+            yearly = frame.groupby("year").agg(t=("t", "mean"), p=("p", "sum"), n=("t", "count"))
+            archive = [
+                {"year": int(y), "temperature_C": round(float(r.t), 2), "precipitation_mm": round(float(r.p), 1)}
+                for y, r in yearly.iterrows()
+                if r.n >= 360  # complete years only
+            ]
+    except LiveWeatherUnavailable as e:
+        error = str(e)
+    except Exception as e:  # network or parsing: keep the dataset series
+        print(f"[WeatherService] Archive call failed: {e}")
+        error = "The Open-Meteo climate archive is unreachable right now; showing dataset values only."
+
+    return {
+        "region": name,
+        "location": location,
+        "archive_source": "ERA5 reanalysis via Open-Meteo archive API" if archive else None,
+        "archive": archive,
+        "dataset": dataset_years,
+        "temperature_trend_C_per_decade": _slope_per_decade([a["year"] for a in archive], [a["temperature_C"] for a in archive]) if archive else None,
+        "precipitation_trend_mm_per_decade": _slope_per_decade([a["year"] for a in archive], [a["precipitation_mm"] for a in archive]) if archive else None,
+        "note": "The dataset's rainfall is a long-term country average (constant across years); its temperature varies by year.",
+        "error": error,
+    }

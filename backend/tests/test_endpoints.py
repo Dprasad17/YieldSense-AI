@@ -213,3 +213,31 @@ def test_forecast_uses_year_feature(client, auth):
     t = client.get("/api/analytics/seasonal-trends?crop=Wheat", headers=auth("farmer")).json()
     f = t["forecast"]
     assert f["year"] == 2014 and f["p10_kg_ha"] <= f["mean_kg_ha"] <= f["p90_kg_ha"] and "XGBoost" in f["method"]
+
+
+def test_climate_trend_and_soil_bands(client, auth, monkeypatch):
+    from backend.app.services import weather_service as wsm
+
+    daily = {"time": [f"2001-{m:02d}-{d:02d}" for m in range(1, 13) for d in range(1, 31)] + [f"2001-12-31"] * 5,
+             "temperature_2m_mean": [20.0] * 365, "precipitation_sum": [2.0] * 365}
+    monkeypatch.setattr(wsm, "_archive_json", lambda url: {"daily": daily})
+    t = client.get("/api/weather/climate-trend?region=india", headers=auth("farmer")).json()
+    assert t["region"] == "India" and t["archive"] == [{"year": 2001, "temperature_C": 20.0, "precipitation_mm": 730.0}]
+    assert t["dataset"][0]["year"] == 1990 and t["error"] is None
+
+    soil = client.get("/api/soil/assessment?crop_type=Wheat", headers=auth("farmer")).json()
+    features = {b["feature"]: b for b in soil["optimal_bands"]}
+    assert {"soil_pH", "soil_moisture_%", "rainfall_mm", "temperature_C", "humidity_%", "sunlight_hours", "NDVI_index"} <= set(features)
+    assert features["soil_pH"]["provenance"] == "synthetic" and features["rainfall_mm"]["provenance"] == "real"
+
+
+def test_my_farms_comparison_and_prediction_delete(client, auth):
+    mine = client.get("/api/analytics/my-farms", headers=auth("farmer")).json()["farms"]
+    assert {f["name"] for f in mine} >= {"Green Valley Farm", "Riverbend Fields", "Hillside Potatoes"}
+    gv = next(f for f in mine if f["name"] == "Green Valley Farm")
+    assert gv["seasons"] >= 1 and gv["reference_kg_ha"] and gv["delta_pct"] is not None
+
+    p = client.post("/api/predict", json=PREDICT_BODY, headers=auth("farmer")).json()
+    assert client.delete(f"/api/predictions/{p['id']}", headers=auth("agronomist")).status_code == 404
+    assert client.delete(f"/api/predictions/{p['id']}", headers=auth("farmer")).status_code == 204
+    assert client.get(f"/api/predictions/{p['id']}", headers=auth("farmer")).status_code == 404

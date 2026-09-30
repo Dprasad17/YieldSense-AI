@@ -234,6 +234,16 @@ def list_predictions(
     return store.list_predictions(owner, page, page_size, crop, region, farm_id, record_code)
 
 
+@history_router.delete("/{prediction_id}", status_code=204)
+def delete_prediction(prediction_id: str, user: dict = Depends(require_user)):
+    """Owners can delete their predictions; admins can delete any."""
+    record = store.get_prediction(prediction_id)
+    if not record or (record["username"] != user["username"] and user.get("role") != "Admin"):
+        raise AppError(404, "Prediction not found.")
+    store.delete_prediction(prediction_id)
+    store.audit(user["username"], "prediction.delete", prediction_id, {"crop": record["crop_type"], "region": record["region"]})
+
+
 @history_router.get("/{prediction_id}", response_model=PredictionRecord)
 def get_prediction(prediction_id: str, user: dict = Depends(require_user)):
     record = store.get_prediction(prediction_id)

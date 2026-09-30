@@ -263,6 +263,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/my-farms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Farm Comparison
+         * @description Real farms (yours; every farm for agronomists and admins) against the dataset's regional mean
+         *     for the same crop and year (nearest dataset year when the season is newer than the data).
+         */
+        get: operations["get_my_farm_comparison_api_analytics_my_farms_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/predict": {
         parameters: {
             query?: never;
@@ -408,7 +429,11 @@ export interface paths {
         get: operations["get_prediction_api_predictions__prediction_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Prediction
+         * @description Owners can delete their predictions; admins can delete any.
+         */
+        delete: operations["delete_prediction_api_predictions__prediction_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -464,6 +489,26 @@ export interface paths {
          * @description Map position for a dataset region (hand-picked agricultural zone or Open-Meteo country centroid).
          */
         get: operations["get_region_coordinates_api_weather_coordinates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/weather/climate-trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Climate Trend
+         * @description Yearly climate for a region: ERA5 reanalysis (Open-Meteo archive, cached) plus the dataset's yearly values.
+         */
+        get: operations["get_climate_trend_api_weather_climate_trend_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1013,6 +1058,38 @@ export interface components {
             /** File */
             file: string;
         };
+        /** ClimateTrend */
+        ClimateTrend: {
+            /** Region */
+            region: string;
+            /** Location */
+            location: {
+                [key: string]: unknown;
+            } | null;
+            /** Archive Source */
+            archive_source: string | null;
+            /** Archive */
+            archive: components["schemas"]["ClimateYear"][];
+            /** Dataset */
+            dataset: components["schemas"]["DatasetClimateYear"][];
+            /** Temperature Trend C Per Decade */
+            temperature_trend_C_per_decade: number | null;
+            /** Precipitation Trend Mm Per Decade */
+            precipitation_trend_mm_per_decade: number | null;
+            /** Note */
+            note: string;
+            /** Error */
+            error: string | null;
+        };
+        /** ClimateYear */
+        ClimateYear: {
+            /** Year */
+            year: number;
+            /** Temperature C */
+            temperature_C: number;
+            /** Precipitation Mm */
+            precipitation_mm: number;
+        };
         /** ColumnProvenance */
         ColumnProvenance: {
             /** Column */
@@ -1130,6 +1207,15 @@ export interface components {
             start_day: number;
             /** End Day */
             end_day: number;
+        };
+        /** DatasetClimateYear */
+        DatasetClimateYear: {
+            /** Year */
+            year: number;
+            /** Temperature C */
+            temperature_C: number;
+            /** Rainfall Mm */
+            rainfall_mm: number;
         };
         /** DatasetSummary */
         DatasetSummary: {
@@ -1463,6 +1549,17 @@ export interface components {
             /** Risk Flags */
             risk_flags: string[];
         };
+        /** FarmSeasonPoint */
+        FarmSeasonPoint: {
+            /** Year */
+            year: number;
+            /** Crop Type */
+            crop_type: string;
+            /** Yield Kg Ha */
+            yield_kg_ha: number | null;
+            /** Reference Kg Ha */
+            reference_kg_ha: number | null;
+        };
         /** FieldSpec */
         FieldSpec: {
             /** Name */
@@ -1522,6 +1619,42 @@ export interface components {
             /** Full Name */
             full_name: string;
             notification_prefs: components["schemas"]["NotificationPrefs"];
+        };
+        /** MyFarmComparison */
+        MyFarmComparison: {
+            /** Farm Id */
+            farm_id: number;
+            /** Name */
+            name: string;
+            /** Owner */
+            owner: string;
+            /** Region */
+            region: string;
+            /** Area Ha */
+            area_ha: number;
+            /** Seasons */
+            seasons: number;
+            /** Latest Year */
+            latest_year: number | null;
+            /** Latest Crop */
+            latest_crop: string | null;
+            /** Latest Yield Kg Ha */
+            latest_yield_kg_ha: number | null;
+            /** Mean Yield Kg Ha */
+            mean_yield_kg_ha: number | null;
+            /** Reference Kg Ha */
+            reference_kg_ha: number | null;
+            /** Delta Pct */
+            delta_pct: number | null;
+            /** History */
+            history: components["schemas"]["FarmSeasonPoint"][];
+        };
+        /** MyFarmsResponse */
+        MyFarmsResponse: {
+            /** Farms */
+            farms: components["schemas"]["MyFarmComparison"][];
+            /** Method */
+            method: string;
         };
         /** Notification */
         Notification: {
@@ -1584,6 +1717,30 @@ export interface components {
              * @default true
              */
             system: boolean;
+        };
+        /** OptimalBand */
+        OptimalBand: {
+            /** Feature */
+            feature: string;
+            /** Label */
+            label: string;
+            /** Unit */
+            unit: string;
+            /** Observed */
+            observed: number;
+            /** Optimal Low */
+            optimal_low: number;
+            /** Optimal High */
+            optimal_high: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "optimal" | "below" | "above";
+            /** Share In Band */
+            share_in_band: number;
+            /** Provenance */
+            provenance: string | null;
         };
         /** Page[AdminUser] */
         Page_AdminUser_: {
@@ -2013,6 +2170,8 @@ export interface components {
         };
         /** SoilAssessment */
         SoilAssessment: {
+            /** Optimal Bands */
+            optimal_bands: components["schemas"]["OptimalBand"][];
             /** Status Claim */
             status_claim: string;
             /** Crop Type */
@@ -3305,6 +3464,62 @@ export interface operations {
             };
         };
     };
+    get_my_farm_comparison_api_analytics_my_farms_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyFarmsResponse"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     predict_crop_yield_api_predict_post: {
         parameters: {
             query?: never;
@@ -3785,6 +4000,62 @@ export interface operations {
             };
         };
     };
+    delete_prediction_api_predictions__prediction_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prediction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     act_on_recommendation_api_recommendations__rec_id__actions_post: {
         parameters: {
             query?: never;
@@ -3921,6 +4192,64 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RegionCoordinates"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_climate_trend_api_weather_climate_trend_get: {
+        parameters: {
+            query: {
+                region: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClimateTrend"];
                 };
             };
             /** @description Not signed in or session expired */
