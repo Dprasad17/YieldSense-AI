@@ -13,4 +13,3 @@ src/components/AnalyticsReportsView.tsx
 src/components/DataExplorer.tsx
 src/components/EdaDashboard.tsx
 src/components/LoginPage.tsx
-src/components/Header.tsx

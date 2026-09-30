@@ -2,7 +2,7 @@ import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '../auth/guards';
 import type { Permission } from '../auth/permissions';
-import { AppLayout } from '../pages/AppLayout';
+import { AppShell } from '../components/shell/AppShell';
 import { RootLayout } from '../pages/RootLayout';
 import { ForbiddenPage, NotFoundPage, RouteErrorPage } from '../pages/SystemPages';
 
@@ -25,6 +25,7 @@ const screens = {
 };
 
 const LoginRoute = named(() => import('../pages/LoginRoute'), 'LoginRoute');
+const DesignSystemPage = named(() => import('../pages/DesignSystemPage'), 'DesignSystemPage');
 
 function screen(path: string, permission: Permission, Screen: ComponentType) {
   return {
@@ -46,12 +47,13 @@ export const router = createBrowserRouter([
       { path: '/', element: <Navigate to="/app/dashboard" replace /> },
       { path: '/login', element: <LoginRoute /> },
       { path: '/403', element: <ForbiddenPage /> },
+      { path: '/design-system', element: <DesignSystemPage /> },
       {
         path: '/app',
         element: <ProtectedRoute />,
         children: [
           {
-            element: <AppLayout />,
+            element: <AppShell />,
             children: [
               { index: true, element: <Navigate to="dashboard" replace /> },
               screen('dashboard', 'dashboard', screens.dashboard),

@@ -18,16 +18,99 @@ export interface NavItem {
   label: string;
   icon: ComponentType<LucideProps>;
   permission: Permission;
+  /** Extra words the command palette matches on. */
+  keywords?: string;
 }
 
-/** Screens that exist today, mapped from the old tab ids. Later phases add the new screens here. */
-export const NAV_ITEMS: readonly NavItem[] = [
-  { path: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: 'dashboard' },
-  { path: 'predict', label: 'Yield Predictor', icon: Cpu, permission: 'predict' },
-  { path: 'weather', label: 'Weather', icon: CloudRain, permission: 'weather' },
-  { path: 'soil', label: 'Soil', icon: Layers, permission: 'soil' },
-  { path: 'recommendations', label: 'Recommendations', icon: Sparkles, permission: 'recommendations' },
-  { path: 'analytics', label: 'Analytics & Reports', icon: FileText, permission: 'analytics' },
-  { path: 'data', label: 'Dataset Explorer', icon: Database, permission: 'dataset' },
-  { path: 'eda', label: 'EDA', icon: BarChart3, permission: 'eda' },
+export interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+/** Sidebar groups. Only screens that exist are listed; later phases add more. */
+export const NAV_GROUPS: readonly NavGroup[] = [
+  {
+    label: 'Overview',
+    items: [
+      {
+        path: 'dashboard',
+        label: 'Dashboard',
+        icon: LayoutDashboard,
+        permission: 'dashboard',
+        keywords: 'home kpi overview',
+      },
+    ],
+  },
+  {
+    label: 'Intelligence',
+    items: [
+      {
+        path: 'predict',
+        label: 'Yield Predictor',
+        icon: Cpu,
+        permission: 'predict',
+        keywords: 'forecast model predict',
+      },
+      {
+        path: 'weather',
+        label: 'Weather',
+        icon: CloudRain,
+        permission: 'weather',
+        keywords: 'rain temperature climate open-meteo',
+      },
+      { path: 'soil', label: 'Soil', icon: Layers, permission: 'soil', keywords: 'ph moisture ndvi' },
+      {
+        path: 'recommendations',
+        label: 'Recommendations',
+        icon: Sparkles,
+        permission: 'recommendations',
+        keywords: 'ai advice actions',
+      },
+    ],
+  },
+  {
+    label: 'Insights',
+    items: [
+      {
+        path: 'analytics',
+        label: 'Analytics & Reports',
+        icon: FileText,
+        permission: 'analytics',
+        keywords: 'export csv trends report',
+      },
+      {
+        path: 'eda',
+        label: 'EDA',
+        icon: BarChart3,
+        permission: 'eda',
+        keywords: 'exploratory distribution correlation',
+      },
+    ],
+  },
+  {
+    label: 'Data',
+    items: [
+      {
+        path: 'data',
+        label: 'Dataset Explorer',
+        icon: Database,
+        permission: 'dataset',
+        keywords: 'records table rows',
+      },
+    ],
+  },
 ];
+
+export const NAV_ITEMS: readonly NavItem[] = NAV_GROUPS.flatMap(g => g.items);
+
+/** Screens not yet rebuilt on the new design system. Their content area stays dark until Phase 6. */
+export const LEGACY_SCREENS: ReadonlySet<string> = new Set([
+  'dashboard',
+  'predict',
+  'weather',
+  'soil',
+  'recommendations',
+  'analytics',
+  'data',
+  'eda',
+]);

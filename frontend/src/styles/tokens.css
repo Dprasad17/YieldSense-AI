@@ -39,6 +39,8 @@
   --danger: #ef5a5a;
   --info: #4c8df6;
   --success-soft: rgba(47, 191, 122, 0.12);
+  --data-water-soft: rgba(76, 141, 246, 0.12);
+  --data-model-soft: rgba(155, 123, 240, 0.12);
   --warning-soft: rgba(232, 163, 58, 0.12);
   --danger-soft: rgba(239, 90, 90, 0.12);
   --info-soft: rgba(76, 141, 246, 0.12);
@@ -94,6 +96,7 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.45);
+  --overlay: rgba(0, 0, 0, 0.55);
 
   /* Motion */
   --duration-fast: 150ms;
@@ -106,12 +109,17 @@
   --gutter: var(--space-8);
   --sidebar-width: 248px;
   --sidebar-collapsed: 64px;
-  --topbar-height: 56px;
+  --topbar-height: 60px;
+  --z-shell: 20;
+  --z-overlay: 40;
+  --z-modal: 50;
+  --z-toast: 60;
 
   /* Texture opacity for the field-grid canvas pattern */
   --texture-opacity: 0.03;
 }
 
+/* Light theme: OS preference (when no explicit theme is set), or data-theme="light" on any element. */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme='dark']) {
     color-scheme: light;
@@ -128,13 +136,15 @@
     --primary-ink: #ffffff;
     --primary-soft: rgba(31, 122, 77, 0.1);
     --focus-ring: rgba(31, 122, 77, 0.4);
+    --overlay: rgba(15, 26, 20, 0.35);
     --shadow-sm: 0 1px 2px rgba(15, 26, 20, 0.06);
     --shadow-md: 0 8px 24px rgba(15, 26, 20, 0.08);
     --shadow-lg: 0 16px 48px rgba(15, 26, 20, 0.12);
+    --texture-opacity: 0.05;
   }
 }
 
-:root[data-theme='light'] {
+[data-theme='light'] {
   color-scheme: light;
   --canvas: #f7f6f2;
   --surface: #ffffff;
@@ -149,9 +159,38 @@
   --primary-ink: #ffffff;
   --primary-soft: rgba(31, 122, 77, 0.1);
   --focus-ring: rgba(31, 122, 77, 0.4);
+  --overlay: rgba(15, 26, 20, 0.35);
   --shadow-sm: 0 1px 2px rgba(15, 26, 20, 0.06);
   --shadow-md: 0 8px 24px rgba(15, 26, 20, 0.08);
   --shadow-lg: 0 16px 48px rgba(15, 26, 20, 0.12);
+  --texture-opacity: 0.05;
+}
+
+/* Dark theme scoped to an element (e.g. a dark preview inside a light page). */
+[data-theme='dark'] {
+  color-scheme: dark;
+  --canvas: #0a0f0c;
+  --surface: #111814;
+  --surface-2: #172019;
+  --border: #222d26;
+  --border-strong: #2e3b33;
+  --highlight: rgba(255, 255, 255, 0.04);
+  --ink: #e7eee9;
+  --muted: #8b978f;
+  --primary: #2fbf7a;
+  --primary-hover: #27a56a;
+  --primary-ink: #04140b;
+  --primary-soft: rgba(47, 191, 122, 0.12);
+  --focus-ring: rgba(47, 191, 122, 0.4);
+  --overlay: rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.45);
+  --texture-opacity: 0.03;
+}
+
+[data-theme] {
+  color: var(--ink);
 }
 
 @media (max-width: 768px) {

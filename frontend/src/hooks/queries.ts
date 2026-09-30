@@ -97,3 +97,13 @@ export function useInsights() {
 export function useReportExport() {
   return useMutation({ mutationFn: reportsApi.export });
 }
+
+/** Region names for the context switcher (the weather endpoint lists every dataset region). */
+export function useRegions() {
+  return useQuery({
+    queryKey: ['regions'],
+    queryFn: () =>
+      weatherApi.analysis('', false).then(d => [...(d.available_regions ?? [])].sort((a, b) => a.localeCompare(b))),
+    staleTime: Infinity,
+  });
+}
