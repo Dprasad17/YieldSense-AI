@@ -56,7 +56,6 @@ interface FormValues {
   rainfall_mm: number;
   temperature_C: number;
   pesticide_usage_ml: number;
-  total_days: number;
   irrigation_type: string;
   fertilizer_type: string;
   crop_disease_status: string;
@@ -73,7 +72,6 @@ const MODEL_KEYS = [
   'rainfall_mm',
   'temperature_C',
   'pesticide_usage_ml',
-  'total_days',
 ] as const satisfies readonly (keyof FormValues)[];
 const CONDITION_KEYS = [
   'irrigation_type',
@@ -92,7 +90,6 @@ const DEFAULTS: FormValues = {
   rainfall_mm: 850,
   temperature_C: 24.5,
   pesticide_usage_ml: 450,
-  total_days: 125,
   irrigation_type: 'Drip',
   fertilizer_type: 'Urea',
   crop_disease_status: 'None',
@@ -123,7 +120,6 @@ const schema = z.object({
   rainfall_mm: zNum().min(0, '0–5,000 mm.').max(5000, '0–5,000 mm.'),
   temperature_C: zNum().min(-10, '−10 to 60 °C.').max(60, '−10 to 60 °C.'),
   pesticide_usage_ml: zNum().min(0, 'Cannot be negative.'),
-  total_days: zNum().int('Whole days.').min(1, '1–365 days.').max(365, '1–365 days.'),
   irrigation_type: z.string().optional(),
   fertilizer_type: z.string().optional(),
   crop_disease_status: z.string().optional(),
@@ -339,7 +335,6 @@ export function PredictorPage() {
         rainfall_mm: rec.rainfall_mm,
         temperature_C: rec.temperature_C,
         pesticide_usage_ml: rec.pesticide_usage_ml,
-        total_days: rec.total_days,
         irrigation_type: rec.irrigation_type,
         fertilizer_type: rec.fertilizer_type,
         crop_disease_status: rec.crop_disease_status || 'None',
@@ -358,13 +353,13 @@ export function PredictorPage() {
   };
 
   // ---------------------------------------------------------------- what-if
-  const [whatIf, setWhatIf] = useState({ rain: 0, temp: 0, pest: 0 });
+  const [whatIf, setWhatIf] = useState({ temp: 0, pest: 0 });
   const debounced = useDebouncedValue(whatIf, 500);
   const [scenario, setScenario] = useState<{ value: number | null; loading: boolean; error?: string }>({
     value: null,
     loading: false,
   });
-  const changed = debounced.rain !== 0 || debounced.temp !== 0 || debounced.pest !== 0;
+  const changed = debounced.temp !== 0 || debounced.pest !== 0;
 
   useEffect(() => {
     if (!result || !changed) return;
@@ -372,7 +367,6 @@ export function PredictorPage() {
     const base = result.input;
     const input: PredictionInput = {
       ...base,
-      rainfall_mm: Math.max(0, Math.min(5000, Math.round(base.rainfall_mm * (1 + debounced.rain / 100)))),
       temperature_C: Math.round((base.temperature_C + debounced.temp) * 10) / 10,
       pesticide_usage_ml: Math.max(0, Math.round(base.pesticide_usage_ml * (1 + debounced.pest / 100))),
       farm_id: undefined,
@@ -414,7 +408,7 @@ export function PredictorPage() {
     setErrors({});
     setResult(null);
     setInsights(null);
-    setWhatIf({ rain: 0, temp: 0, pest: 0 });
+    setWhatIf({ temp: 0, pest: 0 });
   };
 
   return (
@@ -497,7 +491,12 @@ export function PredictorPage() {
                 invalid={!!errors.year}
               />
             </FormField>
-            <FormField label="Rainfall" htmlFor="p-rain" error={errors.rainfall_mm} hint="Average annual, 0–5,000 mm">
+            <FormField
+              label="Rainfall"
+              htmlFor="p-rain"
+              error={errors.rainfall_mm}
+              hint="Long-term annual average for the country (one value per country in the data, so the model sees a cross-country association, not a yearly weather effect)"
+            >
               <Input
                 id="p-rain"
                 type="number"
@@ -537,17 +536,6 @@ export function PredictorPage() {
                 value={Number.isFinite(values.pesticide_usage_ml) ? values.pesticide_usage_ml : ''}
                 onChange={num('pesticide_usage_ml')}
                 invalid={!!errors.pesticide_usage_ml}
-              />
-            </FormField>
-            <FormField label="Growing period" htmlFor="p-days" error={errors.total_days} hint="Sowing to harvest">
-              <Input
-                id="p-days"
-                type="number"
-                step={1}
-                value={Number.isFinite(values.total_days) ? values.total_days : ''}
-                onChange={num('total_days')}
-                suffix="days"
-                invalid={!!errors.total_days}
               />
             </FormField>
           </Section>
@@ -723,7 +711,14 @@ export function PredictorPage() {
                   <div className={s.row} style={{ marginBottom: 'var(--space-2)' }}>
                     <Sparkles size={16} color="var(--data-model)" aria-hidden="true" />
                     <strong>AI insight</strong>
-                    {insights && <span className={s.small}>· {insights.llm_provider}</span>}
+                    {insights && (
+                      <Badge
+                        tone={insights.llm_provider.startsWith('Groq') ? 'model' : 'neutral'}
+                        title={insights.llm_provider}
+                      >
+                        {insights.llm_provider.startsWith('Groq') ? `AI · ${insights.llm_provider}` : 'Fallback · rule engine'}
+                      </Badge>
+                    )}
                   </div>
                   {insightsM.isPending ? (
                     <div className={s.stack}>
@@ -784,25 +779,11 @@ export function PredictorPage() {
 
           {result && (
             <Card>
-              <CardHeader title="What if?" subtitle="Change one thing and see how the prediction moves" />
+              <CardHeader
+                title="What if?"
+                subtitle="Change temperature or pesticide use and see how the prediction moves. Rainfall is left out: it is constant per country in the data."
+              />
               <div className={s.stack}>
-                <FormField label={`Rainfall ${whatIf.rain >= 0 ? '+' : ''}${whatIf.rain}%`} htmlFor="wi-rain">
-                  <Slider.Root
-                    id="wi-rain"
-                    className={s.slider}
-                    value={[whatIf.rain]}
-                    min={-50}
-                    max={50}
-                    step={5}
-                    onValueChange={v => setWhatIf(w => ({ ...w, rain: v[0] }))}
-                    aria-label="Rainfall change"
-                  >
-                    <Slider.Track className={s.sliderTrack}>
-                      <Slider.Range className={s.sliderRange} />
-                    </Slider.Track>
-                    <Slider.Thumb className={s.sliderThumb} aria-label="Rainfall change" />
-                  </Slider.Root>
-                </FormField>
                 <FormField label={`Temperature ${whatIf.temp >= 0 ? '+' : ''}${whatIf.temp} °C`} htmlFor="wi-temp">
                   <Slider.Root
                     id="wi-temp"
@@ -859,7 +840,7 @@ export function PredictorPage() {
                     </div>
                   ) : null}
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => setWhatIf({ rain: 0, temp: 0, pest: 0 })}>
+                <Button size="sm" variant="ghost" onClick={() => setWhatIf({ temp: 0, pest: 0 })}>
                   Reset scenario
                 </Button>
               </div>

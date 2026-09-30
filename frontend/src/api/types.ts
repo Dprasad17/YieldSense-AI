@@ -49,7 +49,33 @@ export interface ModelCard {
   permutation_importance: { feature: string; importance: number; std: number; synthetic: boolean; kept: boolean }[];
   splits: Record<SplitKey, string>;
   results: ModelResult[];
-  interval: { method: string; space: string; residual_q10: number; residual_q90: number };
+  interval: {
+    method: string;
+    space: string;
+    residual_q10: number;
+    residual_q90: number;
+    heldout?: {
+      method: string;
+      calibration_rows: number;
+      evaluation_rows: number;
+      coverage: number;
+      nominal: number;
+      mean_width_kg_ha: number;
+      median_width_kg_ha: number;
+    };
+  };
+  weather_ablation?: {
+    split: string;
+    model: string;
+    target: string;
+    note: string;
+    results: { variant: string; dropped: string[]; rmse: number; r2: number; mae: number; delta_rmse: number; delta_r2: number }[];
+  };
+  previous_version?: {
+    version?: string;
+    features?: { categorical: string[]; numeric: string[] };
+    selected?: { model: string; target: string; metrics: ModelResult };
+  };
   data: { rows: number; years: [number, number]; regions: number; crops: number };
   previous_model?: { model: string; r2: number; rmse: number; mae: number; note: string };
   intended_use: string;

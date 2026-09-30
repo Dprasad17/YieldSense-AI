@@ -44,6 +44,12 @@ REAL_CAT = ["crop_type", "region"]
 REAL_NUM = ["year", "rainfall_mm", "temperature_C", "pesticide_usage_ml"]
 SYNTH_CAT = ["irrigation_type", "fertilizer_type", "crop_disease_status"]
 SYNTH_NUM = ["soil_pH", "soil_moisture_%", "humidity_%", "sunlight_hours", "total_days"]
+# Synthetic columns that only re-encode another input: preprocess_real_dataset.py sets total_days to a
+# fixed per-crop base (e.g. Wheat 140, Cassava 270) plus uniform noise of ±10 days, so it is a crop proxy,
+# not a measured growing period. Excluded regardless of permutation importance.
+PROXY_COLUMNS = {"total_days": "Synthetic crop proxy: a fixed per-crop base duration plus ±10 random days (scripts/preprocess_real_dataset.py). It re-encodes crop_type and was not measured."}
+VERSION = "2.1.0"
+PREVIOUS_CARD = os.path.join("models", "v2", "model_card.json")
 TARGET = "yield_kg_per_hectare"
 TEMPORAL_CUTOFF = 2008
 
@@ -172,6 +178,42 @@ def evaluate(df, cat, num, name, factory, target, tr, te):
     }
 
 
+def heldout_interval(df, cat, num, name, factory, target):
+    """Train on <= 2008, calibrate the P10-P90 residuals on 2009-2010, evaluate on 2011-2013 (never used to calibrate)."""
+    years = df["year"].to_numpy()
+    tr, cal, ev = (np.where(m)[0] for m in (years <= TEMPORAL_CUTOFF, (years > TEMPORAL_CUTOFF) & (years <= 2010), years > 2010))
+    X, y = df[cat + num], df[TARGET].to_numpy()
+    pipe = Pipeline([("prep", preprocessor(cat, num)), ("model", factory())])
+    pipe.fit(X.iloc[tr], fwd(y[tr], target))
+    q10, q90 = np.quantile(fwd(y[cal], target) - pipe.predict(X.iloc[cal]), [0.10, 0.90])
+    p = pipe.predict(X.iloc[ev])
+    lo, hi = np.maximum(inv(p + q10, target), 0), np.maximum(inv(p + q90, target), 0)
+    yt = y[ev]
+    return {
+        "method": "Train on 1990-2008, calibrate P10/P90 residuals on 2009-2010, evaluate on 2011-2013",
+        "calibration_rows": int(len(cal)),
+        "evaluation_rows": int(len(ev)),
+        "coverage": round(float(np.mean((yt >= lo) & (yt <= hi))), 4),
+        "nominal": 0.8,
+        "mean_width_kg_ha": round(float(np.mean(hi - lo)), 1),
+        "median_width_kg_ha": round(float(np.median(hi - lo)), 1),
+    }
+
+
+def weather_ablation(df, cat, num, name, factory, target, tr, te):
+    """Temporal-split RMSE/R² with and without the weather inputs (the served model's family and target)."""
+    out = []
+    for label, drop in (("all features", []), ("without temperature", ["temperature_C"]), ("without rainfall", ["rainfall_mm"]), ("without temperature and rainfall", ["temperature_C", "rainfall_mm"])):
+        n2 = [c for c in num if c not in drop]
+        _, m = evaluate(df, cat, n2, name, factory, target, tr, te)
+        out.append({"variant": label, "dropped": drop, "rmse": m["rmse"], "r2": m["r2"], "mae": m["mae"]})
+    base = out[0]
+    for r in out:
+        r["delta_rmse"] = round(r["rmse"] - base["rmse"], 2)
+        r["delta_r2"] = round(r["r2"] - base["r2"], 4)
+    return out
+
+
 def permutation_check(df):
     """Does any synthetic column add real signal on the temporal split? RF with all candidates."""
     cat, num = REAL_CAT + SYNTH_CAT, REAL_NUM + SYNTH_NUM
@@ -183,7 +225,7 @@ def permutation_check(df):
     out = []
     for col, m, s in zip(cat + num, res.importances_mean, res.importances_std):
         synthetic = col in SYNTH_CAT + SYNTH_NUM
-        keep = (not synthetic) or (m > 0.005 and m > 2 * s)
+        keep = (not synthetic) or (col not in PROXY_COLUMNS and m > 0.005 and m > 2 * s)
         out.append({"feature": col, "importance": round(float(m), 5), "std": round(float(s), 5), "synthetic": synthetic, "kept": bool(keep)})
     return sorted(out, key=lambda r: -r["importance"])
 
@@ -225,6 +267,17 @@ def main():
     te = df.index[df["year"] > TEMPORAL_CUTOFF].to_numpy()
     # Interval residuals come from the out-of-time test period (honest for future years).
     tmp, _ = evaluate(df, cat, num, best["model"], models[best["model"]], best["target"], tr, te)
+    heldout = heldout_interval(df, cat, num, best["model"], models[best["model"]], best["target"])
+    print(f"      held-out interval coverage {heldout['coverage']:.3f}, mean width {heldout['mean_width_kg_ha']:,.0f} kg/ha")
+    ablation = weather_ablation(df, cat, num, best["model"], models[best["model"]], best["target"], tr, te)
+    for a in ablation:
+        print(f"      ablation {a['variant']:34s} RMSE={a['rmse']:,.0f} (d{a['delta_rmse']:+,.0f}) R2={a['r2']:.4f} (d{a['delta_r2']:+.4f})")
+    previous = {}
+    if os.path.exists(PREVIOUS_CARD):
+        with open(PREVIOUS_CARD, encoding="utf-8") as f:
+            pc = json.load(f)
+        if pc.get("version") != VERSION:
+            previous = {"version": pc.get("version"), "features": pc.get("features"), "selected": pc.get("selected")}
     res = fwd(df[TARGET].to_numpy()[te], best["target"]) - tmp.predict(df[cat + num].iloc[te])
     q10, q90 = (float(v) for v in np.quantile(res, [0.10, 0.90]))
     final = Pipeline([("prep", preprocessor(cat, num)), ("model", models[best["model"]]())])
@@ -247,25 +300,35 @@ def main():
 
     card = {
         "name": f"YieldSense yield model v2 · {best['model']}",
-        "version": "2.0.0",
+        "version": VERSION,
         "trained_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "selected": {"model": best["model"], "target": best["target"], "split": "temporal", "metrics": best},
         "selection_rule": "Lowest RMSE on the temporal split (train ≤ 2008, test 2009–2013); models within 1% of the lowest RMSE are tied and the one with the lower p95 latency is served. The Keras MLP is evaluated but not served (it would add TensorFlow to the API runtime).",
         "features": {"categorical": cat, "numeric": num},
         "excluded_features": [
             {"feature": "NDVI_index", "reason": "Derived from the yield's own percentile rank during preprocessing (target leakage)."},
-            *[{"feature": r["feature"], "reason": f"Synthetic column without measurable signal (permutation importance {r['importance']:.4f} ± {r['std']:.4f})."} for r in importance if r["synthetic"] and not r["kept"]],
+            *[{"feature": c, "reason": r} for c, r in PROXY_COLUMNS.items()],
+            *[{"feature": r["feature"], "reason": f"Synthetic column without measurable signal (permutation importance {r['importance']:.4f} ± {r['std']:.4f})."} for r in importance if r["synthetic"] and not r["kept"] and r["feature"] not in PROXY_COLUMNS],
         ],
         "permutation_importance": importance,
         "splits": split_defs,
         "results": results,
-        "interval": {"method": "Split-conformal: 10th and 90th percentiles of residuals on the out-of-time test period", "space": best["target"], "residual_q10": q10, "residual_q90": q90},
+        "interval": {"method": "Split-conformal: 10th and 90th percentiles of residuals on the out-of-time test period", "space": best["target"], "residual_q10": q10, "residual_q90": q90, "heldout": heldout},
+        "weather_ablation": {
+            "split": "temporal",
+            "model": best["model"],
+            "target": best["target"],
+            "note": "Rainfall in this dataset is one long-term average per country (constant across years), so its effect is a cross-country association, not a year-to-year weather effect. Temperature varies by year.",
+            "results": ablation,
+        },
+        "previous_version": previous,
         "data": {"rows": int(len(df)), "years": [int(df["year"].min()), int(df["year"].max())], "regions": int(df["region"].nunique()), "crops": int(df["crop_type"].nunique())},
         "previous_model": old,
         "intended_use": "Country-level yield expectations per crop and year for planning and comparison.",
         "limitations": [
             "Trained on country-level FAOSTAT yields, not individual fields.",
-            "Soil, humidity, sunlight, irrigation, fertilizer and disease columns in the dataset are synthetic and are not used by the model.",
+            "Soil, humidity, sunlight, irrigation, fertilizer, disease and crop-duration columns in the dataset are synthetic and are not used by the model.",
+            "Rainfall is a constant long-term average per country, so the model cannot learn a year-to-year rainfall effect.",
             "Tree models do not extrapolate trends beyond the last training year.",
         ],
     }

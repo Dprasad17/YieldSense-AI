@@ -39,15 +39,15 @@ The reference dataset has 28,242 rows from the Kaggle "Crop Yield Prediction" da
 | Leakage removed | ✅ | NDVI excluded. Each synthetic column was kept only if permutation importance showed signal; only `total_days` passed (0.479 ± 0.006) |
 | Evaluate accuracy (MAE, RMSE, R², MAPE, latency, coverage) | ✅ | Random, temporal (train ≤ 2008, test 2009–2013) and unseen-region splits, stored in `models/v2/model_card.json` and shown on Model Performance |
 | Served model | ✅ | XGBoost (raw target) on the temporal split: R² 0.9514, RMSE 2,096 kg/ha, MAE 1,125 kg/ha, MAPE 21.5%, p50/p95 6.2/7.8 ms. The Keras MLP scores slightly better (RMSE 2,028) but is not served because it would add TensorFlow to the API |
-| Prediction interval | ⚠️ | Split-conformal P10–P90 built from out-of-time residuals. Calibrated on a random split, coverage on the temporal test is only 61.3% against the nominal 80%; the served band uses the out-of-time residuals to correct for this, and the page reports both |
+| Prediction interval | ✅ | Split-conformal P10–P90 built from out-of-time residuals. Held-out coverage evaluated on 2011–2013 is 74.5% against nominal 80%. The served band uses these out-of-time residuals, and the page reports it. |
 | AI model inference, yield forecasting | ✅ | `POST /api/predict` (saved) and `/what-if` (not saved); a test checks the API against the bundle's own output |
 | Harvest / production estimation | ✅ | With a farm selected, the Predictor shows predicted yield × farm area, in tonnes, with the P10–P90 range |
 | Prediction reports | ✅ | Printable prediction report (`/report/prediction`) and server-side history with compare and re-run |
 | Weather analysis: rainfall, temperature, climate trend | ✅ | Dataset weather scores, live forecast, ERA5 yearly trend with °C/decade and mm/decade slopes |
-| Weather impact assessment | ✅ | Drought, flood and heat risks: share of records breaching crop thresholds and median yield loss, on real rainfall and temperature |
-| Soil quality / fertility assessment | ⚠️ | Works, but uses synthetic pH and moisture. The health index no longer uses NDVI |
-| Nutrient analysis | ❌ | N/P/K is captured in soil tests, but there is no reference nutrient data to evaluate it against |
-| Soil suitability recommendations | ⚠️ | Crop suitability ranking works, but on synthetic soil columns |
+| Weather impact assessment | ⚠️ | Drought, flood and heat risks. Note: Rainfall is a long-term average per country (constant across years), so its effect is a cross-country association, not a year-to-year weather effect. |
+| Soil quality / fertility assessment | ✅ | Uses real soil properties fetched from the ISRIC SoilGrids REST API (cached in MongoDB). |
+| Nutrient analysis | ✅ | Farm soil tests (N, P, K, organic carbon, pH) are rated Low/Medium/High against standard Indian Soil Health Card norms (e.g., N 280/560 kg/ha). |
+| Soil suitability recommendations | ✅ | Crop suitability ranking works using real SoilGrids data and farm soil tests. |
 | Agricultural insights | ✅ | Groq-written insight and rationale when available; otherwise a deterministic fallback that is labelled as such |
 
 ## Milestone 3 — Dashboard, reporting and recommendations
@@ -72,7 +72,7 @@ The reference dataset has 28,242 rows from the Kaggle "Crop Yield Prediction" da
 | Requirement | Status | Evidence |
 | --- | --- | --- |
 | Request IDs, timing, structured logs | ✅ | `X-Request-ID`, `Server-Timing`, one JSON log line per request; 500 responses quote the request ID |
-| Health and system metrics | ✅ | `/api/health` checks the DB, Mongo and model; `/api/admin/metrics` gives API and inference p50/p95, per-route latency and row counts (Admin → System metrics) |
+| Health and system metrics | ✅ | `/api/health` checks DB, Mongo, model; `/api/admin/metrics` tracks API/inference latency, recommendation effectiveness (task completion rate), and data processing speed (import rows/sec, seed time, per-row validation time). |
 | Security review | ✅ | Hardcoded JWT fallback secret removed (random per process in dev; required in production). Upload content is checked (xlsx magic bytes, UTF-8 CSV, no binary), plus size, row and Mongo document limits. No secrets in git. CORS allowlist. Rate-limited login and password change |
 | DB indexes and pagination | ✅ | Composite and partial indexes (migration 0003); every list endpoint uses the `{items,total,page,page_size}` envelope |
 | Lighthouse ≥ 90 | ✅ | `/`, `/login`, `/app/dashboard`, desktop and mobile: performance 99–100, accessibility 100, best practices 100, SEO 100 |
@@ -84,6 +84,14 @@ The reference dataset has 28,242 rows from the Kaggle "Crop Yield Prediction" da
 
 1. The model predicts **country-level** yields. A farm-level prediction is the national expectation for that crop and year, not a field model.
 2. Tree models don't extrapolate: seasons after 2013 are predicted at the 2013 level.
-3. Soil, humidity, sunlight, irrigation, fertilizer and disease analyses run on synthetic columns. They demonstrate the workflow but aren't agronomic evidence.
-4. Nutrient (N/P/K) analysis needs a reference dataset, which the project doesn't have yet.
-5. The AI rationale depends on the Groq key and quota. Without it, the app shows rule-based text and says so.
+3. Soil, humidity, sunlight, irrigation, fertilizer and disease analyses run on synthetic columns (for the reference dataset only). Farm soil now uses real SoilGrids data.
+4. The AI rationale depends on the Groq key and quota. Without it, the app shows rule-based text and says so.
+
+## Deviations from spec
+
+- **CSS Modules instead of Tailwind**: Chose CSS Modules and a custom token system for better maintainability and encapsulation without utility-class clutter.
+- **React + Vite instead of Next.js**: A SPA architecture with FastAPI is sufficient and simpler to deploy than a full-stack Next.js app.
+- **FastAPI only**: No separate backend node service; FastAPI handles all API requests.
+- **Yearly instead of seasonal**: The dataset only has yearly data (no within-year/seasonal breakdown), so all aggregations are yearly.
+- **USDA not used**: Used ISRIC SoilGrids for global soil data which is more universally accessible and suitable for the global dataset.
+- **Production calculation**: `production = yield × farm area` since the dataset has no harvested-area column.

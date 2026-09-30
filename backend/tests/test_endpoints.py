@@ -48,7 +48,7 @@ def test_predict_saves_history_with_interval(client, auth):
     res = client.post("/api/predict", json=PREDICT_BODY, headers=auth("farmer"))
     assert res.status_code == 200
     p = res.json()
-    assert p["low_kg_ha"] <= p["predicted_yield_kg_ha"] <= p["high_kg_ha"] and p["model_name"] == "XGBoost" and p["model_version"] == "2.0.0"
+    assert p["low_kg_ha"] <= p["predicted_yield_kg_ha"] <= p["high_kg_ha"] and p["model_name"] == "XGBoost" and p["model_version"] == "2.1.0"
 
     mine = client.get("/api/predictions", headers=auth("farmer")).json()
     assert any(i["id"] == p["id"] for i in mine["items"])
@@ -169,7 +169,7 @@ def test_admin_user_management_and_audit(client, auth):
 def test_predict_rejects_ndvi_and_field_conditions_are_optional(client, auth):
     res = client.post("/api/predict", json={**PREDICT_BODY, "NDVI_index": 0.6}, headers=auth("farmer"))
     assert res.status_code == 422
-    minimal = {k: PREDICT_BODY[k] for k in ("crop_type", "region", "rainfall_mm", "temperature_C", "pesticide_usage_ml", "total_days")}
+    minimal = {k: PREDICT_BODY[k] for k in ("crop_type", "region", "rainfall_mm", "temperature_C", "pesticide_usage_ml")}
     p = client.post("/api/predict", json=minimal, headers=auth("farmer")).json()
     assert p["year"] == 2013 and p["low_kg_ha"] <= p["predicted_yield_kg_ha"] <= p["high_kg_ha"]
 
@@ -198,13 +198,13 @@ def test_model_card_and_provenance(client, auth):
     assert cols["NDVI_index"]["provenance"] == "derived" and not cols["NDVI_index"]["used_by_model"]
     assert cols["rainfall_mm"]["provenance"] == "real" and cols["rainfall_mm"]["used_by_model"]
     assert cols["soil_pH"]["provenance"] == "synthetic" and not cols["soil_pH"]["used_by_model"]
-    assert cols["total_days"]["provenance"] == "synthetic" and cols["total_days"]["used_by_model"]
+    assert cols["total_days"]["provenance"] == "synthetic" and not cols["total_days"]["used_by_model"]
 
 
 def test_recommendation_impact_only_for_model_features(client, auth):
     hub = client.get("/api/predict/recommendations-hub", headers=auth("farmer")).json()
     for r in hub["recommendations"]:
-        modelled = r["rule"] in ("heat_stress", "rainfall_deficit")
+        modelled = r["rule"] == "heat_stress"  # rainfall is constant per country: not estimated
         assert (r["impact_kg_ha"] is not None) == modelled, r["rule"]
         assert r["rule"] != "low_vigour"
 

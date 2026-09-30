@@ -131,7 +131,7 @@ datasets/           Raw and processed data
 docs/               Specs, schema, milestone checklist, screenshots
 ```
 
-## Author & branch
+## 👤 Author & Branch Information
 
-- **Branch:** `milestone-1-3`
+- **Branch:** `DURGA-PRASAD-A`
 - **Repository:** `springboardmentor12233a-tech/-AI-Powered-Crop-Yield-Prediction-and-Agricultural-Productivity-Intelligence-Platform`

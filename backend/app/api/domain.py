@@ -75,12 +75,14 @@ class RiskItem(BaseModel):
     level: Literal["Low", "Moderate", "High", "Critical"]
     mitigation: str
     recommendation_category: str
+    structural: bool = False
+    note: Optional[str] = None
 
 
 class RiskYear(BaseModel):
+    """Yearly breach shares. Drought and flood are omitted: rainfall is constant per country."""
+
     year: int
-    drought: float
-    flood: float
     heat: float
     pest_disease: float
     soil: float
@@ -414,6 +416,8 @@ class SystemMetrics(BaseModel):
     model: Optional[dict]
     database: dict[str, int]
     mongo: bool
+    recommendations: dict
+    processing: dict
 
 
 @admin_router.get("/metrics", response_model=SystemMetrics)
@@ -441,4 +445,30 @@ def admin_system_metrics(_admin: dict = Depends(require_admin)):
         "model": active_model_summary(),
         "database": counts,
         "mongo": mongo.ping(),
+        "recommendations": store.recommendation_effectiveness(),
+        "processing": _processing_speed(),
+    }
+
+
+def _processing_speed() -> dict:
+    """Data processing speed from real runs: the last seed and the recorded upload validations/imports."""
+    import statistics
+
+    from backend.app.db import mongo
+
+    try:
+        d = mongo.db()
+        seed = d.system_metrics.find_one({"_id": "seed"}) or {}
+        reports = [u.get("report") or {} for u in d.uploads.find({"report": {"$ne": None}}, {"report": 1}).sort("created_at", -1).limit(200)]
+    except Exception:
+        return {"available": False}
+    per_row = [r["validate_ms_per_row"] for r in reports if r.get("validate_ms_per_row") is not None]
+    rps = [r["import_rows_per_sec"] for r in reports if r.get("import_rows_per_sec")]
+    return {
+        "available": True,
+        "seed": {k: seed.get(k) for k in ("seconds", "crop_records", "rows_per_sec")} if seed else None,
+        "validation_ms_per_row_median": round(statistics.median(per_row), 4) if per_row else None,
+        "validations_measured": len(per_row),
+        "import_rows_per_sec_median": round(statistics.median(rps), 1) if rps else None,
+        "imports_measured": len(rps),
     }

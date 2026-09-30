@@ -806,6 +806,28 @@ export interface paths {
         patch: operations["update_farm_record_api_farms__farm_id__records__record_id__patch"];
         trace?: never;
     };
+    "/api/farms/{farm_id}/soil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Farm Soil
+         * @description Real soil for a farm: ISRIC SoilGrids (0–30 cm) at the farm (or its region's reference point) plus
+         *     the farm's soil tests rated against Soil Health Card limits. 502 if SoilGrids is unreachable; the
+         *     synthetic dataset columns are never used here.
+         */
+        get: operations["get_farm_soil_api_farms__farm_id__soil_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/soil-tests": {
         parameters: {
             query?: never;
@@ -1592,6 +1614,33 @@ export interface components {
             /** Reference Kg Ha */
             reference_kg_ha: number | null;
         };
+        /** FarmSoil */
+        FarmSoil: {
+            /** Farm Id */
+            farm_id: number;
+            /** Source */
+            source: string;
+            /** Location */
+            location: {
+                [key: string]: unknown;
+            };
+            /** Fetched At */
+            fetched_at: string;
+            /** Cached */
+            cached: boolean;
+            /** Properties */
+            properties: {
+                [key: string]: components["schemas"]["SoilProperty"];
+            };
+            /** Assessment */
+            assessment: {
+                [key: string]: unknown;
+            };
+            /** Soil Tests */
+            soil_tests: components["schemas"]["RatedSoilTest"][];
+            /** Nutrient Source */
+            nutrient_source: string;
+        };
         /** FieldSpec */
         FieldSpec: {
             /** Name */
@@ -1758,6 +1807,27 @@ export interface components {
              * @default true
              */
             system: boolean;
+        };
+        /** NutrientRating */
+        NutrientRating: {
+            /** Nutrient */
+            nutrient: string;
+            /** Label */
+            label: string;
+            /** Unit */
+            unit: string;
+            /** Value */
+            value: number | null;
+            /** Rating */
+            rating: ("Low" | "Medium" | "High") | null;
+            /** Low Below */
+            low_below: number;
+            /** High Above */
+            high_above: number;
+            /** Guidance */
+            guidance: string | null;
+            /** Oxide Equivalent */
+            oxide_equivalent?: string | null;
         };
         /** OptimalBand */
         OptimalBand: {
@@ -1936,6 +2006,17 @@ export interface components {
             rmse: number | null;
             /** Mae */
             mae: number | null;
+        };
+        /** RatedSoilTest */
+        RatedSoilTest: {
+            /** Id */
+            id: string;
+            /** Sampled On */
+            sampled_on: string;
+            /** Lab */
+            lab?: string | null;
+            /** Ratings */
+            ratings: components["schemas"]["NutrientRating"][];
         };
         /** ReadAllResponse */
         ReadAllResponse: {
@@ -2160,6 +2241,13 @@ export interface components {
             mitigation: string;
             /** Recommendation Category */
             recommendation_category: string;
+            /**
+             * Structural
+             * @default false
+             */
+            structural: boolean;
+            /** Note */
+            note?: string | null;
         };
         /** RiskSummary */
         RiskSummary: {
@@ -2172,14 +2260,13 @@ export interface components {
             /** Share Affected */
             share_affected: number;
         };
-        /** RiskYear */
+        /**
+         * RiskYear
+         * @description Yearly breach shares. Drought and flood are omitted: rainfall is constant per country.
+         */
         RiskYear: {
             /** Year */
             year: number;
-            /** Drought */
-            drought: number;
-            /** Flood */
-            flood: number;
             /** Heat */
             heat: number;
             /** Pest Disease */
@@ -2261,6 +2348,19 @@ export interface components {
             /** Why */
             why: string;
         };
+        /** SoilProperty */
+        SoilProperty: {
+            /** Label */
+            label: string;
+            /** Unit */
+            unit: string;
+            /** Value 0 30Cm */
+            value_0_30cm: number;
+            /** By Depth */
+            by_depth: {
+                [key: string]: number;
+            };
+        };
         /** SoilTestIn */
         SoilTestIn: {
             /** Farm Id */
@@ -2282,6 +2382,8 @@ export interface components {
             potassium_kg_ha?: number | null;
             /** Organic Matter Percent */
             organic_matter_percent?: number | null;
+            /** Organic Carbon Percent */
+            organic_carbon_percent?: number | null;
             /** Lab */
             lab?: string | null;
             /** Notes */
@@ -2308,6 +2410,8 @@ export interface components {
             potassium_kg_ha?: number | null;
             /** Organic Matter Percent */
             organic_matter_percent?: number | null;
+            /** Organic Carbon Percent */
+            organic_carbon_percent?: number | null;
             /** Lab */
             lab?: string | null;
             /** Notes */
@@ -2339,6 +2443,14 @@ export interface components {
             };
             /** Mongo */
             mongo: boolean;
+            /** Recommendations */
+            recommendations: {
+                [key: string]: unknown;
+            };
+            /** Processing */
+            processing: {
+                [key: string]: unknown;
+            };
         };
         /** Task */
         Task: {
@@ -2567,8 +2679,11 @@ export interface components {
             temperature_C: number;
             /** Pesticide Usage Ml */
             pesticide_usage_ml: number;
-            /** Total Days */
-            total_days: number;
+            /**
+             * Total Days
+             * @description Growing period. Not a model input since v2.1 (synthetic crop proxy in the dataset).
+             */
+            total_days?: number | null;
             /**
              * Irrigation Type
              * @example Drip
@@ -5595,6 +5710,64 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FarmRecordOut"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_farm_soil_api_farms__farm_id__soil_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                farm_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FarmSoil"];
                 };
             };
             /** @description Not signed in or session expired */

@@ -1,108 +1,132 @@
-# YieldSense AI — Official Master Architecture & Module Specification
+# YieldSense AI — System Architecture
 
-## 1. Executive System Overview
-**YieldSense AI** is an enterprise-grade, AI-powered Crop Yield Prediction and Agricultural Productivity Intelligence Platform. 
+> **Version**: 2.1.0 · **Branch**: `DURGA-PRASAD-A` · **Last updated**: September 2026
 
-The architecture is built on a **3-Tier Modular Framework** (Presentation Layer, API Gateway & Security Layer, AI Processing Pipeline, and Data/Storage Layer) fulfilling all requirements of Milestones 1, 2, 3, and 4.
-
----
-
-## 2. Master System Architecture Diagram
+## High-Level Architecture
 
 ```mermaid
-graph TD
-    subgraph Layer1 ["1. USERS & PERSONAS LAYER"]
-        U1["Farmers / Agri Officers"]
-        U2["Agricultural Departments"]
-        U3["Agronomists & Consultants"]
-        U4["Researchers"]
-        U5["System Administrators"]
+graph TB
+    subgraph Client
+        React["React + Vite + TypeScript<br/>CSS Modules · Recharts"]
     end
 
-    subgraph Layer2 ["2. WEB APPLICATION PRESENTATION LAYER"]
-        A1["KPI Overview Dashboard"]
-        A2["Yield Predictor Engine & Model Comparison"]
-        A3["Weather Analytics & Climate Trends"]
-        A4["Soil Analysis & Health Spectrum"]
-        A5["Dataset Explorer (500 Records)"]
-        A6["EDA Analytics & Performance Reports"]
+    subgraph API["FastAPI Backend"]
+        Auth["JWT Auth + RBAC"]
+        Predict["Prediction Service"]
+        Insights["Recommendations + Risk"]
+        Data["Dataset / EDA / Analytics"]
+        Upload["Data Collection (CSV/XLSX)"]
+        Soil["Soil Service (SoilGrids)"]
+        LLM["LLM Service (Groq)"]
     end
 
-    subgraph Layer3 ["3. API GATEWAY & RBAC SECURITY LAYER"]
-        G1["JWT / Session Authentication"]
-        G2["Role-Based Access Control (Farmer / Agronomist / Admin)"]
-        G3["API Request Routing (FastAPI)"]
-        G4["Pydantic V2 Input Schema Validation"]
+    subgraph Storage
+        PG["PostgreSQL 18<br/>Users · Farms · Crop records · Predictions · Tasks · Audit"]
+        Mongo["MongoDB<br/>Uploads · Soil tests · Weather cache · LLM cache · SoilGrids cache"]
+        Model["XGBoost v2.1<br/>models/v2/model.pkl"]
+        CSV["Reference dataset<br/>datasets/processed/"]
     end
 
-    subgraph Layer4 ["4. AI & DATA PROCESSING PIPELINE (MODULES 1 - 7)"]
-        P1["Module 1: Data Collection & Ingestion<br/>(Crop info, Historical Yield, Soil, Weather)"]
-        P2["Module 2: Data Preprocessing & Pipeline<br/>(Cleaning, Outliers, OneHotEncoder, StandardScaler)"]
-        P3["Module 3: Weather & Climate Analysis<br/>(Rainfall adequacy, Temp stress, Humidity balance)"]
-        P4["Module 4: Soil Health & Fertility Analysis<br/>(Crop-aware pH suitability, Moisture, Soil Health Index)"]
-        P5["Module 5: Yield Prediction Model & GridSearchCV<br/>(XGBoost, Random Forest, LightGBM, Linear/Ridge)"]
-        P6["Module 6: Prediction Outputs & Analytics Dashboard<br/>(Yield kg/ha, Productivity & Risk ratings, EDA Reports)"]
-        P7["Module 7: AI Recommendations & External LLM Insights<br/>(Groq Llama-3 LLM, Fertilizer & Irrigation advice)"]
-
-        P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7
+    subgraph External
+        OpenMeteo["Open-Meteo API<br/>Live weather + ERA5 archive"]
+        SoilGrids["ISRIC SoilGrids 2.0<br/>Real soil properties"]
+        Groq["Groq Cloud<br/>LLM rationale"]
     end
 
-    subgraph Layer5 ["5. EXTERNAL DATA & AI INTEGRATIONS"]
-        E1["Groq LLM API (groq/compound-mini)"]
-        E2["Google Gemini AI API"]
-        E3["Agronomic AI Expert Engine (Offline Fallback)"]
-    end
+    React -->|HTTPS / JWT| Auth
+    Auth --> Predict
+    Auth --> Insights
+    Auth --> Data
+    Auth --> Upload
+    Auth --> Soil
 
-    subgraph Layer6 ["6. DATA & STORAGE LAYER"]
-        S1["Cleaned Dataset (cleaned_crop_yield.csv)"]
-        S2["Model Weights (best_model.pkl & preprocessor.pkl)"]
-        S3["Model Metrics JSON (model_performance_metrics.json)"]
-    end
-
-    Users --> Layer2
-    Layer2 --> Layer3
-    Layer3 --> Layer4
-    Layer4 --> Layer5
-    Layer4 --> Layer6
+    Predict --> Model
+    Predict --> PG
+    Insights --> LLM
+    Insights --> Groq
+    Data --> PG
+    Data --> CSV
+    Upload --> PG
+    Upload --> Mongo
+    Soil --> SoilGrids
+    Soil --> Mongo
+    Predict --> OpenMeteo
 ```
 
----
+## Tech Stack
 
-## 3. Core Processing Modules & Deliverable Reference
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, Vite 6, TypeScript 5.8, CSS Modules, Recharts, Radix UI |
+| Backend | Python 3.12, FastAPI, Uvicorn, Pydantic v2 |
+| Relational DB | PostgreSQL 18 (SQLAlchemy 2.1, Alembic migrations) |
+| Document DB | MongoDB (PyMongo) |
+| ML Model | XGBoost 3.4 (scikit-learn pipeline, trained on FAOSTAT data) |
+| Auth | JWT (PyJWT + bcrypt), role-based: Farmer / Agronomist / Admin |
+| External APIs | Open-Meteo (weather), ISRIC SoilGrids (soil), Groq (LLM) |
 
-### Security & User Management: User Authentication & Role-Based Access Control (RBAC)
-- **Function**: Gate access and manage user credentials with 3 defined personas: **Farmer / Agri Officer**, **Agronomist**, and **System Administrator**.
-- **Code Mapping**: `frontend/src/components/AuthModal.tsx`, `Header.tsx`, `App.tsx`.
+## Database Design
 
-### Module 1: Data Collection & Ingestion
-- **Function**: Ingests agricultural telemetry, soil chemistry, weather conditions, and historical yield attributes across 500 farm records.
-- **Code Mapping**: `datasets/raw/Smart_Farming_Crop_Yield_2024.csv`, `datasets/processed/cleaned_crop_yield.csv`, `frontend/src/components/DataExplorer.tsx`.
+See [`database-schema.md`](database-schema.md) for the full ERD (Mermaid).
 
-### Module 2: Data Preprocessing & Pipeline
-- **Function**: Imputes missing values, cleans categorical strings, scales numerical features via `StandardScaler()`, and encodes categorical variables via `OneHotEncoder(handle_unknown='ignore')`.
-- **Code Mapping**: `scripts/preprocess_data.py`, `models/preprocessor.pkl`.
+### PostgreSQL Tables
+- `users` — accounts with bcrypt hashes and roles
+- `farms` — user-owned farms with coordinates, region, crops
+- `farm_records` — per-season historical entries per farm
+- `crop_records` — reference dataset (28,242 FAOSTAT rows), indexed on region/crop/year
+- `predictions` — saved prediction results with model version
+- `recommendation_actions` — task tracking (create/snooze/dismiss/done)
+- `notifications` — deduplicated alerts with read state
+- `audit_log` — admin activity log
 
-### Module 3: Weather Analysis & Climate Trends
-- **Function**: Computes regional rainfall adequacy scores, temperature stress risks, humidity balance, sunlight exposure, and seasonal rainfall vs. temperature trend lines.
-- **Code Mapping**: `scripts/weather_analytics.py`, `backend/app/services/weather_service.py`, `backend/app/api/weather.py`, `frontend/src/components/WeatherAnalyticsView.tsx`.
+### MongoDB Collections
+- `uploads` — raw uploaded files + validation reports
+- `soil_tests` — farm soil test entries
+- `weather_cache` — Open-Meteo responses (TTL-indexed)
+- `llm_cache` — Groq rationale cache (30-day TTL)
+- `soilgrids_cache` — ISRIC soil data (180-day TTL)
+- `system_metrics` — seed timing and processing speed
 
-### Module 4: Soil Analysis & Health Spectrum
-- **Function**: Calculates crop-specific soil pH suitability (Rice: 5.5-6.8, Wheat: 6.0-7.5, Maize: 5.8-7.2, Soybean: 6.0-7.0, Cotton: 5.8-7.5), moisture sufficiency, NDVI index, and Soil Health Index (0.0-1.0).
-- **Code Mapping**: `scripts/soil_analytics.py`, `backend/app/services/soil_service.py`, `backend/app/api/soil.py`, `frontend/src/components/SoilAnalysisView.tsx`.
+## ML Pipeline
 
-### Module 5: Yield Prediction Model & GridSearchCV Training
-- **Function**: Executes multi-model training and `GridSearchCV` hyperparameter tuning across 6 regression models (Linear Regression, Ridge, Random Forest, XGBoost, LightGBM, Dummy Mean Baseline), evaluating test RMSE/MAE/R²/Latency to save production model artifacts.
-- **Code Mapping**: `scripts/train_models.py`, `models/best_model.pkl`, `models/model_performance_metrics.json`.
+- **Features**: crop_type, region, year, rainfall_mm, temperature_C, pesticide_usage_ml (6 inputs)
+- **Excluded**: NDVI (target leakage), total_days (synthetic crop proxy), soil columns (synthetic)
+- **Target**: yield_kg_per_hectare (raw, not log-transformed)
+- **Splits**: temporal (train ≤ 2008, test 2009–2013), random, unseen-region
+- **Served model**: XGBoost (raw), R² 0.953, RMSE 2,065 kg/ha on temporal split
+- **Interval**: P10–P90 from temporal-split residuals; held-out coverage 74.5% (nominal 80%)
+- **Model card**: `models/v2/model_card.json`
 
-### Module 6: Prediction Outputs & Analytics Reporting Dashboard
-- **Function**: Validates 14 input features via Pydantic V2, executes `ml_service.py` inference, calculates Productivity Ratings (`Low` <3500, `Medium` 3500-4800, `High` >4800) and renders interactive EDA statistical charts.
-- **Code Mapping**: `backend/app/services/ml_service.py`, `backend/app/api/predictions.py`, `frontend/src/components/YieldPredictor.tsx`, `frontend/src/components/EdaDashboard.tsx`.
+## API Structure
 
-### Module 7: AI Recommendations & External LLM Insights
-- **Function**: Integrates live **Groq LLM API** (`groq/compound-mini` / Llama-3 open source models) and Gemini AI to generate real-time AI yield summary insights, active crop risk flags, and step-by-step fertilizer/irrigation management advice.
-- **Code Mapping**: `backend/app/services/llm_service.py`, `POST /api/predict/insights`, AI Insights Panel in `frontend/src/components/YieldPredictor.tsx`.
+All routes require JWT except `/api/auth/*` and `/api/health`. Role gates:
 
----
+| Route prefix | Farmer | Agronomist | Admin |
+|-------------|--------|-----------|-------|
+| `/api/predict` | ✅ | ✅ | ✅ |
+| `/api/farms` (own) | ✅ | ✅ | ✅ |
+| `/api/farms` (all) | ❌ | ✅ | ✅ |
+| `/api/uploads` (crop_records) | ❌ | ✅ | ✅ |
+| `/api/admin/*` | ❌ | ❌ | ✅ |
 
-## 4. Development & Evaluation Directive
-> **AUTHORITATIVE SPECIFICATION**: This Master System Architecture document serves as the official, updated specification for all project evaluations. All milestone deliverables (Milestones 1, 2, 3, and 4) map directly to the modules above.
+## Screens
+
+1. **Landing** — public marketing page
+2. **Sign In / Register** — full-page auth with role selection
+3. **Dashboard** — KPIs, data coverage, yield ranking, recommendations
+4. **Yield Predictor** — model inputs + field conditions, what-if scenarios
+5. **Weather** — live forecast + yearly climate trend
+6. **Soil** — real SoilGrids data + soil test ratings + crop suitability
+7. **Recommendations** — AI + rule-based, with task management
+8. **Analytics** — trends, farm comparison, CSV/XLSX export
+9. **Dataset Explorer** — paginated records with provenance badges
+10. **EDA** — distribution, scatter, crop breakdown, correlation
+11. **Risk Assessment** — likelihood × impact matrix, timeline, anomalies
+12. **Model Performance** — all models × 3 splits, ablation, before/after
+13. **Prediction History** — server-backed, compare, re-run
+14. **Farms** — CRUD + map + seasons + soil tests
+15. **Data Collection** — upload wizard (CSV/XLSX)
+16. **Productivity Report** — printable (/report/productivity)
+17. **Notifications** — bell + page
+18. **Settings** — profile, password, preferences
+19. **Users & Roles** — admin only

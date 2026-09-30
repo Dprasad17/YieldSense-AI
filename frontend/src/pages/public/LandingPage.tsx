@@ -92,7 +92,7 @@ const FAQ = [
   ],
   [
     'How accurate are the predictions?',
-    'Each prediction shows the model it came from. Agronomists and administrators can see the full model comparison, including R², RMSE and MAE on a held-out test set.',
+    'Each prediction shows the model it came from. Agronomists and administrators can see the full model comparison, including R², RMSE and MAE on a temporal split: trained on 1990–2008 and tested on 2009–2013, years the model never saw.',
   ],
   [
     'Do I need to install anything?',
@@ -231,7 +231,7 @@ function Preview() {
           <BarChart3 size={18} color="var(--data-model)" />
           <div style={{ fontSize: 'var(--text-sm)' }}>
             <div style={{ fontWeight: 'var(--weight-semibold)' }}>Predicted yield</div>
-            <div style={{ color: 'var(--muted)' }}>XGBoost · 7 model inputs</div>
+            <div style={{ color: 'var(--muted)' }}>XGBoost · 6 model inputs</div>
           </div>
         </div>
       </div>

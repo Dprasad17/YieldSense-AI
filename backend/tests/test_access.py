@@ -109,3 +109,23 @@ def test_admin_system_metrics(client, auth):
     assert m["inference"]["count"] >= 1 and m["inference"]["p50_ms"] is not None
     assert m["database"]["crop_records"] == 28242 and m["model"]["name"] == "XGBoost"
     assert m["api"]["routes"] and all(r["route"].split(" ")[0] in {"GET", "POST", "PATCH", "DELETE"} for r in m["api"]["routes"])
+
+
+def test_effectiveness_and_processing_metrics(client, auth):
+    hub = client.get("/api/predict/recommendations-hub?region=India&crop=Rice", headers=auth("farmer")).json()
+    rec = hub["recommendations"][0]
+    client.post(f"/api/recommendations/{rec['id']}/actions", json={"action": "create_task"}, headers=auth("farmer"))
+    client.post(f"/api/recommendations/{rec['id']}/actions", json={"action": "done"}, headers=auth("farmer"))
+    farm = client.get("/api/farms", headers=auth("farmer")).json()["items"][0]["id"]
+    files = {"file": ("s.csv", b"Season,Crop,Hectares,Yield\n2008,Rice,4,3500\n", "text/csv")}
+    up = client.post("/api/uploads", data={"kind": "farm_records", "farm_id": farm}, files=files, headers=auth("farmer")).json()
+    client.post(f"/api/uploads/{up['id']}/validate", json={"mapping": up["mapping"]}, headers=auth("farmer"))
+    client.post(f"/api/uploads/{up['id']}/import", headers=auth("farmer"))
+    m = client.get("/api/admin/metrics", headers=auth("admin")).json()
+    r = m["recommendations"]
+    assert r["tasks"] >= 1 and r["done"] >= 1 and 0 < r["completion_rate"] <= 1
+    assert any(u["username"] == "farmer" and u["done"] >= 1 for u in r["per_user"])
+    assert "seasons" in r["outcome_note"]
+    p = m["processing"]
+    assert p["available"] and p["validations_measured"] >= 1 and p["imports_measured"] >= 1
+    assert p["validation_ms_per_row_median"] > 0 and p["import_rows_per_sec_median"] > 0

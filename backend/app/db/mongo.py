@@ -28,6 +28,8 @@ def ensure_indexes() -> None:
     d.weather_cache.create_index("expires_at", expireAfterSeconds=0)
     d.weather_cache.create_index("key", unique=True)
     d.llm_cache.create_index("key", unique=True)
+    d.soilgrids_cache.create_index("key", unique=True)
+    d.soilgrids_cache.create_index("expires_at", expireAfterSeconds=0)
     d.llm_cache.create_index("created_at", expireAfterSeconds=30 * 24 * 3600)
 
 

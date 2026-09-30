@@ -1,5 +1,7 @@
 # YieldSense AI — Milestone 2: Methodological ML Quality & Dual-Tier Validation Report
 
+> **⚠️ SUPERSEDED**: This report describes the v1 system which used NDVI as a model feature. NDVI was derived from the yield's own percentile rank during preprocessing, making it target leakage — the model was effectively given the answer. The v1 Random Forest R² of 0.995 was therefore artificially inflated. The current system (v2.1) excludes NDVI and total_days, uses XGBoost, and achieves R² 0.953 on a temporal split (train ≤ 2008, test 2009–2013). See [`models/v2/model_card.json`](../models/v2/model_card.json) for the current metrics.
+
 ## 1. Executive Summary & Methodological Clarification
 This document presents the complete dual-tier Machine Learning audit and evaluation report for **YieldSense AI Milestone 2**. 
 

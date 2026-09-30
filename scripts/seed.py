@@ -14,6 +14,7 @@ Seed PostgreSQL + MongoDB for YieldSense.
 import io
 import os
 import sys
+import time
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -56,7 +57,8 @@ DEMO_FARMS = [
 SEASONS = range(2009, 2014)
 
 
-def seed_crop_records(reset: bool) -> None:
+def seed_crop_records(reset: bool) -> int:
+    """Loads the reference dataset; returns the number of rows loaded (0 when already present)."""
     with session_scope() as s:
         count = s.scalar(text("SELECT count(*) FROM crop_records WHERE source = 'reference'")) or 0
         if reset:
@@ -64,7 +66,7 @@ def seed_crop_records(reset: bool) -> None:
             count = 0
     if count:
         print(f"crop_records: {count:,} reference rows already present")
-        return
+        return 0
     df = pd.read_csv(settings.DATASET_PATH)
     df = df[list(CSV_COLUMNS)].rename(columns=CSV_COLUMNS)
     df["year"] = pd.to_datetime(df["sowing_date"]).dt.year
@@ -83,6 +85,7 @@ def seed_crop_records(reset: bool) -> None:
     finally:
         raw.close()
     print(f"crop_records: inserted {len(df):,} reference rows")
+    return int(len(df))
 
 
 def seed_users() -> None:
@@ -125,7 +128,15 @@ def seed_farms(reset: bool) -> None:
 
 def main() -> None:
     reset = "--reset" in sys.argv
-    seed_crop_records(reset)
+    started = time.perf_counter()
+    loaded = seed_crop_records(reset)
+    if loaded:
+        seconds = time.perf_counter() - started
+        print(f"crop_records: {loaded:,} rows in {seconds:.2f}s ({loaded / seconds:,.0f} rows/s)")
+        try:
+            record_seed_timing(seconds, loaded)
+        except Exception as e:
+            print(f"mongo: seed timing not recorded ({e})")
     seed_users()
     seed_farms(reset)
     try:
@@ -133,6 +144,19 @@ def main() -> None:
         print("mongo: indexes ensured")
     except Exception as e:
         print(f"mongo: skipped ({e})")
+
+
+def record_seed_timing(seconds: float, rows: int) -> None:
+    """Stores the last seed's duration for the admin system metrics (data processing speed)."""
+    from datetime import datetime, timezone
+
+    from backend.app.db import mongo
+
+    mongo.db().system_metrics.update_one(
+        {"_id": "seed"},
+        {"$set": {"seconds": round(seconds, 2), "crop_records": rows, "rows_per_sec": round(rows / seconds, 1) if seconds else None, "at": datetime.now(timezone.utc)}},
+        upsert=True,
+    )
 
 
 if __name__ == "__main__":

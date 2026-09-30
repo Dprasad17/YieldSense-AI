@@ -25,8 +25,8 @@ class YieldPredictionRequest(BaseModel):
     rainfall_mm: float = Field(..., ge=0.0, le=5000.0)
     temperature_C: float = Field(..., ge=-10.0, le=60.0)
     pesticide_usage_ml: float = Field(..., ge=0.0)
-    total_days: int = Field(..., ge=1, le=400)
     # Field conditions: optional; used for risk flags and insights, not by the model.
+    total_days: Optional[int] = Field(None, ge=1, le=400, description="Growing period. Not a model input since v2.1 (synthetic crop proxy in the dataset).")
     irrigation_type: Optional[str] = Field(None, json_schema_extra={"example": "Drip"})
     fertilizer_type: Optional[str] = Field(None, json_schema_extra={"example": "Urea"})
     crop_disease_status: Optional[str] = Field(None, json_schema_extra={"example": "None"})

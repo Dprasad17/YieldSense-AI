@@ -54,7 +54,6 @@ export function PredictionReportPage() {
     ['Rainfall', `${formatCount(input.rainfall_mm)} mm`],
     ['Temperature', `${input.temperature_C} °C`],
     ['Pesticides (index)', formatCount(input.pesticide_usage_ml)],
-    ['Growing period', `${input.total_days} days`],
     ['Disease status', na(input.crop_disease_status)],
     ['Soil pH', na(input.soil_pH, (x: number) => formatIndex(x))],
     ['Soil moisture', na(input['soil_moisture_%'], (x: number) => `${x}%`)],
@@ -425,7 +424,7 @@ export function SettingsPage() {
 const FAQ: [string, string][] = [
   [
     'How is the predicted yield calculated?',
-    'An XGBoost model trained on 28,242 country-level FAOSTAT records uses 7 inputs (crop, region, year, rainfall, temperature, pesticides and growing period) to estimate yield per hectare, with a P10–P90 range. Field conditions such as soil and irrigation add risk flags but do not change the estimate.',
+    'An XGBoost model trained on 28,242 country-level FAOSTAT records uses 6 inputs (crop, region, year, rainfall, temperature and pesticides) to estimate yield per hectare, with a P10–P90 range. Field conditions such as soil and irrigation add risk flags but do not change the estimate.',
   ],
   [
     'Why does my region or crop change on every screen?',
@@ -513,8 +512,7 @@ export function HelpPage() {
             <CardHeader title="How predictions work" />
             <ol style={{ margin: 0, paddingLeft: 'var(--space-5)', lineHeight: 1.7 }}>
               <li>
-                You enter the model inputs: crop, region, season year, rainfall, temperature, pesticides and growing
-                period.
+                You enter the model inputs: crop, region, season year, rainfall, temperature and pesticides.
               </li>
               <li>The inputs are encoded exactly as during training.</li>
               <li>

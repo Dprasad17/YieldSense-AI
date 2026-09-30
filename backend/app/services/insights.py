@@ -123,9 +123,16 @@ def farm_comparison(f: Filters, limit: int, sort: str) -> dict:
 
 # ------------------------------------------------------------------ risk
 
+# Rainfall in the dataset is one long-term average per country (constant across years), so drought and
+# flood describe a country's climate zone (structural risk), not a particular year's weather.
+STRUCTURAL_RISKS = {"drought", "flood"}
+STRUCTURAL_NOTE = "Climate-zone (structural) risk: rainfall is a long-term country average, constant across years, so this doesn't change from year to year."
+# Model features whose kg/ha effect we don't report: rainfall is a cross-country association, not a yearly weather effect.
+NOT_ESTIMATED_FEATURES = {"rainfall_mm": "Not estimated: rainfall is a long-term country average (constant across years), so the model's rainfall effect is a cross-country association, not a yearly weather effect."}
+
 RISK_TYPES = {
-    "drought": ("Drought", "Rainfall below the crop's P10", "irrigation"),
-    "flood": ("Flood / waterlogging", "Rainfall above the crop's P90", "irrigation"),
+    "drought": ("Drought (climate zone)", "Long-term rainfall below the crop's P10", "irrigation"),
+    "flood": ("Flood / waterlogging (climate zone)", "Long-term rainfall above the crop's P90", "irrigation"),
     "heat": ("Heat stress", "Temperature above the crop's P90", "crop_planning"),
     "pest_disease": ("Pest & disease", "Moderate or severe disease recorded", "disease_pest"),
     "soil": ("Soil pH", "pH outside the crop's optimal band", "fertilizer"),
@@ -194,11 +201,14 @@ def risk_assessment(f: Filters) -> dict:
                     "level": ar.risk_level(likelihood * impact),
                     "mitigation": MITIGATION[key],
                     "recommendation_category": category,
+                    "structural": key in STRUCTURAL_RISKS,
+                    "note": STRUCTURAL_NOTE if key in STRUCTURAL_RISKS else None,
                 }
             )
-        by_year = pd.DataFrame({k: v.astype(float) for k, v in masks.items()}).assign(year=df["year"]).groupby("year").mean()
+        yearly = {k: v for k, v in masks.items() if k not in STRUCTURAL_RISKS}
+        by_year = pd.DataFrame({k: v.astype(float) for k, v in yearly.items()}).assign(year=df["year"]).groupby("year").mean()
         timeline = [
-            {"year": int(y), **{k: round(float(row[k]), 4) for k in masks}} for y, row in by_year.sort_index().iterrows()
+            {"year": int(y), **{k: round(float(row[k]), 4) for k in yearly}} for y, row in by_year.sort_index().iterrows()
         ]
     items.sort(key=lambda r: (-r["score"], r["type"]))
     return {
@@ -209,7 +219,8 @@ def risk_assessment(f: Filters) -> dict:
         "anomalies": anomalies(f),
         "method": (
             "Likelihood = share of records breaching the crop threshold (1–5). Impact = median yield loss of "
-            "breaching vs other records of the same crop (1–5). Level from likelihood × impact."
+            "breaching vs other records of the same crop (1–5). Level from likelihood × impact. Drought and flood use "
+            "long-term rainfall (constant per country), so they are climate-zone risks and are left out of the yearly timeline."
         ),
     }
 
@@ -274,7 +285,7 @@ def parse_recommendation_id(rec_id: str) -> Optional[Filters]:
 def _impact(df: pd.DataFrame, mask: pd.Series, adjust, feature: str) -> Optional[float]:
     """Model-estimated mean gain (kg/ha) on affected records when `adjust` fixes the feature.
     None when the feature is not a model input (synthetic columns): the model can't estimate it."""
-    if feature not in ml_service.features:
+    if feature not in ml_service.features or feature in NOT_ESTIMATED_FEATURES:
         return None
     affected = df[mask]
     if affected.empty:
@@ -360,7 +371,7 @@ def recommendations(f: Filters) -> dict:
         share = float(mask.mean())
         recs.append(
             _rec(rule, f, category, title, action_label, action, impact, baseline, share, area, crop_label,
-                 [_evidence(label, unit, observed, median_low, median_high, share)])
+                 [_evidence(label, unit, observed, median_low, median_high, share)], feature)
         )
 
     disease_mask = df["crop_disease_status"].isin(ar.DISEASE_EVENT_STATUSES)
@@ -403,7 +414,7 @@ def _evidence(label, unit, observed, low, high, share) -> dict:
     }
 
 
-def _rec(rule, f, category, title, action_label, action, impact, baseline, share, area, crop_label, evidence) -> dict:
+def _rec(rule, f, category, title, action_label, action, impact, baseline, share, area, crop_label, evidence, feature=None) -> dict:
     severity = _severity(impact, baseline, share)
     days = SEVERITY_DEADLINE_DAYS[severity]
     return {
@@ -416,8 +427,8 @@ def _rec(rule, f, category, title, action_label, action, impact, baseline, share
         "action_label": action_label,
         "impact_kg_ha": None if impact is None else round(float(impact), 1),
         "impact_basis": (
-            "Not estimated: this column is synthetic in the dataset and is not a model input. "
-            "Severity reflects the share of records outside the optimal band."
+            NOT_ESTIMATED_FEATURES.get(feature or "", "Not estimated: this column is synthetic in the dataset and is not a model input.")
+            + " Severity reflects the share of records outside the optimal band."
             if impact is None
             else f"{ml_service.name} estimate: mean change in predicted yield on affected records when the value is moved into the optimal band."
         ),

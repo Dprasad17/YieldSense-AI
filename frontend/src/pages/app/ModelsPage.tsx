@@ -100,6 +100,9 @@ export function ModelPerformancePage() {
 
   if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
   const m = sel?.metrics;
+  const heldout = card?.interval?.heldout;
+  const ablation = card?.weather_ablation;
+  const prev = card?.previous_version?.selected;
   return (
     <div className={s.page}>
       <PageHeader
@@ -131,11 +134,15 @@ export function ModelPerformancePage() {
               subtitle={`MAE ${formatCount(m.mae)} kg/ha`}
             />
             <StatCard
-              label="P10–P90 coverage"
-              value={formatPercent(m.interval_coverage * 100)}
+              label="P10–P90 coverage · held out"
+              value={heldout ? formatPercent(heldout.coverage * 100) : formatPercent(m.interval_coverage * 100)}
               icon={Target}
-              subtitle="Nominal 80% · random calibration"
-              info="Share of test yields inside the P10–P90 band when the band is calibrated on a random slice of the training years."
+              subtitle={
+                heldout
+                  ? `Nominal 80% · mean width ${formatCount(heldout.mean_width_kg_ha)} kg/ha · 2011–2013`
+                  : 'Nominal 80% · random calibration'
+              }
+              info={heldout?.method ?? 'Calibrated on a random slice of the training years.'}
             />
             <StatCard
               label="Latency p50 / p95"
@@ -255,11 +262,16 @@ export function ModelPerformancePage() {
                 <dd className={s.num}>
                   {formatCount(card.interval.residual_q10)} / +{formatCount(card.interval.residual_q90)} kg/ha
                 </dd>
-                <dt>Coverage (table)</dt>
+                <dt>Held-out coverage</dt>
                 <dd>
-                  The coverage column uses a band calibrated on a random slice of the training data. On the temporal
-                  split that band covers {m ? formatPercent(m.interval_coverage * 100) : '—'} of test yields, below the
-                  nominal 80%, so the served band uses the out-of-time residuals above instead.
+                  {heldout
+                    ? `${formatPercent(heldout.coverage * 100)} of ${formatCount(heldout.evaluation_rows)} yields (2011–2013) fall inside a band calibrated on ${formatCount(heldout.calibration_rows)} rows from 2009–2010. Mean width ${formatCount(heldout.mean_width_kg_ha)} kg/ha, median ${formatCount(heldout.median_width_kg_ha)} kg/ha. Nominal 80%.`
+                    : 'Not measured.'}
+                </dd>
+                <dt>Coverage column</dt>
+                <dd>
+                  The table&apos;s coverage uses a band calibrated on a random slice of the training years; on the
+                  temporal split it covers {m ? formatPercent(m.interval_coverage * 100) : '—'} of test yields.
                 </dd>
               </dl>
             ) : (
@@ -267,6 +279,76 @@ export function ModelPerformancePage() {
             )}
           </Card>
         </div>
+
+        {ablation && (
+          <div className={s.s6}>
+            <Card>
+              <CardHeader
+                title="Weather impact (ablation)"
+                subtitle={`Temporal split · ${ablation.model} (${ablation.target}) with and without weather inputs`}
+              />
+              <DataTable
+                caption="Weather feature ablation"
+                compact
+                rows={ablation.results}
+                rowKey={r => r.variant}
+                columns={[
+                  { key: 'v', header: 'Variant', render: r => r.variant },
+                  { key: 'rmse', header: 'RMSE', align: 'right', render: r => formatCount(r.rmse) },
+                  {
+                    key: 'd',
+                    header: 'ΔRMSE',
+                    align: 'right',
+                    render: r => (r.delta_rmse === 0 ? '—' : `${r.delta_rmse > 0 ? '+' : ''}${formatCount(r.delta_rmse)}`),
+                  },
+                  { key: 'r2', header: 'R²', align: 'right', render: r => formatNumber(r.r2, 4) },
+                  {
+                    key: 'dr2',
+                    header: 'ΔR²',
+                    align: 'right',
+                    render: r => (r.delta_r2 === 0 ? '—' : `${r.delta_r2 > 0 ? '+' : ''}${formatNumber(r.delta_r2, 4)}`),
+                  },
+                ]}
+              />
+              <p className={s.small}>{ablation.note}</p>
+            </Card>
+          </div>
+        )}
+
+        {prev && m && (
+          <div className={s.s6}>
+            <Card>
+              <CardHeader
+                title={`Before / after · v${card?.previous_version?.version ?? '?'} → v${card?.version}`}
+                subtitle="Temporal split, served model"
+              />
+              <DataTable
+                caption="Model version comparison"
+                compact
+                rows={[
+                  { v: `v${card?.previous_version?.version}`, features: card?.previous_version?.features, r: prev.metrics },
+                  { v: `v${card?.version}`, features: card?.features, r: m },
+                ]}
+                rowKey={x => x.v}
+                columns={[
+                  { key: 'v', header: 'Version', render: x => x.v },
+                  {
+                    key: 'f',
+                    header: 'Inputs',
+                    render: x => [...(x.features?.categorical ?? []), ...(x.features?.numeric ?? [])].length,
+                  },
+                  { key: 'mae', header: 'MAE', align: 'right', render: x => formatCount(x.r.mae) },
+                  { key: 'rmse', header: 'RMSE', align: 'right', render: x => formatCount(x.r.rmse) },
+                  { key: 'r2', header: 'R²', align: 'right', render: x => formatNumber(x.r.r2, 4) },
+                  { key: 'mape', header: 'MAPE', align: 'right', render: x => formatPercent(x.r.mape) },
+                ]}
+              />
+              <p className={s.small}>
+                v{card?.version} drops total_days, a synthetic per-crop constant plus noise that re-encoded the crop.
+              </p>
+            </Card>
+          </div>
+        )}
 
         <div className={s.s6}>
           <Card>

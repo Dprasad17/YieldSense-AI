@@ -6,6 +6,7 @@ PostgreSQL (crop_records, farm_records, weather_observations) or MongoDB (soil_t
 """
 import io
 import re
+import time
 import uuid
 from datetime import date, datetime, timezone
 from typing import Any, Literal, Optional
@@ -262,7 +263,9 @@ def validate_upload(upload_id: str, body: ValidateRequest, user: dict = Depends(
     doc = _get(upload_id, user)
     if doc["status"] == "imported":
         raise AppError(409, "This upload has already been imported.", code="already_imported")
+    started = time.perf_counter()
     clean, errors = _validate(doc, body.mapping)
+    validate_s = time.perf_counter() - started
     report = {
         "valid_rows": len(clean),
         "invalid_rows": len({e["row"] for e in errors}),
@@ -270,6 +273,7 @@ def validate_upload(upload_id: str, body: ValidateRequest, user: dict = Depends(
         "error_count": len(errors),
         "clean_preview": clean[:10],
         "validated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "validate_ms_per_row": round(validate_s * 1000 / max(doc["row_count"], 1), 4),
     }
     mongo.db().uploads.update_one({"_id": upload_id}, {"$set": {"mapping": body.mapping, "report": report, "status": "validated"}})
     return _summary({**doc, "mapping": body.mapping, "report": report, "status": "validated"})
@@ -281,6 +285,7 @@ def import_upload(upload_id: str, user: dict = Depends(require_user)):
     doc = _get(upload_id, user)
     if doc["status"] != "validated":
         raise AppError(409, "Validate the upload before importing it.", code="not_validated")
+    started = time.perf_counter()
     clean, _ = _validate(doc, doc["mapping"])
     kind, short = doc["kind"], upload_id[:8]
     with session_scope() as s:
@@ -297,7 +302,14 @@ def import_upload(upload_id: str, user: dict = Depends(require_user)):
             save_soil_test({**r, "farm_id": doc["farm_id"], "sampled_on": date.fromisoformat(r["sampled_on"])}, doc["user"], source="upload", upload_id=upload_id)
     if kind == "crop_records":
         dataset.invalidate()
-    report = {**(doc.get("report") or {}), "imported_rows": len(clean), "imported_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    import_s = time.perf_counter() - started
+    report = {
+        **(doc.get("report") or {}),
+        "imported_rows": len(clean),
+        "imported_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "import_seconds": round(import_s, 4),
+        "import_rows_per_sec": round(len(clean) / import_s, 1) if import_s > 0 else None,
+    }
     mongo.db().uploads.update_one({"_id": upload_id}, {"$set": {"status": "imported", "report": report}})
     return _summary({**doc, "status": "imported", "report": report})
 

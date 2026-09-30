@@ -5,6 +5,9 @@ import urllib.error
 from typing import Dict, Any, List, Optional
 from backend.app.core.observability import log
 
+# Groq sits behind Cloudflare, which rejects Python's default urllib User-Agent (HTTP 403, error 1010).
+USER_AGENT = "YieldSenseAI/2.1 (+https://github.com/springboardmentor12233a-tech)"
+
 class LLMService:
     """
     External LLM Service supporting Groq API, Gemini API, and an offline Agronomic AI Fallback Engine.
@@ -58,7 +61,7 @@ class LLMService:
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.groq_api_key}",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) YieldSenseAI/1.0"
+            "User-Agent": USER_AGENT,
         }
 
         body = {
@@ -83,7 +86,7 @@ class LLMService:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_api_key}"
         prompt = self._build_prompt(payload, prediction_result)
 
-        headers = {"Content-Type": "application/json"}
+        headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT}
         body = {
             "contents": [{
                 "parts": [{"text": prompt + "\nRespond strictly in valid JSON with keys: ai_insights, risk_alerts, recommendations."}]
@@ -174,7 +177,7 @@ Provide a JSON object with:
             "ai_insights": summary_insight,
             "risk_alerts": risk_alerts,
             "recommendations": recommendations,
-            "llm_provider": "YieldSense rule engine",
+            "llm_provider": "YieldSense rule engine (fallback)",
         }
 
     def write_rationale(self, rec: Dict[str, Any]) -> tuple[str, str]:
@@ -205,8 +208,12 @@ Provide a JSON object with:
         )
         prompt = (
             f"Recommendation: {rec['title']} ({rec['affected_area']}). Evidence: {evidence}. "
-            f"Model-estimated effect of fixing it: {rec['impact_kg_ha']:+.0f} kg/ha. "
-            "In 2-3 plain sentences for a farmer, explain why this matters. Use only the numbers given; "
+            + (
+                f"Model-estimated effect of fixing it: {rec['impact_kg_ha']:+.0f} kg/ha. "
+                if rec.get("impact_kg_ha") is not None
+                else "The yield effect is not estimated (this column is not a model input); do not quote one. "
+            )
+            + "In 2-3 plain sentences for a farmer, explain why this matters. Use only the numbers given; "
             "do not invent measurements, dates or products."
         )
         body = {
@@ -216,17 +223,19 @@ Provide a JSON object with:
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.2,
-            "max_tokens": 160,
+            # gpt-oss models reason before answering; leave room for both.
+            "max_tokens": 600,
+            "reasoning_effort": "low",
         }
         req = urllib.request.Request(
             "https://api.groq.com/openai/v1/chat/completions",
             data=json.dumps(body).encode("utf-8"),
-            headers={"Content-Type": "application/json", "Authorization": f"Bearer {self.groq_api_key}"},
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {self.groq_api_key}", "User-Agent": USER_AGENT},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=6) as response:
+        with urllib.request.urlopen(req, timeout=15) as response:
             data = json.loads(response.read().decode("utf-8"))
-        text = str(data["choices"][0]["message"]["content"]).strip()
+        text = str(data["choices"][0]["message"].get("content") or "").strip()
         if not text:
             raise ValueError("empty completion")
         return text

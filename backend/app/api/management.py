@@ -156,6 +156,7 @@ class SoilTestIn(BaseModel):
     phosphorus_kg_ha: Optional[float] = Field(None, ge=0, le=2000)
     potassium_kg_ha: Optional[float] = Field(None, ge=0, le=2000)
     organic_matter_percent: Optional[float] = Field(None, ge=0, le=100)
+    organic_carbon_percent: Optional[float] = Field(None, ge=0, le=60)
     lab: Optional[str] = Field(None, max_length=80)
     notes: Optional[str] = Field(None, max_length=1000)
 
@@ -395,3 +396,81 @@ def create_soil_test(body: SoilTestIn, user: dict = Depends(require_user)):
     with session_scope() as s:
         load_farm(s, body.farm_id, user, write=True)
     return save_soil_test(body.model_dump(), user["username"])
+
+
+# ------------------------------------------------------------------ real soil (SoilGrids + soil tests)
+
+
+class SoilProperty(BaseModel):
+    label: str
+    unit: str
+    value_0_30cm: float
+    by_depth: dict[str, float]
+
+
+class NutrientRating(BaseModel):
+    nutrient: str
+    label: str
+    unit: str
+    value: Optional[float]
+    rating: Optional[Literal["Low", "Medium", "High"]]
+    low_below: float
+    high_above: float
+    guidance: Optional[str]
+    oxide_equivalent: Optional[str] = None
+
+
+class RatedSoilTest(BaseModel):
+    id: str
+    sampled_on: str
+    lab: Optional[str] = None
+    ratings: list[NutrientRating]
+
+
+class FarmSoil(BaseModel):
+    farm_id: int
+    source: str
+    location: dict
+    fetched_at: str
+    cached: bool
+    properties: dict[str, SoilProperty]
+    assessment: dict
+    soil_tests: list[RatedSoilTest]
+    nutrient_source: str
+
+
+@farms_router.get("/{farm_id}/soil", response_model=FarmSoil)
+def get_farm_soil(farm_id: int, user: dict = Depends(require_user)):
+    """Real soil for a farm: ISRIC SoilGrids (0–30 cm) at the farm (or its region's reference point) plus
+    the farm's soil tests rated against Soil Health Card limits. 502 if SoilGrids is unreachable; the
+    synthetic dataset columns are never used here."""
+    from backend.app.services import soil_real
+    from backend.app.services.weather_service import LiveWeatherUnavailable, weather_service
+
+    with session_scope() as s:
+        f = load_farm(s, farm_id, user)
+        lat, lon, region, crops, name = f.latitude, f.longitude, f.region, list(f.crops or []), f.name
+    if lat is not None and lon is not None:
+        location = {"latitude": lat, "longitude": lon, "basis": "farm coordinates", "label": name}
+    else:
+        try:
+            c = weather_service._coordinates(region)
+        except LiveWeatherUnavailable as e:
+            raise AppError(422, f"Add coordinates to this farm: {e}", code="no_coordinates")
+        location = {"latitude": c["lat"], "longitude": c["lon"], "basis": "region reference point (farm has no coordinates)", "label": c["name"]}
+    try:
+        soil = soil_real.fetch_soilgrids(location["latitude"], location["longitude"])
+    except soil_real.SoilGridsUnavailable as e:
+        raise AppError(502, str(e), code="soilgrids_unavailable")
+    tests = [_soil_out(d) for d in mongo.db().soil_tests.find({"farm_id": farm_id}).sort("sampled_on", -1).limit(20)]
+    return {
+        "farm_id": farm_id,
+        "source": "real (SoilGrids)",
+        "location": location,
+        "fetched_at": soil["fetched_at"],
+        "cached": soil["cached"],
+        "properties": soil["properties"],
+        "assessment": soil_real.farm_soil_assessment(soil, tests, crops),
+        "soil_tests": [{"id": t["id"], "sampled_on": t["sampled_on"], "lab": t.get("lab"), "ratings": soil_real.nutrient_ratings(t)} for t in tests],
+        "nutrient_source": soil_real.NUTRIENT_SOURCE,
+    }

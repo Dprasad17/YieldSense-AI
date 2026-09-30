@@ -257,3 +257,66 @@ def list_audit(page: int, page_size: int) -> dict:
         rows = s.scalars(select(AuditLog).order_by(AuditLog.created_at.desc(), AuditLog.id).limit(page_size).offset((page - 1) * page_size))
         items = [{"id": a.id, "actor": a.actor, "action": a.action, "target": a.target, "detail": a.detail, "created_at": _iso(a.created_at)} for a in rows]
         return {"items": items, "total": total, "page": page, "page_size": page_size}
+
+
+def recommendation_effectiveness() -> dict:
+    """Task completion rate and time-to-action, overall and per user, plus yield outcomes where a farm has
+    a season recorded after a completed task. Outcome measurement needs more seasons than the demo data has."""
+    import statistics
+
+    from backend.app.db.models import Farm, FarmRecord
+    from backend.app.services import dataset
+
+    def hours(a, b) -> float:
+        return (b - a).total_seconds() / 3600
+
+    with session_scope() as s:
+        rows = s.execute(select(RecommendationAction, User.username).join(User, User.id == RecommendationAction.user_id)).all()
+        alerts = {
+            (n.user_id, n.dedupe_key[4:]): n.created_at
+            for n in s.scalars(select(Notification).where(Notification.dedupe_key.like("rec:%")))
+        }
+        per_user: dict[str, dict] = {}
+        to_done, to_action, outcomes = [], [], []
+        ref = dataset.get_df().groupby(["region", "crop_type"])["yield_kg_per_hectare"].mean()
+        for t_, username in rows:
+            u = per_user.setdefault(username, {"username": username, "tasks": 0, "done": 0, "dismissed": 0, "open": 0, "snoozed": 0, "done_hours": []})
+            u["tasks"] += 1
+            u[t_.status] = u.get(t_.status, 0) + 1
+            if t_.status == "done":
+                h = hours(t_.created_at, t_.updated_at)
+                u["done_hours"].append(h)
+                to_done.append(h)
+            alert_at = alerts.get((t_.user_id, t_.recommendation_id))
+            if alert_at is not None and t_.created_at >= alert_at:
+                to_action.append(hours(alert_at, t_.created_at))
+            if t_.status == "done" and t_.farm_id:
+                farm = s.get(Farm, t_.farm_id)
+                later = s.scalars(select(FarmRecord).where(FarmRecord.farm_id == t_.farm_id, FarmRecord.year >= t_.updated_at.year, FarmRecord.yield_kg_ha.is_not(None))).all()
+                for r in later:
+                    reference = ref.get((farm.region, r.crop_type)) if farm else None
+                    outcomes.append({"task": t_.title, "farm_id": t_.farm_id, "season": r.year, "crop_type": r.crop_type, "yield_kg_ha": r.yield_kg_ha,
+                                     "reference_kg_ha": round(float(reference), 2) if reference is not None else None})
+    total = len(rows)
+    done = sum(u["done"] for u in per_user.values())
+    users = []
+    for u in per_user.values():
+        dh = u.pop("done_hours")
+        u["completion_rate"] = round(u["done"] / u["tasks"], 3) if u["tasks"] else None
+        u["median_hours_to_done"] = round(statistics.median(dh), 2) if dh else None
+        users.append(u)
+    return {
+        "tasks": total,
+        "done": done,
+        "completion_rate": round(done / total, 3) if total else None,
+        "median_hours_task_to_done": round(statistics.median(to_done), 2) if to_done else None,
+        "median_hours_alert_to_action": round(statistics.median(to_action), 2) if to_action else None,
+        "alert_to_action_measured": len(to_action),
+        "per_user": sorted(users, key=lambda x: -x["tasks"]),
+        "outcomes": outcomes,
+        "outcome_note": (
+            "Yield outcomes need a farm season recorded after a task was completed. "
+            + (f"{len(outcomes)} such season(s) so far; " if outcomes else "None yet; ")
+            + "several seasons per farm are needed before effectiveness can be measured."
+        ),
+    }

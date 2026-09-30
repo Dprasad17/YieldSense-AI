@@ -1,5 +1,7 @@
 # YieldSense AI: Crop Yield Prediction & Agricultural Productivity Forecasting System
 
+> **⚠️ SUPERSEDED**: This report describes the v1 system which used NDVI as a model feature. NDVI was derived from the yield's own percentile rank during preprocessing, making it target leakage — the model was effectively given the answer. The v1 Random Forest R² of 0.995 was therefore artificially inflated. The current system (v2.1) excludes NDVI and total_days, uses XGBoost, and achieves R² 0.953 on a temporal split (train ≤ 2008, test 2009–2013). See [`models/v2/model_card.json`](../models/v2/model_card.json) for the current metrics.
+
 ## Milestone 1 Summary & Technical Presentation Report
 
 **Objectives**: Frontend and Backend Setup, Dataset Collection, Data Preprocessing, and Exploratory Data Analysis (EDA)  
