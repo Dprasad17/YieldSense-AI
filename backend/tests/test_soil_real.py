@@ -91,3 +91,21 @@ def test_no_data_anywhere_is_an_error(monkeypatch):
     monkeypatch.setattr(soil_real, "_http_json", lambda url: raw)
     with pytest.raises(soil_real.SoilGridsNoData):
         soil_real.fetch_soilgrids(0.0, -30.0)
+
+
+def test_seed_prewarms_demo_farms_from_snapshot_when_soilgrids_is_down(monkeypatch):
+    import sys
+
+    sys.path.insert(0, "scripts")
+    import seed
+    from backend.app.db import mongo
+
+    def down(url):
+        raise TimeoutError("timed out")
+
+    monkeypatch.setattr(soil_real, "_http_json", down)
+    mongo.db().soilgrids_cache.delete_many({})
+    seed.seed_soil_cache()
+    for spec in seed.DEMO_FARMS:
+        data = soil_real.fetch_soilgrids(spec["latitude"], spec["longitude"])  # served from the cache, no network
+        assert data["cached"] is True and 3 < data["properties"]["ph"]["value_0_30cm"] < 10

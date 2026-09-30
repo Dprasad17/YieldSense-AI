@@ -77,7 +77,7 @@ pip install -r requirements.txt -r requirements-dev.txt   # API runtime + tests 
 copy backend\.env.example backend\.env    # set DATABASE_URL, TEST_DATABASE_URL, SECRET_KEY
 copy .env.example .env                    # optional: GROQ_API_KEY for AI rationale text
 alembic -c backend/alembic.ini upgrade head
-python scripts/seed.py                    # reference dataset, demo users and farms, Mongo indexes
+python scripts/seed.py                    # reference dataset, demo users and farms, Mongo indexes, SoilGrids cache for the demo farms
 python -m uvicorn backend.app.main:app --port 8000
 ```
 

@@ -145,6 +145,44 @@ def main() -> None:
         print("mongo: indexes ensured")
     except Exception as e:
         print(f"mongo: skipped ({e})")
+    seed_soil_cache()
+
+
+SOIL_SNAPSHOT = os.path.join("datasets", "processed", "soilgrids_demo_farms.json")
+
+
+def seed_soil_cache() -> None:
+    """Pre-warms the SoilGrids cache for the demo farms so the demo never waits on the public API.
+    Tries a live fetch first; if SoilGrids is slow or down, loads the saved snapshot of its real responses
+    for the same coordinates (datasets/processed/soilgrids_demo_farms.json). Nothing here is synthetic."""
+    import json
+    from datetime import datetime, timedelta, timezone
+
+    from backend.app.services import soil_real
+
+    snapshot = {}
+    if os.path.exists(SOIL_SNAPSHOT):
+        with open(SOIL_SNAPSHOT, encoding="utf-8") as f:
+            snapshot = json.load(f).get("points", {})
+    for spec in DEMO_FARMS:
+        key = f"{round(spec['latitude'], 3)},{round(spec['longitude'], 3)}"
+        try:
+            if mongo.cache_get("soilgrids_cache", key) is not None:
+                print(f"soilgrids: {spec['name']} already cached")
+                continue
+            soil_real.fetch_soilgrids(spec["latitude"], spec["longitude"])
+            print(f"soilgrids: {spec['name']} fetched live and cached")
+        except soil_real.SoilGridsUnavailable as e:
+            saved = snapshot.get(key)
+            if not saved:
+                print(f"soilgrids: {spec['name']} not cached ({e})")
+                continue
+            value = {k: v for k, v in saved.items() if k != "farm"}
+            mongo.cache_set("soilgrids_cache", key, value, expires_at=datetime.now(timezone.utc) + timedelta(days=soil_real.CACHE_DAYS))
+            print(f"soilgrids: {spec['name']} cached from the saved SoilGrids snapshot (fetched {saved.get('fetched_at')})")
+        except Exception as e:  # Mongo down: the app still works, the first soil request just goes live
+            print(f"soilgrids: skipped ({e})")
+            return
 
 
 def record_seed_timing(seconds: float, rows: int) -> None:

@@ -1,0 +1,218 @@
+{
+ "source": "ISRIC SoilGrids 2.0 REST API (real values, 0-30 cm), fetched for the demo farm coordinates",
+ "points": {
+  "29.69,76.85": {
+   "latitude": 29.69,
+   "longitude": 76.85,
+   "sampled_latitude": 29.69,
+   "sampled_longitude": 76.85,
+   "sampled_note": null,
+   "properties": {
+    "ph": {
+     "label": "pH (H2O)",
+     "unit": "",
+     "value_0_30cm": 8.3,
+     "by_depth": {
+      "0-5cm": 8.3,
+      "5-15cm": 8.3,
+      "15-30cm": 8.3
+     }
+    },
+    "organic_carbon_percent": {
+     "label": "Organic carbon",
+     "unit": "%",
+     "value_0_30cm": 0.74,
+     "by_depth": {
+      "0-5cm": 1.03,
+      "5-15cm": 0.7,
+      "15-30cm": 0.68
+     }
+    },
+    "total_nitrogen_g_kg": {
+     "label": "Total nitrogen",
+     "unit": "g/kg",
+     "value_0_30cm": 0.88,
+     "by_depth": {
+      "0-5cm": 1.12,
+      "5-15cm": 0.89,
+      "15-30cm": 0.79
+     }
+    },
+    "clay_percent": {
+     "label": "Clay",
+     "unit": "%",
+     "value_0_30cm": 29.55,
+     "by_depth": {
+      "0-5cm": 28.2,
+      "5-15cm": 27.9,
+      "15-30cm": 31.1
+     }
+    },
+    "sand_percent": {
+     "label": "Sand",
+     "unit": "%",
+     "value_0_30cm": 32.63,
+     "by_depth": {
+      "0-5cm": 33.2,
+      "5-15cm": 33.3,
+      "15-30cm": 32.0
+     }
+    },
+    "cec_cmol_kg": {
+     "label": "CEC",
+     "unit": "cmol(c)/kg",
+     "value_0_30cm": 13.42,
+     "by_depth": {
+      "0-5cm": 14.5,
+      "5-15cm": 13.2,
+      "15-30cm": 13.2
+     }
+    }
+   },
+   "fetched_at": "2026-09-30T15:23:28+00:00",
+   "farm": "Green Valley Farm"
+  },
+  "31.85,73.95": {
+   "latitude": 31.85,
+   "longitude": 73.95,
+   "sampled_latitude": 31.85,
+   "sampled_longitude": 73.95,
+   "sampled_note": null,
+   "properties": {
+    "ph": {
+     "label": "pH (H2O)",
+     "unit": "",
+     "value_0_30cm": 8.28,
+     "by_depth": {
+      "0-5cm": 8.2,
+      "5-15cm": 8.3,
+      "15-30cm": 8.3
+     }
+    },
+    "organic_carbon_percent": {
+     "label": "Organic carbon",
+     "unit": "%",
+     "value_0_30cm": 0.71,
+     "by_depth": {
+      "0-5cm": 1.29,
+      "5-15cm": 0.89,
+      "15-30cm": 0.39
+     }
+    },
+    "total_nitrogen_g_kg": {
+     "label": "Total nitrogen",
+     "unit": "g/kg",
+     "value_0_30cm": 0.68,
+     "by_depth": {
+      "0-5cm": 1.03,
+      "5-15cm": 0.76,
+      "15-30cm": 0.51
+     }
+    },
+    "clay_percent": {
+     "label": "Clay",
+     "unit": "%",
+     "value_0_30cm": 23.33,
+     "by_depth": {
+      "0-5cm": 22.0,
+      "5-15cm": 23.3,
+      "15-30cm": 23.8
+     }
+    },
+    "sand_percent": {
+     "label": "Sand",
+     "unit": "%",
+     "value_0_30cm": 26.6,
+     "by_depth": {
+      "0-5cm": 27.3,
+      "5-15cm": 26.7,
+      "15-30cm": 26.3
+     }
+    },
+    "cec_cmol_kg": {
+     "label": "CEC",
+     "unit": "cmol(c)/kg",
+     "value_0_30cm": 12.48,
+     "by_depth": {
+      "0-5cm": 14.5,
+      "5-15cm": 11.9,
+      "15-30cm": 12.2
+     }
+    }
+   },
+   "fetched_at": "2026-09-30T15:23:38+00:00",
+   "farm": "Riverbend Fields"
+  },
+  "24.95,89.25": {
+   "latitude": 24.95,
+   "longitude": 89.25,
+   "sampled_latitude": 24.95,
+   "sampled_longitude": 89.25,
+   "sampled_note": null,
+   "properties": {
+    "ph": {
+     "label": "pH (H2O)",
+     "unit": "",
+     "value_0_30cm": 6.53,
+     "by_depth": {
+      "0-5cm": 6.4,
+      "5-15cm": 6.5,
+      "15-30cm": 6.6
+     }
+    },
+    "organic_carbon_percent": {
+     "label": "Organic carbon",
+     "unit": "%",
+     "value_0_30cm": 1.2,
+     "by_depth": {
+      "0-5cm": 1.62,
+      "5-15cm": 1.51,
+      "15-30cm": 0.86
+     }
+    },
+    "total_nitrogen_g_kg": {
+     "label": "Total nitrogen",
+     "unit": "g/kg",
+     "value_0_30cm": 1.21,
+     "by_depth": {
+      "0-5cm": 1.48,
+      "5-15cm": 1.44,
+      "15-30cm": 0.96
+     }
+    },
+    "clay_percent": {
+     "label": "Clay",
+     "unit": "%",
+     "value_0_30cm": 36.38,
+     "by_depth": {
+      "0-5cm": 36.0,
+      "5-15cm": 36.4,
+      "15-30cm": 36.5
+     }
+    },
+    "sand_percent": {
+     "label": "Sand",
+     "unit": "%",
+     "value_0_30cm": 20.92,
+     "by_depth": {
+      "0-5cm": 21.6,
+      "5-15cm": 20.9,
+      "15-30cm": 20.7
+     }
+    },
+    "cec_cmol_kg": {
+     "label": "CEC",
+     "unit": "cmol(c)/kg",
+     "value_0_30cm": 17.9,
+     "by_depth": {
+      "0-5cm": 18.7,
+      "5-15cm": 17.5,
+      "15-30cm": 17.9
+     }
+    }
+   },
+   "fetched_at": "2026-09-30T15:23:46+00:00",
+   "farm": "Hillside Potatoes"
+  }
+ }
+}

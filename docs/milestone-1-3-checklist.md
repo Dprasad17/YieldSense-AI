@@ -75,9 +75,9 @@ The reference dataset has 28,242 rows from the Kaggle "Crop Yield Prediction" da
 | Health and system metrics | ✅ | `/api/health` checks DB, Mongo, model; `/api/admin/metrics` and Admin → System metrics show API and inference p50/p95, per-route latency and row counts |
 | Security review | ✅ | Hardcoded JWT fallback secret removed (random per process in dev; required in production). Upload content is checked (xlsx magic bytes, UTF-8 CSV, no binary), plus size, row and Mongo document limits. No secrets in git. CORS allowlist. Rate-limited login and password change |
 | DB indexes and pagination | ✅ | Composite and partial indexes (migration 0003); every list endpoint uses the `{items,total,page,page_size}` envelope |
-| Lighthouse ≥ 90 | ✅ | `/`, `/login`, `/app/dashboard`, desktop and mobile: performance 98–100, accessibility 100, best practices 100, SEO 100 |
+| Lighthouse ≥ 90 | ✅ | `/`, `/login`, `/app/dashboard`, desktop and mobile: performance 97–100, accessibility 100, best practices 100, SEO 100 |
 | Responsive 360–1920 px, both themes | ✅ | The browser test checks for no horizontal overflow at 360 px on 15 screens, and renders the light theme |
-| Tests | ✅ | pytest 117, vitest 41, browser test with 37 checks for all 3 roles and 0 console errors |
+| Tests | ✅ | pytest 118, vitest 41, browser test with 37 checks for all 3 roles and 0 console errors |
 | README (setup, architecture, screenshots) | ✅ | `README.md`, `docs/screenshots/`, `docs/system_architecture.md`, `docs/ui_layout.md`, `docs/YieldSense.postman_collection.json` (60 requests) |
 
 ## Performance metrics (spec section 8)
@@ -97,7 +97,7 @@ The reference dataset has 28,242 rows from the Kaggle "Crop Yield Prediction" da
 1. The model predicts **country-level** yields. A farm-level prediction is the national expectation for that crop and year, not a field model.
 2. Tree models don't extrapolate: seasons after 2013 are predicted at the 2013 level.
 3. Humidity, sunlight, irrigation, fertilizer and disease analyses, and the reference-dataset soil view, run on synthetic columns. Farm soil uses real SoilGrids data and soil tests.
-4. SoilGrids is a 250 m global model, not a field measurement, and it has no data for urban pixels or water; the nearest pixel with data is used and the page says so. The public API is slow (about 10 s uncached) and sometimes times out.
+4. SoilGrids is a 250 m global model, not a field measurement, and it has no data for urban pixels or water; the nearest pixel with data is used and the page says so. The public API is slow (about 10 s uncached) and sometimes times out. `scripts/seed.py` pre-warms the cache for the three demo farms (live fetch, or the saved snapshot of SoilGrids' real responses in `datasets/processed/soilgrids_demo_farms.json` if the API is down); new farms still wait on the live API the first time.
 5. Rainfall is constant per country in the dataset, so the app cannot show a year-to-year rainfall effect.
 6. The AI rationale and insight depend on the Groq key and quota. Without it, or when the reply is malformed, the app shows rule-based text and labels it as a fallback.
 
