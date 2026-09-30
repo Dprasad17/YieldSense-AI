@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { isNetworkError, setUnauthorizedHandler } from '../api/client';
 import { authApi } from '../api/endpoints';
-import { clearSession, readSession, writeSession } from '../api/session';
+import { clearSession, readSession, updateSessionUser, writeSession } from '../api/session';
 import type { SessionUser, TokenResponse } from '../api/types';
 import { AuthContext, type AuthState, type AuthStatus } from './context';
 import { findDemoAccount } from './demoAccounts';
@@ -63,10 +63,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const check = stored ? authApi.me().then(res => ({ res, stored })) : Promise.reject(new Error('No stored session'));
 
     check
-      .then(({ res, stored: s }) => {
+      .then(({ res }) => {
         if (cancelled) return;
         const restored: SessionUser = { ...res.user, full_name: res.user.full_name || res.user.username };
-        writeSession({ token: s.token, user: restored, offlineDemo: false });
+        updateSessionUser(restored);
         setUser(restored);
         setOfflineDemo(false);
         setStatus('authenticated');
@@ -97,25 +97,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setUnauthorizedHandler(() => {
       if (!readSession()) return;
-      endSession();
+      const from = location.pathname + location.search;
+      void Promise.resolve(navigate('/session-expired', { replace: true, state: { from } })).then(endSession);
       toast.error('Your session has expired. Please sign in again.');
-      navigate('/login', { replace: true, state: { from: location.pathname + location.search } });
     });
     return () => setUnauthorizedHandler(null);
   }, [endSession, navigate, location.pathname, location.search]);
 
-  const startSession = useCallback((token: string, next: SessionUser, isOfflineDemo: boolean) => {
-    writeSession({ token, user: next, offlineDemo: isOfflineDemo });
+  const startSession = useCallback((token: string, next: SessionUser, isOfflineDemo: boolean, remember = true) => {
+    writeSession({ token, user: next, offlineDemo: isOfflineDemo }, remember);
     setUser(next);
     setOfflineDemo(isOfflineDemo);
     setStatus('authenticated');
   }, []);
 
   const login = useCallback(
-    async (username: string, password: string) => {
+    async (username: string, password: string, remember = true) => {
       try {
         const res = await authApi.login(username.trim(), password);
-        startSession(res.access_token, userFromToken(res), false);
+        startSession(res.access_token, userFromToken(res), false, remember);
       } catch (err) {
         // Offline demo mode: only when the server is unreachable, only in DEV, only with a demo account.
         const demo = findDemoAccount(username, password);
@@ -124,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             OFFLINE_DEMO_TOKEN,
             { username: demo.username, role: demo.role, email: demo.email, full_name: demo.full_name },
             true,
+            remember,
           );
           return;
         }
@@ -142,8 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(() => {
-    endSession();
-    navigate('/login', { replace: true });
+    // navigate() is async in React Router v7: leave the protected page first so the guard
+    // doesn't record it as a "return to" target, then end the session.
+    void Promise.resolve(navigate('/login', { replace: true })).then(endSession);
   }, [endSession, navigate]);
 
   const value = useMemo<AuthState>(

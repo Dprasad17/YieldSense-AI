@@ -13,18 +13,29 @@ function named<T extends Record<string, unknown>>(
   return lazy(() => load().then(m => ({ default: m[name] as ComponentType })));
 }
 
+const app = () => import('../pages/app/ExtraPages');
+const pub = () => import('../pages/public/AuthPages');
+
 const screens = {
-  dashboard: named(() => import('../components/MetricCards'), 'MetricCards'),
-  predict: named(() => import('../components/YieldPredictor'), 'YieldPredictor'),
-  weather: named(() => import('../components/WeatherAnalyticsView'), 'WeatherAnalyticsView'),
-  soil: named(() => import('../components/SoilAnalysisView'), 'SoilAnalysisView'),
-  recommendations: named(() => import('../components/RecommendationsHubView'), 'RecommendationsHubView'),
-  analytics: named(() => import('../components/AnalyticsReportsView'), 'AnalyticsReportsView'),
-  data: named(() => import('../components/DataExplorer'), 'DataExplorer'),
-  eda: named(() => import('../components/EdaDashboard'), 'EdaDashboard'),
+  dashboard: named(() => import('../pages/app/DashboardPage'), 'DashboardPage'),
+  predict: named(() => import('../pages/app/PredictorPage'), 'PredictorPage'),
+  weather: named(() => import('../pages/app/WeatherPage'), 'WeatherPage'),
+  soil: named(() => import('../pages/app/SoilPage'), 'SoilPage'),
+  recommendations: named(() => import('../pages/app/RecommendationsPage'), 'RecommendationsPage'),
+  analytics: named(() => import('../pages/app/AnalyticsPage'), 'AnalyticsPage'),
+  data: named(() => import('../pages/app/DatasetPage'), 'DatasetPage'),
+  eda: named(() => import('../pages/app/EdaPage'), 'EdaPage'),
+  models: named(app, 'ModelPerformancePage'),
+  history: named(app, 'HistoryPage'),
+  settings: named(app, 'SettingsPage'),
+  help: named(app, 'HelpPage'),
 };
 
-const LoginRoute = named(() => import('../pages/LoginRoute'), 'LoginRoute');
+const LandingPage = named(() => import('../pages/public/LandingPage'), 'LandingPage');
+const SignInPage = named(pub, 'SignInPage');
+const RegisterPage = named(pub, 'RegisterPage');
+const SessionExpiredPage = named(pub, 'SessionExpiredPage');
+const PredictionReportPage = named(app, 'PredictionReportPage');
 const DesignSystemPage = named(() => import('../pages/DesignSystemPage'), 'DesignSystemPage');
 
 function screen(path: string, permission: Permission, Screen: ComponentType) {
@@ -43,11 +54,20 @@ export const router = createBrowserRouter([
     element: <RootLayout />,
     errorElement: <RouteErrorPage />,
     children: [
-      // The landing page arrives in Phase 6; until then the root goes straight to the app.
-      { path: '/', element: <Navigate to="/app/dashboard" replace /> },
-      { path: '/login', element: <LoginRoute /> },
+      { path: '/', element: <LandingPage /> },
+      { path: '/login', element: <SignInPage /> },
+      { path: '/register', element: <RegisterPage /> },
+      { path: '/session-expired', element: <SessionExpiredPage /> },
       { path: '/403', element: <ForbiddenPage /> },
       { path: '/design-system', element: <DesignSystemPage /> },
+      {
+        path: '/report/prediction',
+        element: (
+          <ProtectedRoute permission="predict">
+            <PredictionReportPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: '/app',
         element: <ProtectedRoute />,
@@ -64,6 +84,11 @@ export const router = createBrowserRouter([
               screen('analytics', 'analytics', screens.analytics),
               screen('data', 'dataset', screens.data),
               screen('eda', 'eda', screens.eda),
+              screen('models', 'models', screens.models),
+              screen('history', 'history', screens.history),
+              screen('settings', 'settings', screens.settings),
+              screen('help', 'help', screens.help),
+              { path: '*', element: <NotFoundPage /> },
             ],
           },
         ],

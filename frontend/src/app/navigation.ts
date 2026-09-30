@@ -5,6 +5,10 @@ import {
   Cpu,
   Database,
   FileText,
+  Gauge,
+  HelpCircle,
+  History,
+  Settings,
   LayoutDashboard,
   Layers,
   Sparkles,
@@ -97,20 +101,35 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         permission: 'dataset',
         keywords: 'records table rows',
       },
+      { path: 'history', label: 'Recent predictions', icon: History, permission: 'history', keywords: 'saved history' },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      {
+        path: 'models',
+        label: 'Model performance',
+        icon: Gauge,
+        permission: 'models',
+        keywords: 'r2 rmse mae accuracy',
+      },
     ],
   },
 ];
 
 export const NAV_ITEMS: readonly NavItem[] = NAV_GROUPS.flatMap(g => g.items);
 
-/** Screens not yet rebuilt on the new design system. Their content area stays dark until Phase 6. */
-export const LEGACY_SCREENS: ReadonlySet<string> = new Set([
-  'dashboard',
-  'predict',
-  'weather',
-  'soil',
-  'recommendations',
-  'analytics',
-  'data',
-  'eda',
-]);
+/** Shown at the bottom of the sidebar. */
+export const FOOTER_ITEMS: readonly NavItem[] = [
+  {
+    path: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    permission: 'settings',
+    keywords: 'profile preferences theme units',
+  },
+  { path: 'help', label: 'Help', icon: HelpCircle, permission: 'help', keywords: 'faq glossary shortcuts support' },
+];
+
+export const ALL_NAV_ITEMS: readonly NavItem[] = [...NAV_ITEMS, ...FOOTER_ITEMS];

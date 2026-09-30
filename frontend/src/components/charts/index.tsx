@@ -581,3 +581,46 @@ export const Sparkline = memo(function Sparkline({
     </svg>
   );
 });
+
+// ---------------------------------------------------------------- Grouped bars (two series)
+
+export const GroupedBarChart = memo(function GroupedBarChart({
+  data,
+  colors,
+  height,
+  fy = plain,
+  series,
+  refY,
+  refLabel,
+}: {
+  data: Record<string, string | number>[];
+  colors: ChartColors;
+  height: number;
+  fy?: Fmt;
+  series: { key: string; label: string; color: string }[];
+  refY?: number;
+  refLabel?: string;
+}) {
+  const names = Object.fromEntries(series.map(s => [s.key, s.label]));
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={data} margin={{ top: 16, right: 16, bottom: 0, left: 8 }}>
+        <CartesianGrid stroke={colors.border} strokeDasharray="3 3" vertical={false} />
+        <XAxis dataKey="label" {...axisProps(colors)} />
+        <YAxis {...axisProps(colors)} tickFormatter={fy} width={56} axisLine={false} />
+        <RTooltip cursor={{ fill: colors['surface-2'] }} content={<ChartTooltip fx={plain} fy={fy} names={names} />} />
+        {refY != null && (
+          <ReferenceLine
+            y={refY}
+            stroke={colors.muted}
+            strokeDasharray="4 4"
+            label={{ value: refLabel, fill: colors.muted, fontSize: 11, position: 'insideTopRight' }}
+          />
+        )}
+        {series.map(s => (
+          <Bar key={s.key} dataKey={s.key} fill={s.color} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+        ))}
+      </BarChart>
+    </ResponsiveContainer>
+  );
+});

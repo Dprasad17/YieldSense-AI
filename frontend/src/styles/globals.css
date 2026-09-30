@@ -82,3 +82,29 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* User-chosen reduced motion (Settings) */
+[data-reduced-motion] *,
+[data-reduced-motion] *::before,
+[data-reduced-motion] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Topographic contour pattern used on landing, auth and empty states */
+.contour-bg {
+  background-color: var(--canvas);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='480' viewBox='0 0 480 480'%3E%3Cg fill='none' stroke='%232fbf7a' stroke-opacity='0.14' stroke-width='1'%3E%3Cpath d='M-20 120 C 80 60, 160 180, 260 110 S 420 60, 500 130'/%3E%3Cpath d='M-20 160 C 90 100, 170 220, 270 150 S 430 100, 500 170'/%3E%3Cpath d='M-20 200 C 100 140, 180 260, 280 190 S 440 140, 500 210'/%3E%3Cpath d='M-20 260 C 70 230, 150 330, 250 270 S 410 220, 500 290'/%3E%3Cpath d='M-20 300 C 80 270, 160 370, 260 310 S 420 260, 500 330'/%3E%3Cpath d='M-20 360 C 110 320, 190 420, 300 360 S 450 320, 500 380'/%3E%3Cpath d='M-20 60 C 60 20, 140 120, 240 60 S 400 10, 500 70'/%3E%3Ccircle cx='360' cy='390' r='40'/%3E%3Ccircle cx='360' cy='390' r='70'/%3E%3Ccircle cx='110' cy='70' r='30'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 480px 480px;
+}
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

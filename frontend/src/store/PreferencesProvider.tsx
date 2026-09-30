@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { isYieldUnit, type YieldUnit } from '../lib/units';
-import { PreferencesContext, type Preferences, type ThemePreference } from './preferences';
+import { PreferencesContext, type Density, type Preferences, type ThemePreference } from './preferences';
 
-const THEME_KEY = 'yieldsense_theme';
-const UNIT_KEY = 'yieldsense_unit';
-
-// Dark stays the default until every legacy screen has migrated to tokens (they assume a dark canvas).
-const DEFAULT_THEME: ThemePreference = 'dark';
+const KEYS = {
+  theme: 'yieldsense_theme',
+  unit: 'yieldsense_unit',
+  region: 'yieldsense_default_region',
+  crop: 'yieldsense_default_crop',
+  density: 'yieldsense_density',
+  motion: 'yieldsense_reduced_motion',
+};
 
 function read(key: string): string | null {
   try {
@@ -24,19 +27,32 @@ function write(key: string, value: string) {
   }
 }
 
-function initialTheme(): ThemePreference {
-  const v = read(THEME_KEY);
-  return v === 'dark' || v === 'light' || v === 'system' ? v : DEFAULT_THEME;
-}
-
-function initialUnit(): YieldUnit {
-  const v = read(UNIT_KEY);
-  return isYieldUnit(v) ? v : 'kg/ha';
+function useStored<T extends string>(key: string, initial: () => T): [T, (v: T) => void] {
+  const [value, setValue] = useState<T>(initial);
+  return [
+    value,
+    (v: T) => {
+      setValue(v);
+      write(key, v);
+    },
+  ];
 }
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemePreference>(initialTheme);
-  const [unit, setUnitState] = useState<YieldUnit>(initialUnit);
+  const [theme, setTheme] = useStored<ThemePreference>(KEYS.theme, () => {
+    const v = read(KEYS.theme);
+    return v === 'dark' || v === 'light' || v === 'system' ? v : 'dark';
+  });
+  const [unit, setUnit] = useStored<YieldUnit>(KEYS.unit, () => {
+    const v = read(KEYS.unit);
+    return isYieldUnit(v) ? v : 'kg/ha';
+  });
+  const [defaultRegion, setDefaultRegion] = useStored<string>(KEYS.region, () => read(KEYS.region) ?? '');
+  const [defaultCrop, setDefaultCrop] = useStored<string>(KEYS.crop, () => read(KEYS.crop) ?? '');
+  const [density, setDensity] = useStored<Density>(KEYS.density, () =>
+    read(KEYS.density) === 'compact' ? 'compact' : 'comfortable',
+  );
+  const [motion, setMotion] = useStored<'on' | 'off'>(KEYS.motion, () => (read(KEYS.motion) === 'on' ? 'on' : 'off'));
 
   useEffect(() => {
     const root = document.documentElement;
@@ -44,20 +60,28 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     else root.setAttribute('data-theme', theme);
   }, [theme]);
 
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-reduced-motion', motion === 'on');
+  }, [motion]);
+
   const value = useMemo<Preferences>(
     () => ({
       theme,
-      setTheme: next => {
-        setThemeState(next);
-        write(THEME_KEY, next);
-      },
+      setTheme,
       unit,
-      setUnit: next => {
-        setUnitState(next);
-        write(UNIT_KEY, next);
-      },
+      setUnit,
+      defaultRegion,
+      setDefaultRegion,
+      defaultCrop,
+      setDefaultCrop,
+      density,
+      setDensity,
+      reducedMotion: motion === 'on',
+      setReducedMotion: v => setMotion(v ? 'on' : 'off'),
     }),
-    [theme, unit],
+    // setters from useStored are recreated each render but only close over stable keys
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [theme, unit, defaultRegion, defaultCrop, density, motion],
   );
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;

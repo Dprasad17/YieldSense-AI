@@ -5,6 +5,9 @@ import { Command } from 'cmdk';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   ChevronsLeft,
+  HelpCircle,
+  UserCog,
+  WifiOff,
   ChevronsRight,
   LogOut,
   Menu,
@@ -19,7 +22,8 @@ import {
   X,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { LEGACY_SCREENS, NAV_GROUPS, NAV_ITEMS } from '../../app/navigation';
+import { ALL_NAV_ITEMS, FOOTER_ITEMS, NAV_GROUPS } from '../../app/navigation';
+import { ProductTour } from './ProductTour';
 import { useAuth, useCan } from '../../auth/context';
 import { useDatasetSummary, useRegions } from '../../hooks/queries';
 import { YIELD_UNITS, type YieldUnit } from '../../lib/units';
@@ -45,6 +49,7 @@ import {
   TooltipProvider,
 } from '../ui';
 import { LoadingState, OfflineDemoBanner } from '../ui/States';
+import { Banner } from '../ui';
 import s from './shell.module.css';
 
 const COLLAPSE_KEY = 'yieldsense_sidebar_collapsed';
@@ -78,6 +83,7 @@ function SidebarNav({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate
                 className={({ isActive }) => clsx(s.navItem, isActive && s.active)}
                 title={collapsed ? item.label : undefined}
                 onClick={onNavigate}
+                data-tour={item.path === 'predict' ? 'predict' : undefined}
               >
                 <item.icon size={18} aria-hidden="true" />
                 <span className={s.navLabel}>{item.label}</span>
@@ -88,6 +94,41 @@ function SidebarNav({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate
       })}
     </nav>
   );
+}
+
+function FooterNav({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
+  const can = useCan();
+  return (
+    <>
+      {FOOTER_ITEMS.filter(i => can(i.permission)).map(item => (
+        <NavLink
+          key={item.path}
+          to={`/app/${item.path}`}
+          className={({ isActive }) => clsx(s.navItem, isActive && s.active)}
+          title={collapsed ? item.label : undefined}
+          onClick={onNavigate}
+        >
+          <item.icon size={18} aria-hidden="true" />
+          <span className={s.navLabel}>{item.label}</span>
+        </NavLink>
+      ))}
+    </>
+  );
+}
+
+function useOnline(): boolean {
+  const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
+  useEffect(() => {
+    const up = () => setOnline(true);
+    const down = () => setOnline(false);
+    window.addEventListener('online', up);
+    window.addEventListener('offline', down);
+    return () => {
+      window.removeEventListener('online', up);
+      window.removeEventListener('offline', down);
+    };
+  }, []);
+  return online;
 }
 
 function Brand() {
@@ -115,7 +156,7 @@ function ContextSwitcher() {
     <Popover
       align="start"
       trigger={
-        <button type="button" className={s.context} aria-label="Change region, crop and units">
+        <button type="button" className={s.context} aria-label="Change region, crop and units" data-tour="context">
           <SlidersHorizontal size={15} aria-hidden="true" />
           <span className={s.contextText}>
             {filters.region || 'All regions'} <span className={s.contextSep}>·</span> {filters.crop || 'All crops'}
@@ -249,6 +290,7 @@ function initials(name: string): string {
 
 function UserMenu() {
   const { user, role, logout } = useAuth();
+  const navigate = useNavigate();
   const { theme, setTheme } = usePreferences();
   if (!user) return null;
   return (
@@ -270,6 +312,13 @@ function UserMenu() {
             {user.email} <Badge tone="success">{role}</Badge>
           </div>
         </DropdownLabel>
+        <DropdownSeparator />
+        <DropdownItem icon={UserCog} onSelect={() => navigate('/app/settings')}>
+          Profile & settings
+        </DropdownItem>
+        <DropdownItem icon={HelpCircle} onSelect={() => navigate('/app/help')}>
+          Help center
+        </DropdownItem>
         <DropdownSeparator />
         {THEME_OPTIONS.map(o => (
           <DropdownItem key={o.value} icon={o.icon} onSelect={() => setTheme(o.value)}>
@@ -315,7 +364,7 @@ function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (
             <Command.List>
               <Command.Empty>No results.</Command.Empty>
               <Command.Group heading="Go to">
-                {NAV_ITEMS.filter(i => can(i.permission)).map(item => (
+                {ALL_NAV_ITEMS.filter(i => can(i.permission)).map(item => (
                   <Command.Item
                     key={item.path}
                     value={`${item.label} ${item.keywords ?? ''}`}
@@ -355,7 +404,19 @@ function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (
 // ---------------------------------------------------------------- Shell
 
 export function AppShell() {
-  const { offlineDemo } = useAuth();
+  const { offlineDemo, user } = useAuth();
+  const online = useOnline();
+  const { defaultRegion, defaultCrop } = usePreferences();
+  const { filters, setFilters } = useGlobalFilters();
+  const [appliedDefaults] = useState(() => ({ region: filters.region, crop: filters.crop }));
+  useEffect(() => {
+    // Apply the user's default context once, only where the URL doesn't already set one.
+    const patch: { region?: string; crop?: string } = {};
+    if (!appliedDefaults.region && defaultRegion) patch.region = defaultRegion;
+    if (!appliedDefaults.crop && defaultCrop) patch.crop = defaultCrop;
+    if (Object.keys(patch).length) setFilters(patch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -385,17 +446,17 @@ export function AppShell() {
   };
 
   const segment = location.pathname.split('/')[2] ?? '';
-  const current = NAV_ITEMS.find(i => i.path === segment);
+  const current = ALL_NAV_ITEMS.find(i => i.path === segment);
   const group = NAV_GROUPS.find(g => g.items.some(i => i.path === segment));
-  const legacy = LEGACY_SCREENS.has(segment);
 
   return (
     <TooltipProvider>
       <div className={s.app}>
-        <aside className={clsx(s.sidebar, collapsed && s.collapsed)} aria-label="Sidebar">
+        <aside className={clsx(s.sidebar, collapsed && s.collapsed)} aria-label="Sidebar" data-tour="sidebar">
           <Brand />
           <SidebarNav collapsed={collapsed} />
           <div className={s.sidebarFoot}>
+            <FooterNav collapsed={collapsed} />
             <button
               type="button"
               className={s.navItem}
@@ -415,10 +476,21 @@ export function AppShell() {
 
         <Drawer open={mobileOpen} onOpenChange={setMobileOpen} title="YieldSense AI" side="left">
           <SidebarNav onNavigate={() => setMobileOpen(false)} />
+          <FooterNav onNavigate={() => setMobileOpen(false)} />
         </Drawer>
 
         <div className={s.main}>
           {offlineDemo && <OfflineDemoBanner />}
+          {!online && (
+            <div style={{ padding: 'var(--space-2) var(--gutter)' }}>
+              <Banner tone="warning">
+                <span style={{ display: 'inline-flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                  <WifiOff size={16} aria-hidden="true" /> You are offline. Showing the last loaded data; requests retry
+                  when you reconnect.
+                </span>
+              </Banner>
+            </div>
+          )}
           <header className={s.topbar}>
             <div className={s.topbarLeft}>
               <IconButton
@@ -428,7 +500,7 @@ export function AppShell() {
                 onClick={() => setMobileOpen(true)}
               />
               <div className={s.crumbsWrap} style={{ minWidth: 0 }}>
-                <Breadcrumbs items={[{ label: group?.label ?? 'YieldSense' }, { label: current?.label ?? 'Page' }]} />
+                <Breadcrumbs items={[{ label: group?.label ?? 'Account' }, { label: current?.label ?? 'Page' }]} />
               </div>
               <ContextSwitcher />
             </div>
@@ -438,6 +510,7 @@ export function AppShell() {
                 className={s.search}
                 onClick={() => setPaletteOpen(true)}
                 aria-label="Search (Ctrl+K)"
+                data-tour="search"
               >
                 <Search size={15} aria-hidden="true" />
                 <span className={s.searchText}>Search…</span>
@@ -450,14 +523,13 @@ export function AppShell() {
           </header>
 
           <main id="main" className={s.content}>
-            <div data-theme={legacy ? 'dark' : undefined} className={legacy ? s.legacy : undefined}>
-              <Suspense fallback={<LoadingState />}>
-                <Outlet />
-              </Suspense>
-            </div>
+            <Suspense fallback={<LoadingState />}>
+              <Outlet />
+            </Suspense>
           </main>
         </div>
         <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+        {user && <ProductTour username={user.username} />}
       </div>
     </TooltipProvider>
   );

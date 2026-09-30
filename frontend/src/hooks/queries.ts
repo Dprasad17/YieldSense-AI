@@ -98,12 +98,42 @@ export function useReportExport() {
   return useMutation({ mutationFn: reportsApi.export });
 }
 
-/** Region names for the context switcher (the weather endpoint lists every dataset region). */
-export function useRegions() {
+export interface WeatherOverview {
+  available_regions?: string[];
+  global_averages?: { rainfall_mm: number; temperature_C: number; humidity_percent: number; sunlight_hours: number };
+  total_records_analyzed?: number;
+}
+
+/** Weather endpoint without a region: global averages plus the list of every dataset region. */
+export function useWeatherOverview() {
   return useQuery({
-    queryKey: ['regions'],
-    queryFn: () =>
-      weatherApi.analysis('', false).then(d => [...(d.available_regions ?? [])].sort((a, b) => a.localeCompare(b))),
+    queryKey: ['weather', 'overview'],
+    queryFn: () => weatherApi.analysis('', false) as unknown as Promise<WeatherOverview>,
     staleTime: Infinity,
+  });
+}
+
+/** Region names for the context switcher. */
+export function useRegions() {
+  const q = useWeatherOverview();
+  const data = q.data?.available_regions ? [...q.data.available_regions].sort((a, b) => a.localeCompare(b)) : undefined;
+  return { ...q, data };
+}
+
+/** A spread-out sample of records (several pages across the dataset) for scatter/histogram charts. */
+export function useRecordSample(filters: { crop?: string; region?: string }, pages = 5, pageSize = 100) {
+  return useQuery({
+    queryKey: ['data', 'sample', filters, pages, pageSize],
+    staleTime: 10 * 60_000,
+    queryFn: async () => {
+      const base = { limit: pageSize, crop_type: filters.crop || undefined, region: filters.region || undefined };
+      const first = await dataApi.records({ ...base, page: 1 });
+      const totalPages = first.total_pages;
+      const picks = Array.from(
+        new Set(Array.from({ length: pages }, (_, i) => 1 + Math.floor((i * totalPages) / pages))),
+      );
+      const rest = await Promise.all(picks.filter(p => p !== 1).map(page => dataApi.records({ ...base, page })));
+      return { total: first.total_records, rows: [first, ...rest].flatMap(r => r.data) };
+    },
   });
 }
