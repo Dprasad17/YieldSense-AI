@@ -65,6 +65,27 @@ c:\INFOSYS 7.0\
 
 ---
 
+## 🗄️ Databases: PostgreSQL + MongoDB (Windows)
+
+1. **Install** PostgreSQL 16+ (EDB installer) and MongoDB Community 7+ (MSI, "Install as a Service"). Both run as Windows services.
+2. **Create the app role and databases** (PowerShell, using the `postgres` superuser password you chose during install):
+   ```powershell
+   $psql = "C:\Program Files\PostgreSQL8in\psql.exe"
+   & $psql -h 127.0.0.1 -U postgres -c "CREATE ROLE yieldsense LOGIN PASSWORD 'choose-a-password';"
+   & $psql -h 127.0.0.1 -U postgres -c "CREATE DATABASE yieldsense OWNER yieldsense;"
+   & $psql -h 127.0.0.1 -U postgres -c "CREATE DATABASE yieldsense_test OWNER yieldsense;"
+   ```
+3. **Configure** `backend/.env` from `backend/.env.example` (`DATABASE_URL`, `TEST_DATABASE_URL`, `MONGO_URL`).
+4. **Migrate and seed** (repo root, venv active):
+   ```powershell
+   alembic -c backend/alembic.ini upgrade head
+   python scripts/migrate_legacy_stores.py   # one-time: users_db.json + old SQLite store -> PostgreSQL
+   python scripts/seed.py                    # reference dataset, demo users, demo farms, Mongo indexes
+   ```
+5. **Check**: `GET http://localhost:8000/api/health` reports `database`, `mongo` and `model_loaded`.
+
+Schema and ERD: [docs/database-schema.md](docs/database-schema.md).
+
 ## ⚙️ Quickstart & Setup Guide
 
 ### 1. Python Virtual Environment & Dependencies

@@ -5,7 +5,7 @@ PREDICT_BODY = {
     "crop_type": "Rice", "region": "India", "irrigation_type": "Drip", "fertilizer_type": "Urea",
     "crop_disease_status": "None", "soil_pH": 6.2, "soil_moisture_%": 40, "temperature_C": 25,
     "rainfall_mm": 1100, "humidity_%": 60, "sunlight_hours": 7.4, "pesticide_usage_ml": 450,
-    "total_days": 130, "NDVI_index": 0.65, "farm_id": "FARM00001",
+    "total_days": 130, "NDVI_index": 0.65, "record_code": "FARM00001",
 }
 
 
@@ -73,7 +73,7 @@ def test_recommendations_are_rule_based_and_actionable(client, auth):
     assert hub["record_count"] > 0 and hub["context"]["source"].startswith("YieldSense dataset")
     for rec in hub["recommendations"]:
         assert rec["severity"] in ("critical", "high", "medium", "info")
-        assert rec["rationale"] and rec["rationale_source"] == "YieldSense rule engine"
+        assert rec["rationale"] and rec["rationale_source"] == "YieldSense rule engine (fallback)"
         assert "Sector" not in rec["title"] and "Iowa" not in rec["affected_area"]
     if hub["recommendations"]:
         rec_id = hub["recommendations"][0]["id"]

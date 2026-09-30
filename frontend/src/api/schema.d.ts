@@ -4,3650 +4,3671 @@
  */
 
 export interface paths {
-  '/api/public/stats': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/public/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public Stats */
+        get: operations["public_stats_api_public_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Public Stats */
-    get: operations['public_stats_api_public_stats_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/auth/login': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_api_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Login */
-    post: operations['login_api_auth_login_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/auth/register': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register */
+        post: operations["register_api_auth_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Register */
-    post: operations['register_api_auth_register_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/auth/me': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Current User Profile */
+        get: operations["read_current_user_profile_api_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Read Current User Profile */
-    get: operations['read_current_user_profile_api_auth_me_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/data/records': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/data/records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Crop Records */
+        get: operations["get_crop_records_api_data_records_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Crop Records */
-    get: operations['get_crop_records_api_data_records_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/data/summary': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/data/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Dataset Summary */
+        get: operations["get_dataset_summary_api_data_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Dataset Summary */
-    get: operations['get_dataset_summary_api_data_summary_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/analytics/metrics': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/analytics/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Eda Metrics
+         * @description EDA summary generated by scripts/run_eda.py.
+         */
+        get: operations["get_eda_metrics_api_analytics_metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Eda Metrics
-     * @description EDA summary generated by scripts/run_eda.py.
-     */
-    get: operations['get_eda_metrics_api_analytics_metrics_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/analytics/eda-charts': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/analytics/eda-charts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Eda Charts
+         * @description Chart-ready EDA data computed from the dataset: yield histogram, rainfall-vs-yield sample
+         *     with a least-squares fit (r and R² over all filtered records), and mean yield by pH bin.
+         */
+        get: operations["get_eda_charts_api_analytics_eda_charts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Eda Charts
-     * @description Chart-ready EDA data computed from the dataset: yield histogram, rainfall-vs-yield sample
-     *     with a least-squares fit (r and R² over all filtered records), and mean yield by pH bin.
-     */
-    get: operations['get_eda_charts_api_analytics_eda_charts_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/analytics/regions': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/analytics/regions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Region Ranking */
+        get: operations["get_region_ranking_api_analytics_regions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Region Ranking */
-    get: operations['get_region_ranking_api_analytics_regions_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/analytics/seasonal-trends': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/analytics/seasonal-trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Seasonal Trends
+         * @description Yearly yield (sowing years 1990–2013) plus a model-based expectation with a P10–P90 band.
+         *     All sowing dates in the dataset fall on 15 January, so month/season grouping is not possible.
+         */
+        get: operations["get_seasonal_trends_api_analytics_seasonal_trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Seasonal Trends
-     * @description Yearly yield (sowing years 1990–2013) plus a model-based expectation with a P10–P90 band.
-     *     All sowing dates in the dataset fall on 15 January, so month/season grouping is not possible.
-     */
-    get: operations['get_seasonal_trends_api_analytics_seasonal_trends_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/analytics/farm-comparison': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/analytics/farm-comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Farm Comparison */
+        get: operations["get_farm_comparison_api_analytics_farm_comparison_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Farm Comparison */
-    get: operations['get_farm_comparison_api_analytics_farm_comparison_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/predict': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/predict": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Predict Crop Yield
+         * @description Predicts yield with a P10–P90 interval (spread of the forest's trees) and saves it to history.
+         */
+        post: operations["predict_crop_yield_api_predict_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Predict Crop Yield
-     * @description Predicts yield with a P10–P90 interval (spread of the forest's trees) and saves it to history.
-     */
-    post: operations['predict_crop_yield_api_predict_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/predict/insights': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/predict/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate Prediction Insights */
+        post: operations["generate_prediction_insights_api_predict_insights_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Generate Prediction Insights */
-    post: operations['generate_prediction_insights_api_predict_insights_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/predict/models': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/predict/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Model Performance Metrics
+         * @description Full comparison of trained models (models/model_performance_metrics.json).
+         */
+        get: operations["get_model_performance_metrics_api_predict_models_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Model Performance Metrics
-     * @description Full comparison of trained models (models/model_performance_metrics.json).
-     */
-    get: operations['get_model_performance_metrics_api_predict_models_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/predict/models/active': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/predict/models/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Active Model Summary
+         * @description Headline metrics of the model that serves predictions. Available to every signed-in role.
+         */
+        get: operations["get_active_model_summary_api_predict_models_active_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Active Model Summary
-     * @description Headline metrics of the model that serves predictions. Available to every signed-in role.
-     */
-    get: operations['get_active_model_summary_api_predict_models_active_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/predict/recommendations-hub': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/predict/recommendations-hub": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Recommendations Hub
+         * @description Rule-based recommendations for the selected region and crop. Thresholds from core/agronomy_rules;
+         *     impacts are Random Forest estimates; only the rationale text is written by the LLM (with a fallback).
+         */
+        get: operations["get_recommendations_hub_api_predict_recommendations_hub_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get Recommendations Hub
-     * @description Rule-based recommendations for the selected region and crop. Thresholds from core/agronomy_rules;
-     *     impacts are Random Forest estimates; only the rationale text is written by the LLM (with a fallback).
-     */
-    get: operations['get_recommendations_hub_api_predict_recommendations_hub_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/predictions': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/predictions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Predictions
+         * @description Farmers see their own predictions; agronomists and admins see everyone's.
+         */
+        get: operations["list_predictions_api_predictions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * List Predictions
-     * @description Farmers see their own predictions; agronomists and admins see everyone's.
-     */
-    get: operations['list_predictions_api_predictions_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/predictions/{prediction_id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/predictions/{prediction_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Prediction */
+        get: operations["get_prediction_api_predictions__prediction_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Prediction */
-    get: operations['get_prediction_api_predictions__prediction_id__get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/recommendations/{rec_id}/actions': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/recommendations/{rec_id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Act On Recommendation
+         * @description Records what the user did with a recommendation. There is no field hardware: "create_task"
+         *     creates a task in YieldSense, it does not dispatch anything to equipment.
+         */
+        post: operations["act_on_recommendation_api_recommendations__rec_id__actions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Act On Recommendation
-     * @description Records what the user did with a recommendation. There is no field hardware: "create_task"
-     *     creates a task in YieldSense, it does not dispatch anything to equipment.
-     */
-    post: operations['act_on_recommendation_api_recommendations__rec_id__actions_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/recommendations/tasks': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/recommendations/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Tasks */
+        get: operations["list_tasks_api_recommendations_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List Tasks */
-    get: operations['list_tasks_api_recommendations_tasks_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/weather/analysis': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/weather/analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Weather Analysis */
+        get: operations["get_weather_analysis_api_weather_analysis_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Weather Analysis */
-    get: operations['get_weather_analysis_api_weather_analysis_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/soil/assessment': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/soil/assessment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Soil Assessment */
+        get: operations["get_soil_assessment_api_soil_assessment_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Soil Assessment */
-    get: operations['get_soil_assessment_api_soil_assessment_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/reports/export': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/reports/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export Report
+         * @description Exports the real filtered dataset rows (capped at 50,000) as CSV or XLSX.
+         */
+        post: operations["export_report_api_reports_export_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Export Report
-     * @description Exports the real filtered dataset rows (capped at 50,000) as CSV or XLSX.
-     */
-    post: operations['export_report_api_reports_export_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/farms': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/farms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Farms */
+        get: operations["list_farms_api_farms_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List Farms */
-    get: operations['list_farms_api_farms_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/farms/{farm_id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/farms/{farm_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Farm */
+        get: operations["get_farm_api_farms__farm_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Farm */
-    get: operations['get_farm_api_farms__farm_id__get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/risk': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/risk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Risk */
+        get: operations["get_risk_api_risk_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Risk */
-    get: operations['get_risk_api_risk_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/notifications': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Notifications
+         * @description Passing region/crop first syncs notifications for that context (deduplicated).
+         */
+        get: operations["list_notifications_api_notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * List Notifications
-     * @description Passing region/crop first syncs notifications for that context (deduplicated).
-     */
-    get: operations['list_notifications_api_notifications_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/notifications/read-all': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark All Read */
+        patch: operations["mark_all_read_api_notifications_read_all_patch"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Mark All Read */
-    patch: operations['mark_all_read_api_notifications_read_all_patch'];
-    trace?: never;
-  };
-  '/api/notifications/{notification_id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/notifications/{notification_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set Read */
+        patch: operations["set_read_api_notifications__notification_id__patch"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Set Read */
-    patch: operations['set_read_api_notifications__notification_id__patch'];
-    trace?: never;
-  };
-  '/api/admin/users': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin List Users */
+        get: operations["admin_list_users_api_admin_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Admin List Users */
-    get: operations['admin_list_users_api_admin_users_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/admin/users/{username}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/admin/users/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Admin Update User */
+        patch: operations["admin_update_user_api_admin_users__username__patch"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Admin Update User */
-    patch: operations['admin_update_user_api_admin_users__username__patch'];
-    trace?: never;
-  };
-  '/api/admin/audit': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/admin/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Audit */
+        get: operations["admin_audit_api_admin_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Admin Audit */
-    get: operations['admin_audit_api_admin_audit_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Root */
+        get: operations["root__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Root */
-    get: operations['root__get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/health': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health Check
+         * @description Liveness plus dependency checks: PostgreSQL, MongoDB and the loaded model.
+         */
+        get: operations["health_check_api_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Health Check */
-    get: operations['health_check_api_health_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** AIInsightsResponse */
-    AIInsightsResponse: {
-      /** Ai Insights */
-      ai_insights: string;
-      /** Risk Alerts */
-      risk_alerts: string[];
-      /** Recommendations */
-      recommendations: string[];
-      /** Llm Provider */
-      llm_provider: string;
-    };
-    /** ActionRequest */
-    ActionRequest: {
-      /**
-       * Action
-       * @enum {string}
-       */
-      action: 'create_task' | 'done' | 'dismiss' | 'snooze';
-      /** Note */
-      note?: string | null;
-      /**
-       * Snooze Days
-       * @default 3
-       */
-      snooze_days: number;
-    };
-    /** ActionResponse */
-    ActionResponse: {
-      /** Message */
-      message: string;
-      task: components['schemas']['Task'];
-    };
-    /** ActiveModel */
-    ActiveModel: {
-      /** Name */
-      name: string;
-      /** R2 */
-      r2: number;
-      /** Rmse */
-      rmse: number;
-      /** Mae */
-      mae: number;
-      /** Inference Latency Ms */
-      inference_latency_ms?: number | null;
-      /** Test Size */
-      test_size?: number | null;
-    };
-    /** AdminUser */
-    AdminUser: {
-      /** Username */
-      username: string;
-      /** Email */
-      email: string;
-      /** Full Name */
-      full_name: string;
-      /**
-       * Role
-       * @enum {string}
-       */
-      role: 'Farmer' | 'Agronomist' | 'Admin';
-      /** Active */
-      active: boolean;
-    };
-    /** Anomaly */
-    Anomaly: {
-      /** Farm Id */
-      farm_id: string;
-      /** Region */
-      region: string;
-      /** Crop Type */
-      crop_type: string;
-      /** Year */
-      year: number;
-      /** Yield Kg Ha */
-      yield_kg_ha: number;
-      /** Crop Mean Kg Ha */
-      crop_mean_kg_ha: number;
-      /** Z Score */
-      z_score: number;
-      /**
-       * Direction
-       * @enum {string}
-       */
-      direction: 'high' | 'low';
-    };
-    /** AuditEntry */
-    AuditEntry: {
-      /** Id */
-      id: string;
-      /** Actor */
-      actor: string;
-      /** Action */
-      action: string;
-      /** Target */
-      target: string;
-      /** Detail */
-      detail: {
-        [key: string]: unknown;
-      };
-      /** Created At */
-      created_at: string;
-    };
-    /** BinnedMean */
-    BinnedMean: {
-      /** Start */
-      start: number;
-      /** End */
-      end: number;
-      /** Mean Yield Kg Ha */
-      mean_yield_kg_ha: number;
-      /** Count */
-      count: number;
-    };
-    /** ContextClimate */
-    ContextClimate: {
-      /** Source */
-      source: string;
-      /** Temperature C */
-      temperature_C: number;
-      /** Rainfall Mm */
-      rainfall_mm: number;
-      /** Humidity Percent */
-      humidity_percent: number;
-      /** Sunlight Hours */
-      sunlight_hours: number;
-      /** Record Count */
-      record_count: number;
-    };
-    /** CropBreakdown */
-    CropBreakdown: {
-      /** Count */
-      count: number;
-      /** Avg Yield */
-      avg_yield: number;
-      /** Std Yield */
-      std_yield?: number | null;
-      /** Min Yield */
-      min_yield?: number | null;
-      /** Max Yield */
-      max_yield?: number | null;
-    };
-    /** CropCycle */
-    CropCycle: {
-      /** Crop */
-      crop: string;
-      /** Median Days */
-      median_days: number;
-      /** Stages */
-      stages: components['schemas']['CycleStage'][];
-      /** Source */
-      source: string;
-    };
-    /** CropRecord */
-    CropRecord: {
-      /** Farm Id */
-      farm_id: string;
-      /** Region */
-      region: string;
-      /** Crop Type */
-      crop_type: string;
-      /** Year */
-      year?: number | null;
-      /** Yield Kg Per Hectare */
-      yield_kg_per_hectare: number;
-      /** Rainfall Mm */
-      rainfall_mm: number;
-      /** Temperature C */
-      temperature_C: number;
-      /** Pesticide Usage Ml */
-      pesticide_usage_ml: number;
-      /** Soil Ph */
-      soil_pH: number;
-      /** Soil Moisture % */
-      'soil_moisture_%': number;
-      /** Humidity % */
-      'humidity_%': number;
-      /** Sunlight Hours */
-      sunlight_hours: number;
-      /** Total Days */
-      total_days: number;
-      /** Sowing Date */
-      sowing_date: string;
-      /** Harvest Date */
-      harvest_date: string;
-      /** Irrigation Type */
-      irrigation_type: string;
-      /** Fertilizer Type */
-      fertilizer_type: string;
-      /** Crop Disease Status */
-      crop_disease_status: string;
-      /** Ndvi Index */
-      NDVI_index: number;
-    };
-    /** CropSuitability */
-    CropSuitability: {
-      /** Crop */
-      crop: string;
-      /** Suitability Index */
-      suitability_index: number;
-      /** Reasons */
-      reasons: string[];
-    };
-    /** CycleStage */
-    CycleStage: {
-      /** Name */
-      name: string;
-      /** Start Day */
-      start_day: number;
-      /** End Day */
-      end_day: number;
-    };
-    /** DatasetSummary */
-    DatasetSummary: {
-      /**
-       * Total Farms
-       * @description Number of dataset records (rows)
-       */
-      total_farms: number;
-      /** Avg Yield Kg Ha */
-      avg_yield_kg_ha: number;
-      /** Median Yield Kg Ha */
-      median_yield_kg_ha: number;
-      /** Avg Rainfall Mm */
-      avg_rainfall_mm: number;
-      /** Avg Ndvi */
-      avg_ndvi: number;
-      /** Total Regions */
-      total_regions: number;
-      /** Crops Supported */
-      crops_supported: string[];
-      /** Regions */
-      regions: string[];
-      /** Year Min */
-      year_min: number;
-      /** Year Max */
-      year_max: number;
-      /** Missing Years */
-      missing_years: number[];
-    };
-    /** EdaCharts */
-    EdaCharts: {
-      /** Scope */
-      scope: string;
-      /** Record Count */
-      record_count: number;
-      /** Yield Histogram */
-      yield_histogram: components['schemas']['HistogramBin'][];
-      /** Yield Mean Kg Ha */
-      yield_mean_kg_ha: number;
-      /** Yield Median Kg Ha */
-      yield_median_kg_ha: number;
-      /** Rainfall Vs Yield */
-      rainfall_vs_yield: components['schemas']['ScatterPoint'][];
-      rainfall_regression: components['schemas']['Regression'];
-      /** Ph Bins */
-      ph_bins: components['schemas']['BinnedMean'][];
-      /** Ph Optimal Low */
-      ph_optimal_low: number | null;
-      /** Ph Optimal High */
-      ph_optimal_high: number | null;
-    };
-    /** EdaMetrics */
-    EdaMetrics: {
-      /** Total Records */
-      total_records: number;
-      /** Overall Stats */
-      overall_stats: {
-        [key: string]: {
-          [key: string]: number;
+    schemas: {
+        /** AIInsightsResponse */
+        AIInsightsResponse: {
+            /** Ai Insights */
+            ai_insights: string;
+            /** Risk Alerts */
+            risk_alerts: string[];
+            /** Recommendations */
+            recommendations: string[];
+            /** Llm Provider */
+            llm_provider: string;
         };
-      };
-      /** Crop Breakdown */
-      crop_breakdown: {
-        [key: string]: components['schemas']['CropBreakdown'];
-      };
-      /** Top Crop By Yield */
-      top_crop_by_yield?: string | null;
+        /** ActionRequest */
+        ActionRequest: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "create_task" | "done" | "dismiss" | "snooze";
+            /** Note */
+            note?: string | null;
+            /**
+             * Snooze Days
+             * @default 3
+             */
+            snooze_days: number;
+        };
+        /** ActionResponse */
+        ActionResponse: {
+            /** Message */
+            message: string;
+            task: components["schemas"]["Task"];
+        };
+        /** ActiveModel */
+        ActiveModel: {
+            /** Name */
+            name: string;
+            /** R2 */
+            r2: number;
+            /** Rmse */
+            rmse: number;
+            /** Mae */
+            mae: number;
+            /** Inference Latency Ms */
+            inference_latency_ms?: number | null;
+            /** Test Size */
+            test_size?: number | null;
+        };
+        /** AdminUser */
+        AdminUser: {
+            /** Username */
+            username: string;
+            /** Email */
+            email: string;
+            /** Full Name */
+            full_name: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "Farmer" | "Agronomist" | "Admin";
+            /** Active */
+            active: boolean;
+        };
+        /** Anomaly */
+        Anomaly: {
+            /** Farm Id */
+            farm_id: string;
+            /** Region */
+            region: string;
+            /** Crop Type */
+            crop_type: string;
+            /** Year */
+            year: number;
+            /** Yield Kg Ha */
+            yield_kg_ha: number;
+            /** Crop Mean Kg Ha */
+            crop_mean_kg_ha: number;
+            /** Z Score */
+            z_score: number;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "high" | "low";
+        };
+        /** AuditEntry */
+        AuditEntry: {
+            /** Id */
+            id: string;
+            /** Actor */
+            actor: string;
+            /** Action */
+            action: string;
+            /** Target */
+            target: string;
+            /** Detail */
+            detail: {
+                [key: string]: unknown;
+            };
+            /** Created At */
+            created_at: string;
+        };
+        /** BinnedMean */
+        BinnedMean: {
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Mean Yield Kg Ha */
+            mean_yield_kg_ha: number;
+            /** Count */
+            count: number;
+        };
+        /** ContextClimate */
+        ContextClimate: {
+            /** Source */
+            source: string;
+            /** Temperature C */
+            temperature_C: number;
+            /** Rainfall Mm */
+            rainfall_mm: number;
+            /** Humidity Percent */
+            humidity_percent: number;
+            /** Sunlight Hours */
+            sunlight_hours: number;
+            /** Record Count */
+            record_count: number;
+        };
+        /** CropBreakdown */
+        CropBreakdown: {
+            /** Count */
+            count: number;
+            /** Avg Yield */
+            avg_yield: number;
+            /** Std Yield */
+            std_yield?: number | null;
+            /** Min Yield */
+            min_yield?: number | null;
+            /** Max Yield */
+            max_yield?: number | null;
+        };
+        /** CropCycle */
+        CropCycle: {
+            /** Crop */
+            crop: string;
+            /** Median Days */
+            median_days: number;
+            /** Stages */
+            stages: components["schemas"]["CycleStage"][];
+            /** Source */
+            source: string;
+        };
+        /** CropRecord */
+        CropRecord: {
+            /** Farm Id */
+            farm_id: string;
+            /** Region */
+            region: string;
+            /** Crop Type */
+            crop_type: string;
+            /** Year */
+            year?: number | null;
+            /** Yield Kg Per Hectare */
+            yield_kg_per_hectare: number;
+            /** Rainfall Mm */
+            rainfall_mm: number;
+            /** Temperature C */
+            temperature_C: number;
+            /** Pesticide Usage Ml */
+            pesticide_usage_ml: number;
+            /** Soil Ph */
+            soil_pH: number;
+            /** Soil Moisture % */
+            "soil_moisture_%": number;
+            /** Humidity % */
+            "humidity_%": number;
+            /** Sunlight Hours */
+            sunlight_hours: number;
+            /** Total Days */
+            total_days: number;
+            /** Sowing Date */
+            sowing_date: string;
+            /** Harvest Date */
+            harvest_date: string;
+            /** Irrigation Type */
+            irrigation_type: string;
+            /** Fertilizer Type */
+            fertilizer_type: string;
+            /** Crop Disease Status */
+            crop_disease_status: string;
+            /** Ndvi Index */
+            NDVI_index: number;
+        };
+        /** CropSuitability */
+        CropSuitability: {
+            /** Crop */
+            crop: string;
+            /** Suitability Index */
+            suitability_index: number;
+            /** Reasons */
+            reasons: string[];
+        };
+        /** CycleStage */
+        CycleStage: {
+            /** Name */
+            name: string;
+            /** Start Day */
+            start_day: number;
+            /** End Day */
+            end_day: number;
+        };
+        /** DatasetSummary */
+        DatasetSummary: {
+            /**
+             * Total Farms
+             * @description Number of dataset records (rows)
+             */
+            total_farms: number;
+            /** Avg Yield Kg Ha */
+            avg_yield_kg_ha: number;
+            /** Median Yield Kg Ha */
+            median_yield_kg_ha: number;
+            /** Avg Rainfall Mm */
+            avg_rainfall_mm: number;
+            /** Avg Ndvi */
+            avg_ndvi: number;
+            /** Total Regions */
+            total_regions: number;
+            /** Crops Supported */
+            crops_supported: string[];
+            /** Regions */
+            regions: string[];
+            /** Year Min */
+            year_min: number;
+            /** Year Max */
+            year_max: number;
+            /** Missing Years */
+            missing_years: number[];
+        };
+        /** EdaCharts */
+        EdaCharts: {
+            /** Scope */
+            scope: string;
+            /** Record Count */
+            record_count: number;
+            /** Yield Histogram */
+            yield_histogram: components["schemas"]["HistogramBin"][];
+            /** Yield Mean Kg Ha */
+            yield_mean_kg_ha: number;
+            /** Yield Median Kg Ha */
+            yield_median_kg_ha: number;
+            /** Rainfall Vs Yield */
+            rainfall_vs_yield: components["schemas"]["ScatterPoint"][];
+            rainfall_regression: components["schemas"]["Regression"];
+            /** Ph Bins */
+            ph_bins: components["schemas"]["BinnedMean"][];
+            /** Ph Optimal Low */
+            ph_optimal_low: number | null;
+            /** Ph Optimal High */
+            ph_optimal_high: number | null;
+        };
+        /** EdaMetrics */
+        EdaMetrics: {
+            /** Total Records */
+            total_records: number;
+            /** Overall Stats */
+            overall_stats: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+            /** Crop Breakdown */
+            crop_breakdown: {
+                [key: string]: components["schemas"]["CropBreakdown"];
+            };
+            /** Top Crop By Yield */
+            top_crop_by_yield?: string | null;
+        };
+        /** ErrorBody */
+        ErrorBody: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+        };
+        /** ErrorEnvelope */
+        ErrorEnvelope: {
+            error: components["schemas"]["ErrorBody"];
+        };
+        /** Evidence */
+        Evidence: {
+            /** Label */
+            label: string;
+            /** Unit */
+            unit: string;
+            /** Observed */
+            observed: number;
+            /** Optimal Low */
+            optimal_low: number;
+            /** Optimal High */
+            optimal_high: number;
+            /** Share Affected */
+            share_affected: number;
+        };
+        /** FarmComparison */
+        FarmComparison: {
+            /** Scope */
+            scope: string;
+            /** Total Records */
+            total_records: number;
+            /** Mean Yield Kg Ha */
+            mean_yield_kg_ha: number | null;
+            /** Sort */
+            sort: string;
+            /** Farms */
+            farms: components["schemas"]["FarmRow"][];
+            /** Risk Method */
+            risk_method: string;
+        };
+        /** FarmDetail */
+        FarmDetail: {
+            /** Farm Id */
+            farm_id: string;
+            /** Note */
+            note: string;
+            /** Records */
+            records: components["schemas"]["CropRecord"][];
+            /** Avg Yield Kg Ha */
+            avg_yield_kg_ha: number;
+            /** Region Crop Mean Kg Ha */
+            region_crop_mean_kg_ha: number | null;
+            /** Crop Mean Kg Ha */
+            crop_mean_kg_ha: number;
+            /** Crop Percentile */
+            crop_percentile: number;
+            /** Predictions */
+            predictions: components["schemas"]["PredictionRecord"][];
+        };
+        /** FarmRow */
+        FarmRow: {
+            /** Farm Id */
+            farm_id: string;
+            /** Region */
+            region: string;
+            /** Crop Type */
+            crop_type: string;
+            /** Year */
+            year: number;
+            /** Yield Kg Ha */
+            yield_kg_ha: number;
+            /** Soil Health Index */
+            soil_health_index: number;
+            /** Soil Ph */
+            soil_pH: number;
+            /** Soil Moisture Percent */
+            soil_moisture_percent: number;
+            /** Ndvi */
+            ndvi: number;
+            /**
+             * Risk Rating
+             * @enum {string}
+             */
+            risk_rating: "Low" | "Medium" | "High";
+            /** Risk Flags */
+            risk_flags: string[];
+        };
+        /** FarmSummary */
+        FarmSummary: {
+            /** Farm Id */
+            farm_id: string;
+            /** Region */
+            region: string;
+            /** Crop Type */
+            crop_type: string;
+            /** Year */
+            year: number | null;
+            /** Yield Kg Ha */
+            yield_kg_ha: number;
+            /** Ndvi */
+            ndvi: number;
+        };
+        /** Forecast */
+        Forecast: {
+            /** Year */
+            year: number;
+            /** Mean Kg Ha */
+            mean_kg_ha: number;
+            /** P10 Kg Ha */
+            p10_kg_ha: number;
+            /** P90 Kg Ha */
+            p90_kg_ha: number;
+            /** Basis Year */
+            basis_year: number;
+            /** Basis Records */
+            basis_records: number;
+            /** Method */
+            method: string;
+        };
+        /** HistogramBin */
+        HistogramBin: {
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Count */
+            count: number;
+        };
+        /** LoginRequest */
+        LoginRequest: {
+            /** Username */
+            username: string;
+            /** Password */
+            password: string;
+        };
+        /** MeResponse */
+        MeResponse: {
+            /** Status */
+            status: string;
+            user: components["schemas"]["SessionUser"];
+        };
+        /** Notification */
+        Notification: {
+            /** Id */
+            id: string;
+            /** Username */
+            username: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "alerts" | "weather" | "recommendations" | "system";
+            /** Severity */
+            severity: string;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            /** Link */
+            link: string | null;
+            /** Created At */
+            created_at: string;
+            /** Read At */
+            read_at: string | null;
+            /** Read */
+            read: boolean;
+        };
+        /** NotificationPage */
+        NotificationPage: {
+            /** Items */
+            items: components["schemas"]["Notification"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Unread Count */
+            unread_count: number;
+        };
+        /** Page[AdminUser] */
+        Page_AdminUser_: {
+            /** Items */
+            items: components["schemas"]["AdminUser"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** Page[AuditEntry] */
+        Page_AuditEntry_: {
+            /** Items */
+            items: components["schemas"]["AuditEntry"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** Page[CropRecord] */
+        Page_CropRecord_: {
+            /** Items */
+            items: components["schemas"]["CropRecord"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** Page[FarmSummary] */
+        Page_FarmSummary_: {
+            /** Items */
+            items: components["schemas"]["FarmSummary"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** Page[PredictionRecord] */
+        Page_PredictionRecord_: {
+            /** Items */
+            items: components["schemas"]["PredictionRecord"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+        };
+        /** PredictionRecord */
+        PredictionRecord: {
+            /** Id */
+            id: string;
+            /** Username */
+            username: string;
+            /** Created At */
+            created_at: string;
+            /** Farm Id */
+            farm_id: number | null;
+            /** Record Code */
+            record_code?: string | null;
+            /** Year */
+            year?: number | null;
+            /** Model Version */
+            model_version?: string | null;
+            /** Crop Type */
+            crop_type: string;
+            /** Region */
+            region: string;
+            /** Inputs */
+            inputs: {
+                [key: string]: unknown;
+            };
+            /** Predicted Yield Kg Ha */
+            predicted_yield_kg_ha: number;
+            /** Low Kg Ha */
+            low_kg_ha: number;
+            /** High Kg Ha */
+            high_kg_ha: number;
+            /**
+             * Productivity Rating
+             * @enum {string}
+             */
+            productivity_rating: "Low" | "Medium" | "High";
+            /**
+             * Risk Rating
+             * @enum {string}
+             */
+            risk_rating: "Low" | "Medium" | "High";
+            /** Model Name */
+            model_name: string;
+            /** Model R2 */
+            model_r2: number | null;
+        };
+        /** PublicStats */
+        PublicStats: {
+            /** Record Count */
+            record_count: number;
+            /** Crop Count */
+            crop_count: number;
+            /** Region Count */
+            region_count: number;
+            /** Year Min */
+            year_min: number;
+            /** Year Max */
+            year_max: number;
+            /** Model Name */
+            model_name: string | null;
+            /** R2 */
+            r2: number | null;
+            /** Rmse */
+            rmse: number | null;
+            /** Mae */
+            mae: number | null;
+        };
+        /** ReadAllResponse */
+        ReadAllResponse: {
+            /** Updated */
+            updated: number;
+        };
+        /** ReadRequest */
+        ReadRequest: {
+            /**
+             * Read
+             * @default true
+             */
+            read: boolean;
+        };
+        /** Recommendation */
+        Recommendation: {
+            /** Id */
+            id: string;
+            /** Rule */
+            rule: string;
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "critical" | "high" | "medium" | "info";
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "irrigation" | "disease_pest" | "fertilizer" | "crop_planning" | "best_practices";
+            /** Title */
+            title: string;
+            /** Action */
+            action: string;
+            /** Action Label */
+            action_label: string;
+            /** Impact Kg Ha */
+            impact_kg_ha: number;
+            /** Impact Basis */
+            impact_basis: string;
+            /** Deadline Days */
+            deadline_days: number;
+            /** Deadline */
+            deadline: string;
+            /** Affected Area */
+            affected_area: string;
+            /** Evidence */
+            evidence: components["schemas"]["Evidence"][];
+            /** Rationale */
+            rationale: string;
+            /** Rationale Source */
+            rationale_source: string;
+            task?: components["schemas"]["TaskState"] | null;
+        };
+        /** RecommendationsHub */
+        RecommendationsHub: {
+            /** Scope */
+            scope: string;
+            /** Record Count */
+            record_count: number;
+            /** Recommendations */
+            recommendations: components["schemas"]["Recommendation"][];
+            context: components["schemas"]["ContextClimate"] | null;
+            crop_cycle: components["schemas"]["CropCycle"] | null;
+        };
+        /** RegionRank */
+        RegionRank: {
+            /** Region */
+            region: string;
+            /** Mean Yield Kg Ha */
+            mean_yield_kg_ha: number;
+            /** Median Yield Kg Ha */
+            median_yield_kg_ha: number;
+            /** Record Count */
+            record_count: number;
+        };
+        /** RegionRanking */
+        RegionRanking: {
+            /** Scope */
+            scope: string;
+            /** Global Mean Kg Ha */
+            global_mean_kg_ha: number;
+            /** Total Regions */
+            total_regions: number;
+            /** Regions */
+            regions: components["schemas"]["RegionRank"][];
+        };
+        /** RegisterRequest */
+        RegisterRequest: {
+            /** Username */
+            username: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Password */
+            password: string;
+            /**
+             * Role
+             * @default Farmer
+             * @enum {string}
+             */
+            role: "Farmer" | "Agronomist";
+            /**
+             * Full Name
+             * @default
+             */
+            full_name: string;
+        };
+        /** Regression */
+        Regression: {
+            /** Slope */
+            slope: number;
+            /** Intercept */
+            intercept: number;
+            /** R */
+            r: number;
+            /** R2 */
+            r2: number;
+        };
+        /** ReportExportRequest */
+        ReportExportRequest: {
+            /**
+             * Format
+             * @default csv
+             * @enum {string}
+             */
+            format: "csv" | "xlsx";
+            /** Crop Type */
+            crop_type?: string | null;
+            /** Region */
+            region?: string | null;
+            /** Year From */
+            year_from?: number | null;
+            /** Year To */
+            year_to?: number | null;
+        };
+        /** RiskAssessment */
+        RiskAssessment: {
+            /** Scope */
+            scope: string;
+            /** Record Count */
+            record_count: number;
+            /** Risks */
+            risks: components["schemas"]["RiskItem"][];
+            /** Timeline */
+            timeline: components["schemas"]["RiskYear"][];
+            /** Anomalies */
+            anomalies: components["schemas"]["Anomaly"][];
+            /** Method */
+            method: string;
+        };
+        /** RiskItem */
+        RiskItem: {
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "drought" | "flood" | "heat" | "pest_disease" | "soil";
+            /** Label */
+            label: string;
+            /** Trigger */
+            trigger: string;
+            /** Share Affected */
+            share_affected: number;
+            /** Median Yield Loss Pct */
+            median_yield_loss_pct: number;
+            /** Likelihood */
+            likelihood: number;
+            /** Impact */
+            impact: number;
+            /** Score */
+            score: number;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "Low" | "Moderate" | "High" | "Critical";
+            /** Mitigation */
+            mitigation: string;
+            /** Recommendation Category */
+            recommendation_category: string;
+        };
+        /** RiskYear */
+        RiskYear: {
+            /** Year */
+            year: number;
+            /** Drought */
+            drought: number;
+            /** Flood */
+            flood: number;
+            /** Heat */
+            heat: number;
+            /** Pest Disease */
+            pest_disease: number;
+            /** Soil */
+            soil: number;
+        };
+        /** ScatterPoint */
+        ScatterPoint: {
+            /** X */
+            x: number;
+            /** Y */
+            y: number;
+        };
+        /** SeasonalTrends */
+        SeasonalTrends: {
+            /**
+             * Granularity
+             * @constant
+             */
+            granularity: "year";
+            /** Scope */
+            scope: string;
+            /** Series */
+            series: components["schemas"]["YearPoint"][];
+            /** Missing Years */
+            missing_years: number[];
+            forecast: components["schemas"]["Forecast"] | null;
+        };
+        /** SessionUser */
+        SessionUser: {
+            /** Username */
+            username: string;
+            /** Role */
+            role: string;
+            /** Email */
+            email: string;
+            /** Full Name */
+            full_name: string;
+        };
+        /** SoilAssessment */
+        SoilAssessment: {
+            /** Status Claim */
+            status_claim: string;
+            /** Crop Type */
+            crop_type: string;
+            /** Scope */
+            scope: string;
+            /** Soil Metrics */
+            soil_metrics: {
+                [key: string]: number | string;
+            };
+            /** Global Soil Averages */
+            global_soil_averages: {
+                [key: string]: number;
+            };
+            /** Guidance */
+            guidance: components["schemas"]["SoilGuidance"][];
+            /** Crop Suitability */
+            crop_suitability: components["schemas"]["CropSuitability"][];
+            /** General Reference Note */
+            general_reference_note: string;
+        };
+        /** SoilGuidance */
+        SoilGuidance: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "optimal" | "watch" | "critical";
+            /** Finding */
+            finding: string;
+            /** Action */
+            action: string;
+            /** Why */
+            why: string;
+        };
+        /** Task */
+        Task: {
+            /** Id */
+            id: string;
+            /** Recommendation Id */
+            recommendation_id: string;
+            /** Title */
+            title: string;
+            /** Region */
+            region: string | null;
+            /** Crop Type */
+            crop_type: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "done" | "dismissed" | "snoozed";
+            /** Note */
+            note: string | null;
+            /** Snooze Until */
+            snooze_until: string | null;
+            /** Username */
+            username: string;
+            /** Created At */
+            created_at: string;
+            /** Updated At */
+            updated_at: string;
+        };
+        /** TaskState */
+        TaskState: {
+            /** Id */
+            id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "done" | "dismissed" | "snoozed";
+            /** Note */
+            note: string | null;
+            /** Snooze Until */
+            snooze_until: string | null;
+            /** Updated At */
+            updated_at: string;
+        };
+        /** TokenResponse */
+        TokenResponse: {
+            /** Access Token */
+            access_token: string;
+            /**
+             * Token Type
+             * @default bearer
+             */
+            token_type: string;
+            /** Expires In */
+            expires_in: number;
+            /** Username */
+            username: string;
+            /** Role */
+            role: string;
+            /** Email */
+            email: string;
+            /** Full Name */
+            full_name: string;
+        };
+        /** UserPatch */
+        UserPatch: {
+            /** Role */
+            role?: ("Farmer" | "Agronomist" | "Admin") | null;
+            /** Active */
+            active?: boolean | null;
+        };
+        /** WeatherCurrent */
+        WeatherCurrent: {
+            /** Temperature C */
+            temperature_C: number;
+            /** Humidity Percent */
+            humidity_percent: number;
+            /** Precipitation Mm */
+            precipitation_mm: number;
+            /** Wind Speed Kmh */
+            wind_speed_kmh: number;
+            /** Observed At */
+            observed_at: string | null;
+        };
+        /** WeatherForecastDay */
+        WeatherForecastDay: {
+            /** Date */
+            date: string;
+            /** Temp Max C */
+            temp_max_C: number;
+            /** Temp Min C */
+            temp_min_C: number;
+            /** Precipitation Mm */
+            precipitation_mm: number;
+            /** Sunshine Hours */
+            sunshine_hours: number;
+        };
+        /** WeatherResponse */
+        WeatherResponse: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "dataset" | "live";
+            /** Status Claim */
+            status_claim: string;
+            /** Data Source */
+            data_source: string;
+            /** Period */
+            period: string;
+            /** Region */
+            region: string;
+            /** Analytics */
+            analytics: {
+                [key: string]: number | null;
+            };
+            /** Available Regions */
+            available_regions: string[];
+            current: components["schemas"]["WeatherCurrent"] | null;
+            /** Forecast */
+            forecast: components["schemas"]["WeatherForecastDay"][];
+            /** Fetched At */
+            fetched_at: string | null;
+        };
+        /** YearPoint */
+        YearPoint: {
+            /** Year */
+            year: number;
+            /** Mean Yield Kg Ha */
+            mean_yield_kg_ha: number;
+            /** Median Yield Kg Ha */
+            median_yield_kg_ha: number;
+            /** Record Count */
+            record_count: number;
+        };
+        /** YieldPredictionRequest */
+        YieldPredictionRequest: {
+            /**
+             * Crop Type
+             * @example Wheat
+             */
+            crop_type: string;
+            /**
+             * Region
+             * @example India
+             */
+            region: string;
+            /**
+             * Irrigation Type
+             * @example Drip
+             */
+            irrigation_type: string;
+            /**
+             * Fertilizer Type
+             * @example Urea
+             */
+            fertilizer_type: string;
+            /**
+             * Crop Disease Status
+             * @example None
+             */
+            crop_disease_status: string;
+            /** Soil Ph */
+            soil_pH: number;
+            /** Soil Moisture % */
+            "soil_moisture_%": number;
+            /** Temperature C */
+            temperature_C: number;
+            /** Rainfall Mm */
+            rainfall_mm: number;
+            /** Humidity % */
+            "humidity_%": number;
+            /** Sunlight Hours */
+            sunlight_hours: number;
+            /** Pesticide Usage Ml */
+            pesticide_usage_ml: number;
+            /** Total Days */
+            total_days: number;
+            /** Ndvi Index */
+            NDVI_index: number;
+            /**
+             * Farm Id
+             * @description Link the prediction to one of your farms
+             */
+            farm_id?: number | null;
+            /**
+             * Record Code
+             * @description Link the prediction to a dataset record
+             */
+            record_code?: string | null;
+        };
+        /** YieldPredictionResponse */
+        YieldPredictionResponse: {
+            /** Id */
+            id: string;
+            /** Username */
+            username: string;
+            /** Created At */
+            created_at: string;
+            /** Farm Id */
+            farm_id: number | null;
+            /** Record Code */
+            record_code?: string | null;
+            /** Year */
+            year?: number | null;
+            /** Model Version */
+            model_version?: string | null;
+            /** Crop Type */
+            crop_type: string;
+            /** Region */
+            region: string;
+            /** Inputs */
+            inputs: {
+                [key: string]: unknown;
+            };
+            /** Predicted Yield Kg Ha */
+            predicted_yield_kg_ha: number;
+            /** Low Kg Ha */
+            low_kg_ha: number;
+            /** High Kg Ha */
+            high_kg_ha: number;
+            /**
+             * Productivity Rating
+             * @enum {string}
+             */
+            productivity_rating: "Low" | "Medium" | "High";
+            /**
+             * Risk Rating
+             * @enum {string}
+             */
+            risk_rating: "Low" | "Medium" | "High";
+            /** Model Name */
+            model_name: string;
+            /** Model R2 */
+            model_r2: number | null;
+            /** Risk Flags */
+            risk_flags: string[];
+        };
     };
-    /** ErrorBody */
-    ErrorBody: {
-      /** Code */
-      code: string;
-      /** Message */
-      message: string;
-    };
-    /** ErrorEnvelope */
-    ErrorEnvelope: {
-      error: components['schemas']['ErrorBody'];
-    };
-    /** Evidence */
-    Evidence: {
-      /** Label */
-      label: string;
-      /** Unit */
-      unit: string;
-      /** Observed */
-      observed: number;
-      /** Optimal Low */
-      optimal_low: number;
-      /** Optimal High */
-      optimal_high: number;
-      /** Share Affected */
-      share_affected: number;
-    };
-    /** FarmComparison */
-    FarmComparison: {
-      /** Scope */
-      scope: string;
-      /** Total Records */
-      total_records: number;
-      /** Mean Yield Kg Ha */
-      mean_yield_kg_ha: number | null;
-      /** Sort */
-      sort: string;
-      /** Farms */
-      farms: components['schemas']['FarmRow'][];
-      /** Risk Method */
-      risk_method: string;
-    };
-    /** FarmDetail */
-    FarmDetail: {
-      /** Farm Id */
-      farm_id: string;
-      /** Note */
-      note: string;
-      /** Records */
-      records: components['schemas']['CropRecord'][];
-      /** Avg Yield Kg Ha */
-      avg_yield_kg_ha: number;
-      /** Region Crop Mean Kg Ha */
-      region_crop_mean_kg_ha: number | null;
-      /** Crop Mean Kg Ha */
-      crop_mean_kg_ha: number;
-      /** Crop Percentile */
-      crop_percentile: number;
-      /** Predictions */
-      predictions: components['schemas']['PredictionRecord'][];
-    };
-    /** FarmRow */
-    FarmRow: {
-      /** Farm Id */
-      farm_id: string;
-      /** Region */
-      region: string;
-      /** Crop Type */
-      crop_type: string;
-      /** Year */
-      year: number;
-      /** Yield Kg Ha */
-      yield_kg_ha: number;
-      /** Soil Health Index */
-      soil_health_index: number;
-      /** Soil Ph */
-      soil_pH: number;
-      /** Soil Moisture Percent */
-      soil_moisture_percent: number;
-      /** Ndvi */
-      ndvi: number;
-      /**
-       * Risk Rating
-       * @enum {string}
-       */
-      risk_rating: 'Low' | 'Medium' | 'High';
-      /** Risk Flags */
-      risk_flags: string[];
-    };
-    /** FarmSummary */
-    FarmSummary: {
-      /** Farm Id */
-      farm_id: string;
-      /** Region */
-      region: string;
-      /** Crop Type */
-      crop_type: string;
-      /** Year */
-      year: number | null;
-      /** Yield Kg Ha */
-      yield_kg_ha: number;
-      /** Ndvi */
-      ndvi: number;
-    };
-    /** Forecast */
-    Forecast: {
-      /** Year */
-      year: number;
-      /** Mean Kg Ha */
-      mean_kg_ha: number;
-      /** P10 Kg Ha */
-      p10_kg_ha: number;
-      /** P90 Kg Ha */
-      p90_kg_ha: number;
-      /** Basis Year */
-      basis_year: number;
-      /** Basis Records */
-      basis_records: number;
-      /** Method */
-      method: string;
-    };
-    /** HistogramBin */
-    HistogramBin: {
-      /** Start */
-      start: number;
-      /** End */
-      end: number;
-      /** Count */
-      count: number;
-    };
-    /** LoginRequest */
-    LoginRequest: {
-      /** Username */
-      username: string;
-      /** Password */
-      password: string;
-    };
-    /** MeResponse */
-    MeResponse: {
-      /** Status */
-      status: string;
-      user: components['schemas']['SessionUser'];
-    };
-    /** Notification */
-    Notification: {
-      /** Id */
-      id: string;
-      /** Username */
-      username: string;
-      /**
-       * Category
-       * @enum {string}
-       */
-      category: 'alerts' | 'weather' | 'recommendations' | 'system';
-      /** Severity */
-      severity: string;
-      /** Title */
-      title: string;
-      /** Body */
-      body: string;
-      /** Link */
-      link: string | null;
-      /** Created At */
-      created_at: string;
-      /** Read At */
-      read_at: string | null;
-      /** Read */
-      read: boolean;
-    };
-    /** NotificationPage */
-    NotificationPage: {
-      /** Items */
-      items: components['schemas']['Notification'][];
-      /** Total */
-      total: number;
-      /** Page */
-      page: number;
-      /** Page Size */
-      page_size: number;
-      /** Unread Count */
-      unread_count: number;
-    };
-    /** Page[AdminUser] */
-    Page_AdminUser_: {
-      /** Items */
-      items: components['schemas']['AdminUser'][];
-      /** Total */
-      total: number;
-      /** Page */
-      page: number;
-      /** Page Size */
-      page_size: number;
-    };
-    /** Page[AuditEntry] */
-    Page_AuditEntry_: {
-      /** Items */
-      items: components['schemas']['AuditEntry'][];
-      /** Total */
-      total: number;
-      /** Page */
-      page: number;
-      /** Page Size */
-      page_size: number;
-    };
-    /** Page[CropRecord] */
-    Page_CropRecord_: {
-      /** Items */
-      items: components['schemas']['CropRecord'][];
-      /** Total */
-      total: number;
-      /** Page */
-      page: number;
-      /** Page Size */
-      page_size: number;
-    };
-    /** Page[FarmSummary] */
-    Page_FarmSummary_: {
-      /** Items */
-      items: components['schemas']['FarmSummary'][];
-      /** Total */
-      total: number;
-      /** Page */
-      page: number;
-      /** Page Size */
-      page_size: number;
-    };
-    /** Page[PredictionRecord] */
-    Page_PredictionRecord_: {
-      /** Items */
-      items: components['schemas']['PredictionRecord'][];
-      /** Total */
-      total: number;
-      /** Page */
-      page: number;
-      /** Page Size */
-      page_size: number;
-    };
-    /** PredictionRecord */
-    PredictionRecord: {
-      /** Id */
-      id: string;
-      /** Username */
-      username: string;
-      /** Created At */
-      created_at: string;
-      /** Farm Id */
-      farm_id: string | null;
-      /** Crop Type */
-      crop_type: string;
-      /** Region */
-      region: string;
-      /** Inputs */
-      inputs: {
-        [key: string]: unknown;
-      };
-      /** Predicted Yield Kg Ha */
-      predicted_yield_kg_ha: number;
-      /** Low Kg Ha */
-      low_kg_ha: number;
-      /** High Kg Ha */
-      high_kg_ha: number;
-      /**
-       * Productivity Rating
-       * @enum {string}
-       */
-      productivity_rating: 'Low' | 'Medium' | 'High';
-      /**
-       * Risk Rating
-       * @enum {string}
-       */
-      risk_rating: 'Low' | 'Medium' | 'High';
-      /** Model Name */
-      model_name: string;
-      /** Model R2 */
-      model_r2: number | null;
-    };
-    /** PublicStats */
-    PublicStats: {
-      /** Record Count */
-      record_count: number;
-      /** Crop Count */
-      crop_count: number;
-      /** Region Count */
-      region_count: number;
-      /** Year Min */
-      year_min: number;
-      /** Year Max */
-      year_max: number;
-      /** Model Name */
-      model_name: string | null;
-      /** R2 */
-      r2: number | null;
-      /** Rmse */
-      rmse: number | null;
-      /** Mae */
-      mae: number | null;
-    };
-    /** ReadAllResponse */
-    ReadAllResponse: {
-      /** Updated */
-      updated: number;
-    };
-    /** ReadRequest */
-    ReadRequest: {
-      /**
-       * Read
-       * @default true
-       */
-      read: boolean;
-    };
-    /** Recommendation */
-    Recommendation: {
-      /** Id */
-      id: string;
-      /** Rule */
-      rule: string;
-      /**
-       * Severity
-       * @enum {string}
-       */
-      severity: 'critical' | 'high' | 'medium' | 'info';
-      /**
-       * Category
-       * @enum {string}
-       */
-      category: 'irrigation' | 'disease_pest' | 'fertilizer' | 'crop_planning' | 'best_practices';
-      /** Title */
-      title: string;
-      /** Action */
-      action: string;
-      /** Action Label */
-      action_label: string;
-      /** Impact Kg Ha */
-      impact_kg_ha: number;
-      /** Impact Basis */
-      impact_basis: string;
-      /** Deadline Days */
-      deadline_days: number;
-      /** Deadline */
-      deadline: string;
-      /** Affected Area */
-      affected_area: string;
-      /** Evidence */
-      evidence: components['schemas']['Evidence'][];
-      /** Rationale */
-      rationale: string;
-      /** Rationale Source */
-      rationale_source: string;
-      task?: components['schemas']['TaskState'] | null;
-    };
-    /** RecommendationsHub */
-    RecommendationsHub: {
-      /** Scope */
-      scope: string;
-      /** Record Count */
-      record_count: number;
-      /** Recommendations */
-      recommendations: components['schemas']['Recommendation'][];
-      context: components['schemas']['ContextClimate'] | null;
-      crop_cycle: components['schemas']['CropCycle'] | null;
-    };
-    /** RegionRank */
-    RegionRank: {
-      /** Region */
-      region: string;
-      /** Mean Yield Kg Ha */
-      mean_yield_kg_ha: number;
-      /** Median Yield Kg Ha */
-      median_yield_kg_ha: number;
-      /** Record Count */
-      record_count: number;
-    };
-    /** RegionRanking */
-    RegionRanking: {
-      /** Scope */
-      scope: string;
-      /** Global Mean Kg Ha */
-      global_mean_kg_ha: number;
-      /** Total Regions */
-      total_regions: number;
-      /** Regions */
-      regions: components['schemas']['RegionRank'][];
-    };
-    /** RegisterRequest */
-    RegisterRequest: {
-      /** Username */
-      username: string;
-      /**
-       * Email
-       * Format: email
-       */
-      email: string;
-      /** Password */
-      password: string;
-      /**
-       * Role
-       * @default Farmer
-       * @enum {string}
-       */
-      role: 'Farmer' | 'Agronomist';
-      /**
-       * Full Name
-       * @default
-       */
-      full_name: string;
-    };
-    /** Regression */
-    Regression: {
-      /** Slope */
-      slope: number;
-      /** Intercept */
-      intercept: number;
-      /** R */
-      r: number;
-      /** R2 */
-      r2: number;
-    };
-    /** ReportExportRequest */
-    ReportExportRequest: {
-      /**
-       * Format
-       * @default csv
-       * @enum {string}
-       */
-      format: 'csv' | 'xlsx';
-      /** Crop Type */
-      crop_type?: string | null;
-      /** Region */
-      region?: string | null;
-      /** Year From */
-      year_from?: number | null;
-      /** Year To */
-      year_to?: number | null;
-    };
-    /** RiskAssessment */
-    RiskAssessment: {
-      /** Scope */
-      scope: string;
-      /** Record Count */
-      record_count: number;
-      /** Risks */
-      risks: components['schemas']['RiskItem'][];
-      /** Timeline */
-      timeline: components['schemas']['RiskYear'][];
-      /** Anomalies */
-      anomalies: components['schemas']['Anomaly'][];
-      /** Method */
-      method: string;
-    };
-    /** RiskItem */
-    RiskItem: {
-      /**
-       * Type
-       * @enum {string}
-       */
-      type: 'drought' | 'flood' | 'heat' | 'pest_disease' | 'soil';
-      /** Label */
-      label: string;
-      /** Trigger */
-      trigger: string;
-      /** Share Affected */
-      share_affected: number;
-      /** Median Yield Loss Pct */
-      median_yield_loss_pct: number;
-      /** Likelihood */
-      likelihood: number;
-      /** Impact */
-      impact: number;
-      /** Score */
-      score: number;
-      /**
-       * Level
-       * @enum {string}
-       */
-      level: 'Low' | 'Moderate' | 'High' | 'Critical';
-      /** Mitigation */
-      mitigation: string;
-      /** Recommendation Category */
-      recommendation_category: string;
-    };
-    /** RiskYear */
-    RiskYear: {
-      /** Year */
-      year: number;
-      /** Drought */
-      drought: number;
-      /** Flood */
-      flood: number;
-      /** Heat */
-      heat: number;
-      /** Pest Disease */
-      pest_disease: number;
-      /** Soil */
-      soil: number;
-    };
-    /** ScatterPoint */
-    ScatterPoint: {
-      /** X */
-      x: number;
-      /** Y */
-      y: number;
-    };
-    /** SeasonalTrends */
-    SeasonalTrends: {
-      /**
-       * Granularity
-       * @constant
-       */
-      granularity: 'year';
-      /** Scope */
-      scope: string;
-      /** Series */
-      series: components['schemas']['YearPoint'][];
-      /** Missing Years */
-      missing_years: number[];
-      forecast: components['schemas']['Forecast'] | null;
-    };
-    /** SessionUser */
-    SessionUser: {
-      /** Username */
-      username: string;
-      /** Role */
-      role: string;
-      /** Email */
-      email: string;
-      /** Full Name */
-      full_name: string;
-    };
-    /** SoilAssessment */
-    SoilAssessment: {
-      /** Status Claim */
-      status_claim: string;
-      /** Crop Type */
-      crop_type: string;
-      /** Scope */
-      scope: string;
-      /** Soil Metrics */
-      soil_metrics: {
-        [key: string]: number | string;
-      };
-      /** Global Soil Averages */
-      global_soil_averages: {
-        [key: string]: number;
-      };
-      /** Guidance */
-      guidance: components['schemas']['SoilGuidance'][];
-      /** Crop Suitability */
-      crop_suitability: components['schemas']['CropSuitability'][];
-      /** General Reference Note */
-      general_reference_note: string;
-    };
-    /** SoilGuidance */
-    SoilGuidance: {
-      /**
-       * Status
-       * @enum {string}
-       */
-      status: 'optimal' | 'watch' | 'critical';
-      /** Finding */
-      finding: string;
-      /** Action */
-      action: string;
-      /** Why */
-      why: string;
-    };
-    /** Task */
-    Task: {
-      /** Id */
-      id: string;
-      /** Recommendation Id */
-      recommendation_id: string;
-      /** Title */
-      title: string;
-      /** Region */
-      region: string | null;
-      /** Crop Type */
-      crop_type: string | null;
-      /**
-       * Status
-       * @enum {string}
-       */
-      status: 'open' | 'done' | 'dismissed' | 'snoozed';
-      /** Note */
-      note: string | null;
-      /** Snooze Until */
-      snooze_until: string | null;
-      /** Username */
-      username: string;
-      /** Created At */
-      created_at: string;
-      /** Updated At */
-      updated_at: string;
-    };
-    /** TaskState */
-    TaskState: {
-      /** Id */
-      id: string;
-      /**
-       * Status
-       * @enum {string}
-       */
-      status: 'open' | 'done' | 'dismissed' | 'snoozed';
-      /** Note */
-      note: string | null;
-      /** Snooze Until */
-      snooze_until: string | null;
-      /** Updated At */
-      updated_at: string;
-    };
-    /** TokenResponse */
-    TokenResponse: {
-      /** Access Token */
-      access_token: string;
-      /**
-       * Token Type
-       * @default bearer
-       */
-      token_type: string;
-      /** Expires In */
-      expires_in: number;
-      /** Username */
-      username: string;
-      /** Role */
-      role: string;
-      /** Email */
-      email: string;
-      /** Full Name */
-      full_name: string;
-    };
-    /** UserPatch */
-    UserPatch: {
-      /** Role */
-      role?: ('Farmer' | 'Agronomist' | 'Admin') | null;
-      /** Active */
-      active?: boolean | null;
-    };
-    /** WeatherCurrent */
-    WeatherCurrent: {
-      /** Temperature C */
-      temperature_C: number;
-      /** Humidity Percent */
-      humidity_percent: number;
-      /** Precipitation Mm */
-      precipitation_mm: number;
-      /** Wind Speed Kmh */
-      wind_speed_kmh: number;
-      /** Observed At */
-      observed_at: string | null;
-    };
-    /** WeatherForecastDay */
-    WeatherForecastDay: {
-      /** Date */
-      date: string;
-      /** Temp Max C */
-      temp_max_C: number;
-      /** Temp Min C */
-      temp_min_C: number;
-      /** Precipitation Mm */
-      precipitation_mm: number;
-      /** Sunshine Hours */
-      sunshine_hours: number;
-    };
-    /** WeatherResponse */
-    WeatherResponse: {
-      /**
-       * Mode
-       * @enum {string}
-       */
-      mode: 'dataset' | 'live';
-      /** Status Claim */
-      status_claim: string;
-      /** Data Source */
-      data_source: string;
-      /** Period */
-      period: string;
-      /** Region */
-      region: string;
-      /** Analytics */
-      analytics: {
-        [key: string]: number | null;
-      };
-      /** Available Regions */
-      available_regions: string[];
-      current: components['schemas']['WeatherCurrent'] | null;
-      /** Forecast */
-      forecast: components['schemas']['WeatherForecastDay'][];
-      /** Fetched At */
-      fetched_at: string | null;
-    };
-    /** YearPoint */
-    YearPoint: {
-      /** Year */
-      year: number;
-      /** Mean Yield Kg Ha */
-      mean_yield_kg_ha: number;
-      /** Median Yield Kg Ha */
-      median_yield_kg_ha: number;
-      /** Record Count */
-      record_count: number;
-    };
-    /** YieldPredictionRequest */
-    YieldPredictionRequest: {
-      /**
-       * Crop Type
-       * @example Wheat
-       */
-      crop_type: string;
-      /**
-       * Region
-       * @example India
-       */
-      region: string;
-      /**
-       * Irrigation Type
-       * @example Drip
-       */
-      irrigation_type: string;
-      /**
-       * Fertilizer Type
-       * @example Urea
-       */
-      fertilizer_type: string;
-      /**
-       * Crop Disease Status
-       * @example None
-       */
-      crop_disease_status: string;
-      /** Soil Ph */
-      soil_pH: number;
-      /** Soil Moisture % */
-      'soil_moisture_%': number;
-      /** Temperature C */
-      temperature_C: number;
-      /** Rainfall Mm */
-      rainfall_mm: number;
-      /** Humidity % */
-      'humidity_%': number;
-      /** Sunlight Hours */
-      sunlight_hours: number;
-      /** Pesticide Usage Ml */
-      pesticide_usage_ml: number;
-      /** Total Days */
-      total_days: number;
-      /** Ndvi Index */
-      NDVI_index: number;
-      /**
-       * Farm Id
-       * @description Link the prediction to a dataset record
-       */
-      farm_id?: string | null;
-    };
-    /** YieldPredictionResponse */
-    YieldPredictionResponse: {
-      /** Id */
-      id: string;
-      /** Username */
-      username: string;
-      /** Created At */
-      created_at: string;
-      /** Farm Id */
-      farm_id: string | null;
-      /** Crop Type */
-      crop_type: string;
-      /** Region */
-      region: string;
-      /** Inputs */
-      inputs: {
-        [key: string]: unknown;
-      };
-      /** Predicted Yield Kg Ha */
-      predicted_yield_kg_ha: number;
-      /** Low Kg Ha */
-      low_kg_ha: number;
-      /** High Kg Ha */
-      high_kg_ha: number;
-      /**
-       * Productivity Rating
-       * @enum {string}
-       */
-      productivity_rating: 'Low' | 'Medium' | 'High';
-      /**
-       * Risk Rating
-       * @enum {string}
-       */
-      risk_rating: 'Low' | 'Medium' | 'High';
-      /** Model Name */
-      model_name: string;
-      /** Model R2 */
-      model_r2: number | null;
-      /** Risk Flags */
-      risk_flags: string[];
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  public_stats_api_public_stats_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PublicStats'];
-        };
-      };
-    };
-  };
-  login_api_auth_login_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['LoginRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['TokenResponse'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Too many attempts */
-      429: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  register_api_auth_register_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['RegisterRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['TokenResponse'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  read_current_user_profile_api_auth_me_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['MeResponse'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_crop_records_api_data_records_get: {
-    parameters: {
-      query?: {
-        /** @description Matches farm ID, region or crop */
-        search?: string | null;
-        page?: number;
-        page_size?: number;
-        /** @description Dataset region (country) */
-        region?: string | null;
-        /** @description Crop type */
-        crop?: string | null;
-        year_from?: number | null;
-        year_to?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Page_CropRecord_'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_dataset_summary_api_data_summary_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['DatasetSummary'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_eda_metrics_api_analytics_metrics_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['EdaMetrics'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_eda_charts_api_analytics_eda_charts_get: {
-    parameters: {
-      query?: {
-        bins?: number;
-        sample?: number;
-        /** @description Dataset region (country) */
-        region?: string | null;
-        /** @description Crop type */
-        crop?: string | null;
-        year_from?: number | null;
-        year_to?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['EdaCharts'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_region_ranking_api_analytics_regions_get: {
-    parameters: {
-      query?: {
-        crop?: string | null;
-        limit?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['RegionRanking'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_seasonal_trends_api_analytics_seasonal_trends_get: {
-    parameters: {
-      query?: {
-        /** @description Dataset region (country) */
-        region?: string | null;
-        /** @description Crop type */
-        crop?: string | null;
-        year_from?: number | null;
-        year_to?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['SeasonalTrends'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_farm_comparison_api_analytics_farm_comparison_get: {
-    parameters: {
-      query?: {
-        limit?: number;
-        sort?: 'yield_desc' | 'yield_asc';
-        /** @description Dataset region (country) */
-        region?: string | null;
-        /** @description Crop type */
-        crop?: string | null;
-        year_from?: number | null;
-        year_to?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['FarmComparison'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  predict_crop_yield_api_predict_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['YieldPredictionRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['YieldPredictionResponse'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  generate_prediction_insights_api_predict_insights_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['YieldPredictionRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['AIInsightsResponse'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_model_performance_metrics_api_predict_models_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_active_model_summary_api_predict_models_active_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ActiveModel'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_recommendations_hub_api_predict_recommendations_hub_get: {
-    parameters: {
-      query?: {
-        /** @description Dataset region (country) */
-        region?: string | null;
-        /** @description Crop type */
-        crop?: string | null;
-        year_from?: number | null;
-        year_to?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['RecommendationsHub'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  list_predictions_api_predictions_get: {
-    parameters: {
-      query?: {
-        page?: number;
-        page_size?: number;
-        crop?: string | null;
-        region?: string | null;
-        farm_id?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Page_PredictionRecord_'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_prediction_api_predictions__prediction_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        prediction_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PredictionRecord'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  act_on_recommendation_api_recommendations__rec_id__actions_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        rec_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ActionRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ActionResponse'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  list_tasks_api_recommendations_tasks_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Task'][];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_weather_analysis_api_weather_analysis_get: {
-    parameters: {
-      query?: {
-        region?: string | null;
-        live?: boolean;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['WeatherResponse'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_soil_assessment_api_soil_assessment_get: {
-    parameters: {
-      query?: {
-        crop_type?: string | null;
-        /** @description Dataset region (country) */
-        region?: string | null;
-        /** @description Crop type */
-        crop?: string | null;
-        year_from?: number | null;
-        year_to?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['SoilAssessment'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  export_report_api_reports_export_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ReportExportRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-          'text/csv': unknown;
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': unknown;
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  list_farms_api_farms_get: {
-    parameters: {
-      query?: {
-        search?: string | null;
-        sort?: 'farm_id' | 'yield_desc' | 'yield_asc';
-        page?: number;
-        page_size?: number;
-        /** @description Dataset region (country) */
-        region?: string | null;
-        /** @description Crop type */
-        crop?: string | null;
-        year_from?: number | null;
-        year_to?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Page_FarmSummary_'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_farm_api_farms__farm_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        farm_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['FarmDetail'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  get_risk_api_risk_get: {
-    parameters: {
-      query?: {
-        /** @description Dataset region (country) */
-        region?: string | null;
-        /** @description Crop type */
-        crop?: string | null;
-        year_from?: number | null;
-        year_to?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['RiskAssessment'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  list_notifications_api_notifications_get: {
-    parameters: {
-      query?: {
-        category?: ('alerts' | 'weather' | 'recommendations' | 'system') | null;
-        unread_only?: boolean;
-        page?: number;
-        page_size?: number;
-        /** @description Dataset region (country) */
-        region?: string | null;
-        /** @description Crop type */
-        crop?: string | null;
-        year_from?: number | null;
-        year_to?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['NotificationPage'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  mark_all_read_api_notifications_read_all_patch: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ReadAllResponse'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  set_read_api_notifications__notification_id__patch: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        notification_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ReadRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Notification'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  admin_list_users_api_admin_users_get: {
-    parameters: {
-      query?: {
-        page?: number;
-        page_size?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Page_AdminUser_'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  admin_update_user_api_admin_users__username__patch: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        username: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UserPatch'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['AdminUser'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  admin_audit_api_admin_audit_get: {
-    parameters: {
-      query?: {
-        page?: number;
-        page_size?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Page_AuditEntry_'];
-        };
-      };
-      /** @description Not signed in or session expired */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Role not allowed */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-      /** @description Invalid request */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelope'];
-        };
-      };
-    };
-  };
-  root__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-    };
-  };
-  health_check_api_health_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-    };
-  };
+    public_stats_api_public_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicStats"];
+                };
+            };
+        };
+    };
+    login_api_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too many attempts */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    register_api_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    read_current_user_profile_api_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeResponse"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_crop_records_api_data_records_get: {
+        parameters: {
+            query?: {
+                /** @description Matches farm ID, region or crop */
+                search?: string | null;
+                page?: number;
+                page_size?: number;
+                /** @description Dataset region (country) */
+                region?: string | null;
+                /** @description Crop type */
+                crop?: string | null;
+                year_from?: number | null;
+                year_to?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_CropRecord_"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_dataset_summary_api_data_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatasetSummary"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_eda_metrics_api_analytics_metrics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EdaMetrics"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_eda_charts_api_analytics_eda_charts_get: {
+        parameters: {
+            query?: {
+                bins?: number;
+                sample?: number;
+                /** @description Dataset region (country) */
+                region?: string | null;
+                /** @description Crop type */
+                crop?: string | null;
+                year_from?: number | null;
+                year_to?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EdaCharts"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_region_ranking_api_analytics_regions_get: {
+        parameters: {
+            query?: {
+                crop?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegionRanking"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_seasonal_trends_api_analytics_seasonal_trends_get: {
+        parameters: {
+            query?: {
+                /** @description Dataset region (country) */
+                region?: string | null;
+                /** @description Crop type */
+                crop?: string | null;
+                year_from?: number | null;
+                year_to?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonalTrends"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_farm_comparison_api_analytics_farm_comparison_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                sort?: "yield_desc" | "yield_asc";
+                /** @description Dataset region (country) */
+                region?: string | null;
+                /** @description Crop type */
+                crop?: string | null;
+                year_from?: number | null;
+                year_to?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FarmComparison"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    predict_crop_yield_api_predict_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["YieldPredictionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["YieldPredictionResponse"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    generate_prediction_insights_api_predict_insights_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["YieldPredictionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIInsightsResponse"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_model_performance_metrics_api_predict_models_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_active_model_summary_api_predict_models_active_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActiveModel"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_recommendations_hub_api_predict_recommendations_hub_get: {
+        parameters: {
+            query?: {
+                /** @description Dataset region (country) */
+                region?: string | null;
+                /** @description Crop type */
+                crop?: string | null;
+                year_from?: number | null;
+                year_to?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendationsHub"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    list_predictions_api_predictions_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+                crop?: string | null;
+                region?: string | null;
+                farm_id?: number | null;
+                record_code?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_PredictionRecord_"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_prediction_api_predictions__prediction_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                prediction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredictionRecord"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    act_on_recommendation_api_recommendations__rec_id__actions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rec_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    list_tasks_api_recommendations_tasks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Task"][];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_weather_analysis_api_weather_analysis_get: {
+        parameters: {
+            query?: {
+                region?: string | null;
+                live?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeatherResponse"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_soil_assessment_api_soil_assessment_get: {
+        parameters: {
+            query?: {
+                crop_type?: string | null;
+                /** @description Dataset region (country) */
+                region?: string | null;
+                /** @description Crop type */
+                crop?: string | null;
+                year_from?: number | null;
+                year_to?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SoilAssessment"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    export_report_api_reports_export_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportExportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    "text/csv": unknown;
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    list_farms_api_farms_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                sort?: "farm_id" | "yield_desc" | "yield_asc";
+                page?: number;
+                page_size?: number;
+                /** @description Dataset region (country) */
+                region?: string | null;
+                /** @description Crop type */
+                crop?: string | null;
+                year_from?: number | null;
+                year_to?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_FarmSummary_"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_farm_api_farms__farm_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                farm_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FarmDetail"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_risk_api_risk_get: {
+        parameters: {
+            query?: {
+                /** @description Dataset region (country) */
+                region?: string | null;
+                /** @description Crop type */
+                crop?: string | null;
+                year_from?: number | null;
+                year_to?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskAssessment"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    list_notifications_api_notifications_get: {
+        parameters: {
+            query?: {
+                category?: ("alerts" | "weather" | "recommendations" | "system") | null;
+                unread_only?: boolean;
+                page?: number;
+                page_size?: number;
+                /** @description Dataset region (country) */
+                region?: string | null;
+                /** @description Crop type */
+                crop?: string | null;
+                year_from?: number | null;
+                year_to?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPage"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    mark_all_read_api_notifications_read_all_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadAllResponse"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    set_read_api_notifications__notification_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Notification"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    admin_list_users_api_admin_users_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AdminUser_"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    admin_update_user_api_admin_users__username__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    admin_audit_api_admin_audit_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_AuditEntry_"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    root__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    health_check_api_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
 }

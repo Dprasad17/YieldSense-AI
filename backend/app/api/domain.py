@@ -86,7 +86,7 @@ def get_farm(farm_id: str, user: dict = Depends(require_user)):
     crop_yields = df.loc[df["crop_type"] == row["crop_type"], "yield_kg_per_hectare"]
     peers = df[(df["crop_type"] == row["crop_type"]) & (df["region"] == row["region"])]["yield_kg_per_hectare"]
     owner = None if is_privileged(user) else user["username"]
-    preds = store.list_predictions(owner, 1, 50, farm_id=str(row["farm_id"]))["items"]
+    preds = store.list_predictions(owner, 1, 50, record_code=str(row["farm_id"]))["items"]
     return {
         "farm_id": row["farm_id"],
         "note": "Each farm ID in the dataset is a single region × crop × year record.",

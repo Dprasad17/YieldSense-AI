@@ -1,94 +1,78 @@
-"""JSON-file user store (backend/app/api/users_db.json). Thread-safe, cached by file mtime."""
-import json
-import os
-import threading
+"""User store on PostgreSQL. Returns plain dicts so callers stay storage-agnostic."""
 from typing import Optional
 
-from backend.app.core.config import settings
-from backend.app.core.security import hash_password
+from sqlalchemy import func, select
+
+from backend.app.db.models import User
+from backend.app.db.session import session_scope
 
 ROLES = ("Farmer", "Agronomist", "Admin")
 
-# Public demo accounts. Seeded into any store that lacks them.
+# Public demo accounts (seeded by scripts/seed.py).
 DEMO_USERS = {
     "admin": ("admin123", "Admin", "admin@yieldsense.ai", "System Administrator"),
     "farmer": ("farmer123", "Farmer", "farmer@yieldsense.ai", "Ramesh Kumar"),
     "agronomist": ("agro123", "Agronomist", "agronomist@yieldsense.ai", "Dr. Sarah Jenkins"),
 }
 
-_lock = threading.RLock()
-_cache: dict = {"mtime": None, "path": None, "users": {}}
+DEFAULT_NOTIFICATION_PREFS = {"recommendations": True, "alerts": True, "weather": True, "system": True}
 
 
-def _path() -> str:
-    return settings.USERS_FILE
-
-
-def _normalize(user: dict) -> dict:
-    """Fill fields added after the store was first created."""
-    user.setdefault("active", True)
-    # Records written before bcrypt carry a salted SHA-256 hex digest.
-    user.setdefault("hash_scheme", "bcrypt" if str(user.get("hashed_password", "")).startswith("$2") else "sha256")
-    user.setdefault("full_name", user.get("username", ""))
-    return user
-
-
-def _save(users: dict) -> None:
-    path = _path()
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(users, f, indent=4)
-    os.replace(tmp, path)
-    _cache.update(mtime=os.path.getmtime(path), path=path, users=users)
-
-
-def load_users() -> dict:
-    with _lock:
-        path = _path()
-        users: dict = {}
-        if os.path.exists(path):
-            mtime = os.path.getmtime(path)
-            if _cache["path"] == path and _cache["mtime"] == mtime:
-                return _cache["users"]
-            with open(path, "r", encoding="utf-8") as f:
-                users = json.load(f)
-
-        changed = False
-        for username, (password, role, email, full_name) in DEMO_USERS.items():
-            if username not in users:
-                users[username] = {
-                    "username": username,
-                    "email": email,
-                    "hashed_password": hash_password(password),
-                    "hash_scheme": "bcrypt",
-                    "role": role,
-                    "full_name": full_name,
-                    "active": True,
-                }
-                changed = True
-        for key, user in users.items():
-            before = dict(user)
-            _normalize(user)
-            changed = changed or before != user
-
-        if changed or not os.path.exists(path):
-            _save(users)
-        else:
-            _cache.update(mtime=os.path.getmtime(path), path=path, users=users)
-        return users
+def to_dict(u: User) -> dict:
+    return {
+        "id": u.id,
+        "username": u.username,
+        "email": u.email,
+        "full_name": u.full_name or u.username,
+        "role": u.role,
+        "hashed_password": u.hashed_password,
+        "hash_scheme": u.hash_scheme,
+        "active": u.active,
+        "notification_prefs": {**DEFAULT_NOTIFICATION_PREFS, **(u.notification_prefs or {})},
+    }
 
 
 def get_user(username: str) -> Optional[dict]:
-    return load_users().get(username.strip().lower())
+    with session_scope() as s:
+        u = s.scalar(select(User).where(func.lower(User.username) == username.strip().lower()))
+        return to_dict(u) if u else None
+
+
+def list_users() -> list[dict]:
+    with session_scope() as s:
+        return [to_dict(u) for u in s.scalars(select(User).order_by(User.username))]
+
+
+def create_user(username: str, email: str, hashed_password: str, role: str, full_name: str, hash_scheme: str = "bcrypt") -> dict:
+    with session_scope() as s:
+        u = User(username=username, email=email, hashed_password=hashed_password, hash_scheme=hash_scheme, role=role, full_name=full_name or username, active=True, notification_prefs=dict(DEFAULT_NOTIFICATION_PREFS))
+        s.add(u)
+        s.flush()
+        return to_dict(u)
+
+
+def update_user(username: str, **fields) -> Optional[dict]:
+    allowed = {"email", "full_name", "role", "hashed_password", "hash_scheme", "active", "notification_prefs"}
+    with session_scope() as s:
+        u = s.scalar(select(User).where(func.lower(User.username) == username.strip().lower()))
+        if not u:
+            return None
+        for k, v in fields.items():
+            if k in allowed and v is not None:
+                setattr(u, k, v)
+        s.flush()
+        return to_dict(u)
 
 
 def upsert_user(user: dict) -> dict:
-    with _lock:
-        users = dict(load_users())
-        users[user["username"].lower()] = _normalize(user)
-        _save(users)
-        return user
+    """Compatibility helper: update an existing user from a dict, or create it."""
+    if get_user(user["username"]):
+        return update_user(user["username"], **{k: v for k, v in user.items() if k != "username"}) or user
+    return create_user(user["username"], user["email"], user["hashed_password"], user.get("role", "Farmer"), user.get("full_name", ""), user.get("hash_scheme", "bcrypt"))
+
+
+def load_users() -> dict:
+    return {u["username"].lower(): u for u in list_users()}
 
 
 def public_user(user: dict) -> dict:
@@ -99,3 +83,8 @@ def public_user(user: dict) -> dict:
         "role": user["role"],
         "active": bool(user.get("active", True)),
     }
+
+
+def user_id(username: str) -> Optional[int]:
+    with session_scope() as s:
+        return s.scalar(select(User.id).where(func.lower(User.username) == username.strip().lower()))

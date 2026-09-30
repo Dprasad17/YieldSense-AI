@@ -4,7 +4,6 @@ The crop-yield dataset, loaded once and shared by every endpoint.
 Each row is one record (farm_id is unique per row): a region (country) × crop × year observation
 with agronomic features. Aggregates are cached per filter combination.
 """
-import os
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Optional
@@ -12,9 +11,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from backend.app.core.config import settings
 
-FALLBACK_PATH = "Smart_Farming_Crop_Yield_2024.csv"
 
 NUMERIC_FEATURES = [
     "yield_kg_per_hectare",
@@ -30,20 +27,51 @@ NUMERIC_FEATURES = [
 ]
 
 
+# Postgres column -> analysis column (the names the rest of the app and the model use)
+_COLUMN_MAP = {
+    "record_code": "farm_id",
+    "temperature_c": "temperature_C",
+    "soil_ph": "soil_pH",
+    "soil_moisture_percent": "soil_moisture_%",
+    "humidity_percent": "humidity_%",
+    "ndvi_index": "NDVI_index",
+}
+
+
 @lru_cache(maxsize=1)
 def get_df() -> pd.DataFrame:
-    path = settings.DATASET_PATH if os.path.exists(settings.DATASET_PATH) else FALLBACK_PATH
-    if not os.path.exists(path):
-        raise FileNotFoundError("Dataset file not found. Run scripts/preprocess_real_dataset.py first.")
-    df = pd.read_csv(path)
+    """All crop records (reference dataset + imported rows) from PostgreSQL, cached until invalidated."""
+    from backend.app.db.session import engine
+
+    df = pd.read_sql(
+        "SELECT record_code, region, crop_type, year, yield_kg_per_hectare, rainfall_mm, temperature_c, pesticide_usage_ml, "
+        "soil_ph, soil_moisture_percent, humidity_percent, sunlight_hours, total_days, sowing_date, harvest_date, "
+        "irrigation_type, fertilizer_type, crop_disease_status, ndvi_index, source FROM crop_records ORDER BY id",
+        engine,
+    ).rename(columns=_COLUMN_MAP)
+    if df.empty:
+        raise FileNotFoundError("No crop records in the database. Run: python scripts/seed.py")
     df["sowing_date"] = pd.to_datetime(df["sowing_date"], errors="coerce")
     df["harvest_date"] = pd.to_datetime(df["harvest_date"], errors="coerce")
-    df["year"] = df["sowing_date"].dt.year.astype("Int64")
+    df["year"] = df["year"].astype("Int64")
     # An empty disease status means no disease was recorded.
     df["crop_disease_status"] = df["crop_disease_status"].fillna("None").astype(str)
     for col in ("region", "crop_type", "irrigation_type", "fertilizer_type"):
-        df[col] = df[col].astype(str).str.strip()
+        df[col] = df[col].fillna("").astype(str).str.strip()
     return df
+
+
+def invalidate() -> None:
+    """Drop every cached aggregate after records change (imports)."""
+    get_df.cache_clear()
+    region_ranking.cache_clear()
+    yearly_yield.cache_clear()
+    from backend.app.core import agronomy_rules
+    from backend.app.services import insights
+
+    agronomy_rules.rules_for.cache_clear()
+    for fn in (insights.seasonal_trends, insights.farm_comparison, insights.risk_assessment, insights.recommendations, insights.soil_assessment):
+        fn.cache_clear()
 
 
 @dataclass(frozen=True)

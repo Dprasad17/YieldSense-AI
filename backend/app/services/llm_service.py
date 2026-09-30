@@ -12,7 +12,7 @@ class LLMService:
     def __init__(self):
         self._load_env_file()
         self.groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
-        self.groq_model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant").strip()
+        self.groq_model = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
         self.gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
 
     def _load_env_file(self):
@@ -182,11 +182,21 @@ Provide a JSON object with:
         """Plain-language "why" for a recommendation. Returns (text, source).
         Groq writes it when a key is configured; otherwise a deterministic sentence is built from the evidence."""
         if self.groq_api_key:
+            import hashlib
+
+            from backend.app.db import mongo
+
+            key = hashlib.sha256(json.dumps([self.groq_model, rec["title"], rec["affected_area"], rec["evidence"], rec["impact_kg_ha"]], sort_keys=True, default=str).encode()).hexdigest()
+            cached = mongo.cache_get("llm_cache", key)
+            if cached:
+                return cached, f"Groq · {self.groq_model}"
             try:
-                return self._groq_rationale(rec), f"Groq · {self.groq_model}"
+                text = self._groq_rationale(rec)
+                mongo.cache_set("llm_cache", key, text)
+                return text, f"Groq · {self.groq_model}"
             except Exception as e:
                 print(f"[LLMService] Groq rationale failed: {e}. Using rule-based text.")
-        return self._fallback_rationale(rec), "YieldSense rule engine"
+        return self._fallback_rationale(rec), "YieldSense rule engine (fallback)"
 
     def _groq_rationale(self, rec: Dict[str, Any]) -> str:
         evidence = "; ".join(

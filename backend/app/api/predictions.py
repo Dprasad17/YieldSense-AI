@@ -32,13 +32,15 @@ class YieldPredictionRequest(BaseModel):
     pesticide_usage_ml: float = Field(..., ge=0.0)
     total_days: int = Field(..., ge=1, le=400)
     NDVI_index: float = Field(..., ge=0.0, le=1.0)
-    farm_id: Optional[str] = Field(None, max_length=32, description="Link the prediction to a dataset record")
+    farm_id: Optional[int] = Field(None, description="Link the prediction to one of your farms")
+    record_code: Optional[str] = Field(None, max_length=32, description="Link the prediction to a dataset record")
 
     model_config = {"populate_by_name": True}
 
     def features(self) -> dict:
         data = self.model_dump(by_alias=True)
         data.pop("farm_id", None)
+        data.pop("record_code", None)
         return data
 
 
@@ -46,7 +48,10 @@ class PredictionRecord(BaseModel):
     id: str
     username: str
     created_at: str
-    farm_id: Optional[str]
+    farm_id: Optional[int]
+    record_code: Optional[str] = None
+    year: Optional[int] = None
+    model_version: Optional[str] = None
     crop_type: str
     region: str
     inputs: dict
@@ -149,7 +154,7 @@ def _run_prediction(request: YieldPredictionRequest) -> dict:
 def predict_crop_yield(request: YieldPredictionRequest, user: dict = Depends(require_user)):
     """Predicts yield with a P10–P90 interval (spread of the forest's trees) and saves it to history."""
     result = _run_prediction(request)
-    saved = store.save_prediction(user["username"], request.features(), result, active_model_summary(), request.farm_id)
+    saved = store.save_prediction(user["username"], request.features(), result, active_model_summary(), request.farm_id, request.record_code)
     return {**saved, "risk_flags": result["risk_flags"]}
 
 
@@ -197,12 +202,13 @@ def list_predictions(
     page_size: int = Query(20, ge=1, le=100),
     crop: Optional[str] = Query(None),
     region: Optional[str] = Query(None),
-    farm_id: Optional[str] = Query(None),
+    farm_id: Optional[int] = Query(None),
+    record_code: Optional[str] = Query(None),
     user: dict = Depends(require_user),
 ):
     """Farmers see their own predictions; agronomists and admins see everyone's."""
     owner = None if is_privileged(user) else user["username"]
-    return store.list_predictions(owner, page, page_size, crop, region, farm_id)
+    return store.list_predictions(owner, page, page_size, crop, region, farm_id, record_code)
 
 
 @history_router.get("/{prediction_id}", response_model=PredictionRecord)

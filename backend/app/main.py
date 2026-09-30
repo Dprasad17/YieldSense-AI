@@ -26,7 +26,13 @@ from backend.app.services.dataset import get_df
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    get_df()  # load the CSV once at startup
+    from backend.app.db import mongo
+
+    try:
+        mongo.ensure_indexes()
+    except Exception as e:
+        print(f"[startup] MongoDB unavailable: {e}")
+    get_df()  # load crop records once at startup
     yield
 
 
@@ -78,4 +84,18 @@ def root():
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "healthy", "service": "YieldSense AI Backend"}
+    """Liveness plus dependency checks: PostgreSQL, MongoDB and the loaded model."""
+    from sqlalchemy import text
+
+    from backend.app.db import mongo
+    from backend.app.db.session import engine
+    from backend.app.services.ml_service import ml_service
+
+    try:
+        with engine.connect() as c:
+            c.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception:
+        db_ok = False
+    checks = {"database": db_ok, "mongo": mongo.ping(), "model_loaded": ml_service.is_ready()}
+    return {"status": "healthy" if all(checks.values()) else "degraded", "service": "YieldSense AI Backend", "checks": checks}

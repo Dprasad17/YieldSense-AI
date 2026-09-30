@@ -1,12 +1,6 @@
-import json
 from datetime import timedelta
 
 from backend.app.core.security import create_access_token, legacy_sha256_hash
-
-
-def read_users(path: str) -> dict:
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
 
 
 def test_demo_users_sign_in(client):
@@ -32,23 +26,15 @@ def test_login_rate_limited_after_five_failures(client):
     assert int(res.headers["Retry-After"]) > 0
 
 
-def test_legacy_sha256_hash_is_migrated_to_bcrypt(client, users_file):
-    users = read_users(users_file)
-    users["legacy"] = {
-        "username": "legacy",
-        "email": "legacy@example.com",
-        "hashed_password": legacy_sha256_hash("oldpass1"),
-        "role": "Farmer",
-        "full_name": "Legacy User",
-    }
-    with open(users_file, "w", encoding="utf-8") as f:
-        json.dump(users, f)
+def test_legacy_sha256_hash_is_migrated_to_bcrypt(client):
+    from backend.app.services import users
 
+    users.create_user("legacy", "legacy@example.com", legacy_sha256_hash("oldpass1"), "Farmer", "Legacy User", hash_scheme="sha256")
     assert client.post("/api/auth/login", json={"username": "legacy", "password": "wrong"}).status_code == 401
-    assert read_users(users_file)["legacy"]["hash_scheme"] == "sha256"
+    assert users.get_user("legacy")["hash_scheme"] == "sha256"
 
     assert client.post("/api/auth/login", json={"username": "legacy", "password": "oldpass1"}).status_code == 200
-    migrated = read_users(users_file)["legacy"]
+    migrated = users.get_user("legacy")
     assert migrated["hash_scheme"] == "bcrypt" and migrated["hashed_password"].startswith("$2")
     assert client.post("/api/auth/login", json={"username": "legacy", "password": "oldpass1"}).status_code == 200
 

@@ -36,10 +36,25 @@ class LiveWeatherUnavailable(Exception):
     """Open-Meteo could not be reached or has no data for the region."""
 
 
-def _http_get_json(url: str) -> dict:
+def _fetch_json(url: str) -> dict:
     req = urllib.request.Request(url, headers={"User-Agent": "YieldSenseAI/1.0"})
     with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT_S) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+
+def _http_get_json(url: str) -> dict:
+    """Open-Meteo GET with a MongoDB cache (TTL index removes entries after WEATHER_CACHE_SECONDS)."""
+    from datetime import timedelta
+
+    from backend.app.core.config import settings
+    from backend.app.db import mongo
+
+    cached = mongo.cache_get("weather_cache", url)
+    if cached is not None:
+        return cached
+    data = _fetch_json(url)
+    mongo.cache_set("weather_cache", url, data, expires_at=datetime.now(timezone.utc) + timedelta(seconds=settings.WEATHER_CACHE_SECONDS))
+    return data
 
 
 @lru_cache(maxsize=256)

@@ -1,0 +1,711 @@
+{
+  "name": "YieldSense yield model v2 · XGBoost",
+  "version": "2.0.0",
+  "trained_at": "2026-09-30T09:10:09+00:00",
+  "selected": {
+    "model": "XGBoost",
+    "target": "raw",
+    "split": "temporal",
+    "metrics": {
+      "model": "XGBoost",
+      "target": "raw",
+      "mae": 1125.26,
+      "rmse": 2095.78,
+      "r2": 0.9514,
+      "mape": 21.45,
+      "latency_p50_ms": 6.207,
+      "latency_p95_ms": 7.769,
+      "interval_coverage": 0.613,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    }
+  },
+  "selection_rule": "Lowest RMSE on the temporal split (train ≤ 2008, test 2009–2013); models within 1% of the lowest RMSE are tied and the one with the lower p95 latency is served. The Keras MLP is evaluated but not served (it would add TensorFlow to the API runtime).",
+  "features": {
+    "categorical": [
+      "crop_type",
+      "region"
+    ],
+    "numeric": [
+      "year",
+      "rainfall_mm",
+      "temperature_C",
+      "pesticide_usage_ml",
+      "total_days"
+    ]
+  },
+  "excluded_features": [
+    {
+      "feature": "NDVI_index",
+      "reason": "Derived from the yield's own percentile rank during preprocessing (target leakage)."
+    },
+    {
+      "feature": "soil_moisture_%",
+      "reason": "Synthetic column without measurable signal (permutation importance 0.0011 ± 0.0001)."
+    },
+    {
+      "feature": "humidity_%",
+      "reason": "Synthetic column without measurable signal (permutation importance 0.0003 ± 0.0001)."
+    },
+    {
+      "feature": "soil_pH",
+      "reason": "Synthetic column without measurable signal (permutation importance 0.0001 ± 0.0002)."
+    },
+    {
+      "feature": "crop_disease_status",
+      "reason": "Synthetic column without measurable signal (permutation importance 0.0000 ± 0.0001)."
+    },
+    {
+      "feature": "fertilizer_type",
+      "reason": "Synthetic column without measurable signal (permutation importance 0.0000 ± 0.0001)."
+    },
+    {
+      "feature": "irrigation_type",
+      "reason": "Synthetic column without measurable signal (permutation importance -0.0003 ± 0.0001)."
+    },
+    {
+      "feature": "sunlight_hours",
+      "reason": "Synthetic column without measurable signal (permutation importance -0.0006 ± 0.0003)."
+    }
+  ],
+  "permutation_importance": [
+    {
+      "feature": "crop_type",
+      "importance": 1.26973,
+      "std": 0.0164,
+      "synthetic": false,
+      "kept": true
+    },
+    {
+      "feature": "total_days",
+      "importance": 0.47894,
+      "std": 0.00621,
+      "synthetic": true,
+      "kept": true
+    },
+    {
+      "feature": "pesticide_usage_ml",
+      "importance": 0.15713,
+      "std": 0.00313,
+      "synthetic": false,
+      "kept": true
+    },
+    {
+      "feature": "region",
+      "importance": 0.13814,
+      "std": 0.00532,
+      "synthetic": false,
+      "kept": true
+    },
+    {
+      "feature": "rainfall_mm",
+      "importance": 0.125,
+      "std": 0.00139,
+      "synthetic": false,
+      "kept": true
+    },
+    {
+      "feature": "temperature_C",
+      "importance": 0.1173,
+      "std": 0.00298,
+      "synthetic": false,
+      "kept": true
+    },
+    {
+      "feature": "soil_moisture_%",
+      "importance": 0.00106,
+      "std": 0.00014,
+      "synthetic": true,
+      "kept": false
+    },
+    {
+      "feature": "humidity_%",
+      "importance": 0.00025,
+      "std": 0.00011,
+      "synthetic": true,
+      "kept": false
+    },
+    {
+      "feature": "soil_pH",
+      "importance": 0.00011,
+      "std": 0.00018,
+      "synthetic": true,
+      "kept": false
+    },
+    {
+      "feature": "crop_disease_status",
+      "importance": 4e-05,
+      "std": 5e-05,
+      "synthetic": true,
+      "kept": false
+    },
+    {
+      "feature": "fertilizer_type",
+      "importance": 1e-05,
+      "std": 8e-05,
+      "synthetic": true,
+      "kept": false
+    },
+    {
+      "feature": "year",
+      "importance": 0.0,
+      "std": 0.0,
+      "synthetic": false,
+      "kept": true
+    },
+    {
+      "feature": "irrigation_type",
+      "importance": -0.00034,
+      "std": 0.00012,
+      "synthetic": true,
+      "kept": false
+    },
+    {
+      "feature": "sunlight_hours",
+      "importance": -0.00064,
+      "std": 0.00027,
+      "synthetic": true,
+      "kept": false
+    }
+  ],
+  "splits": {
+    "random": "Random 80/20",
+    "temporal": "Train ≤ 2008, test 2009–2013",
+    "unseen_region": "20% of regions held out entirely"
+  },
+  "results": [
+    {
+      "model": "Linear Regression",
+      "target": "raw",
+      "mae": 2763.12,
+      "rmse": 4087.71,
+      "r2": 0.7696,
+      "mape": 67.13,
+      "latency_p50_ms": 2.497,
+      "latency_p95_ms": 3.22,
+      "interval_coverage": 0.7936,
+      "train_rows": 22593,
+      "test_rows": 5649,
+      "split": "random"
+    },
+    {
+      "model": "Linear Regression",
+      "target": "log1p",
+      "mae": 2241.13,
+      "rmse": 4031.65,
+      "r2": 0.7759,
+      "mape": 37.71,
+      "latency_p50_ms": 2.499,
+      "latency_p95_ms": 3.46,
+      "interval_coverage": 0.7856,
+      "train_rows": 22593,
+      "test_rows": 5649,
+      "split": "random"
+    },
+    {
+      "model": "Ridge Regression",
+      "target": "raw",
+      "mae": 2762.15,
+      "rmse": 4090.84,
+      "r2": 0.7693,
+      "mape": 67.12,
+      "latency_p50_ms": 2.551,
+      "latency_p95_ms": 3.433,
+      "interval_coverage": 0.7922,
+      "train_rows": 22593,
+      "test_rows": 5649,
+      "split": "random"
+    },
+    {
+      "model": "Ridge Regression",
+      "target": "log1p",
+      "mae": 2234.98,
+      "rmse": 4011.35,
+      "r2": 0.7782,
+      "mape": 37.77,
+      "latency_p50_ms": 2.499,
+      "latency_p95_ms": 3.311,
+      "interval_coverage": 0.7867,
+      "train_rows": 22593,
+      "test_rows": 5649,
+      "split": "random"
+    },
+    {
+      "model": "Random Forest",
+      "target": "raw",
+      "mae": 448.05,
+      "rmse": 1133.02,
+      "r2": 0.9823,
+      "mape": 9.85,
+      "latency_p50_ms": 28.577,
+      "latency_p95_ms": 39.641,
+      "interval_coverage": 0.8062,
+      "train_rows": 22593,
+      "test_rows": 5649,
+      "split": "random"
+    },
+    {
+      "model": "Random Forest",
+      "target": "log1p",
+      "mae": 445.14,
+      "rmse": 1112.91,
+      "r2": 0.9829,
+      "mape": 8.82,
+      "latency_p50_ms": 28.507,
+      "latency_p95_ms": 38.415,
+      "interval_coverage": 0.7985,
+      "train_rows": 22593,
+      "test_rows": 5649,
+      "split": "random"
+    },
+    {
+      "model": "XGBoost",
+      "target": "raw",
+      "mae": 611.56,
+      "rmse": 1123.62,
+      "r2": 0.9826,
+      "mape": 15.88,
+      "latency_p50_ms": 6.211,
+      "latency_p95_ms": 7.7,
+      "interval_coverage": 0.7893,
+      "train_rows": 22593,
+      "test_rows": 5649,
+      "split": "random"
+    },
+    {
+      "model": "XGBoost",
+      "target": "log1p",
+      "mae": 643.51,
+      "rmse": 1303.14,
+      "r2": 0.9766,
+      "mape": 11.04,
+      "latency_p50_ms": 6.236,
+      "latency_p95_ms": 7.891,
+      "interval_coverage": 0.7952,
+      "train_rows": 22593,
+      "test_rows": 5649,
+      "split": "random"
+    },
+    {
+      "model": "LightGBM",
+      "target": "raw",
+      "mae": 665.54,
+      "rmse": 1267.7,
+      "r2": 0.9778,
+      "mape": 17.18,
+      "latency_p50_ms": 4.952,
+      "latency_p95_ms": 6.771,
+      "interval_coverage": 0.784,
+      "train_rows": 22593,
+      "test_rows": 5649,
+      "split": "random"
+    },
+    {
+      "model": "LightGBM",
+      "target": "log1p",
+      "mae": 687.59,
+      "rmse": 1440.69,
+      "r2": 0.9714,
+      "mape": 11.76,
+      "latency_p50_ms": 5.35,
+      "latency_p95_ms": 6.917,
+      "interval_coverage": 0.7837,
+      "train_rows": 22593,
+      "test_rows": 5649,
+      "split": "random"
+    },
+    {
+      "model": "Keras MLP",
+      "target": "raw",
+      "mae": 588.86,
+      "rmse": 1126.16,
+      "r2": 0.9825,
+      "mape": 14.61,
+      "latency_p50_ms": 55.181,
+      "latency_p95_ms": 62.528,
+      "interval_coverage": 0.7978,
+      "train_rows": 22593,
+      "test_rows": 5649,
+      "split": "random"
+    },
+    {
+      "model": "Keras MLP",
+      "target": "log1p",
+      "mae": 689.18,
+      "rmse": 1360.84,
+      "r2": 0.9745,
+      "mape": 10.79,
+      "latency_p50_ms": 53.555,
+      "latency_p95_ms": 58.353,
+      "interval_coverage": 0.8016,
+      "train_rows": 22593,
+      "test_rows": 5649,
+      "split": "random"
+    },
+    {
+      "model": "Linear Regression",
+      "target": "raw",
+      "mae": 3265.53,
+      "rmse": 4959.39,
+      "r2": 0.7281,
+      "mape": 75.94,
+      "latency_p50_ms": 2.666,
+      "latency_p95_ms": 3.385,
+      "interval_coverage": 0.7725,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    },
+    {
+      "model": "Linear Regression",
+      "target": "log1p",
+      "mae": 2824.89,
+      "rmse": 5076.76,
+      "r2": 0.715,
+      "mape": 41.41,
+      "latency_p50_ms": 2.672,
+      "latency_p95_ms": 3.583,
+      "interval_coverage": 0.7728,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    },
+    {
+      "model": "Ridge Regression",
+      "target": "raw",
+      "mae": 3262.34,
+      "rmse": 4959.62,
+      "r2": 0.728,
+      "mape": 75.83,
+      "latency_p50_ms": 2.619,
+      "latency_p95_ms": 3.245,
+      "interval_coverage": 0.7712,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    },
+    {
+      "model": "Ridge Regression",
+      "target": "log1p",
+      "mae": 2813.29,
+      "rmse": 5043.3,
+      "r2": 0.7188,
+      "mape": 41.42,
+      "latency_p50_ms": 2.528,
+      "latency_p95_ms": 3.355,
+      "interval_coverage": 0.7728,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    },
+    {
+      "model": "Random Forest",
+      "target": "raw",
+      "mae": 1081.13,
+      "rmse": 2094.3,
+      "r2": 0.9515,
+      "mape": 17.21,
+      "latency_p50_ms": 30.468,
+      "latency_p95_ms": 41.519,
+      "interval_coverage": 0.5055,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    },
+    {
+      "model": "Random Forest",
+      "target": "log1p",
+      "mae": 1162.42,
+      "rmse": 2384.58,
+      "r2": 0.9371,
+      "mape": 16.25,
+      "latency_p50_ms": 30.401,
+      "latency_p95_ms": 41.946,
+      "interval_coverage": 0.5484,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    },
+    {
+      "model": "XGBoost",
+      "target": "raw",
+      "mae": 1125.26,
+      "rmse": 2095.78,
+      "r2": 0.9514,
+      "mape": 21.45,
+      "latency_p50_ms": 6.207,
+      "latency_p95_ms": 7.769,
+      "interval_coverage": 0.613,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    },
+    {
+      "model": "XGBoost",
+      "target": "log1p",
+      "mae": 1117.71,
+      "rmse": 2161.25,
+      "r2": 0.9484,
+      "mape": 16.08,
+      "latency_p50_ms": 6.04,
+      "latency_p95_ms": 7.184,
+      "interval_coverage": 0.6397,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    },
+    {
+      "model": "LightGBM",
+      "target": "raw",
+      "mae": 1180.59,
+      "rmse": 2159.96,
+      "r2": 0.9484,
+      "mape": 22.84,
+      "latency_p50_ms": 5.135,
+      "latency_p95_ms": 6.779,
+      "interval_coverage": 0.6121,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    },
+    {
+      "model": "LightGBM",
+      "target": "log1p",
+      "mae": 1196.29,
+      "rmse": 2304.55,
+      "r2": 0.9413,
+      "mape": 17.05,
+      "latency_p50_ms": 4.877,
+      "latency_p95_ms": 6.576,
+      "interval_coverage": 0.6385,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    },
+    {
+      "model": "Keras MLP",
+      "target": "raw",
+      "mae": 1113.84,
+      "rmse": 2028.42,
+      "r2": 0.9545,
+      "mape": 20.65,
+      "latency_p50_ms": 54.163,
+      "latency_p95_ms": 58.531,
+      "interval_coverage": 0.5892,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    },
+    {
+      "model": "Keras MLP",
+      "target": "log1p",
+      "mae": 1262.16,
+      "rmse": 2450.1,
+      "r2": 0.9336,
+      "mape": 16.58,
+      "latency_p50_ms": 53.998,
+      "latency_p95_ms": 58.484,
+      "interval_coverage": 0.57,
+      "train_rows": 21991,
+      "test_rows": 6251,
+      "split": "temporal"
+    },
+    {
+      "model": "Linear Regression",
+      "target": "raw",
+      "mae": 4153.68,
+      "rmse": 6834.82,
+      "r2": 0.5528,
+      "mape": 73.92,
+      "latency_p50_ms": 2.761,
+      "latency_p95_ms": 3.947,
+      "interval_coverage": 0.6797,
+      "train_rows": 24751,
+      "test_rows": 3491,
+      "split": "unseen_region"
+    },
+    {
+      "model": "Linear Regression",
+      "target": "log1p",
+      "mae": 3965.25,
+      "rmse": 7355.86,
+      "r2": 0.4821,
+      "mape": 56.81,
+      "latency_p50_ms": 2.993,
+      "latency_p95_ms": 3.869,
+      "interval_coverage": 0.5987,
+      "train_rows": 24751,
+      "test_rows": 3491,
+      "split": "unseen_region"
+    },
+    {
+      "model": "Ridge Regression",
+      "target": "raw",
+      "mae": 4111.98,
+      "rmse": 6788.21,
+      "r2": 0.5589,
+      "mape": 72.59,
+      "latency_p50_ms": 2.703,
+      "latency_p95_ms": 3.569,
+      "interval_coverage": 0.682,
+      "train_rows": 24751,
+      "test_rows": 3491,
+      "split": "unseen_region"
+    },
+    {
+      "model": "Ridge Regression",
+      "target": "log1p",
+      "mae": 3916.34,
+      "rmse": 7266.22,
+      "r2": 0.4946,
+      "mape": 56.08,
+      "latency_p50_ms": 2.732,
+      "latency_p95_ms": 3.675,
+      "interval_coverage": 0.6081,
+      "train_rows": 24751,
+      "test_rows": 3491,
+      "split": "unseen_region"
+    },
+    {
+      "model": "Random Forest",
+      "target": "raw",
+      "mae": 3492.75,
+      "rmse": 6236.22,
+      "r2": 0.6277,
+      "mape": 53.14,
+      "latency_p50_ms": 40.297,
+      "latency_p95_ms": 44.367,
+      "interval_coverage": 0.2315,
+      "train_rows": 24751,
+      "test_rows": 3491,
+      "split": "unseen_region"
+    },
+    {
+      "model": "Random Forest",
+      "target": "log1p",
+      "mae": 3401.73,
+      "rmse": 6020.22,
+      "r2": 0.6531,
+      "mape": 52.43,
+      "latency_p50_ms": 58.938,
+      "latency_p95_ms": 89.224,
+      "interval_coverage": 0.1507,
+      "train_rows": 24751,
+      "test_rows": 3491,
+      "split": "unseen_region"
+    },
+    {
+      "model": "XGBoost",
+      "target": "raw",
+      "mae": 3394.35,
+      "rmse": 6062.62,
+      "r2": 0.6482,
+      "mape": 51.35,
+      "latency_p50_ms": 6.109,
+      "latency_p95_ms": 7.473,
+      "interval_coverage": 0.3495,
+      "train_rows": 24751,
+      "test_rows": 3491,
+      "split": "unseen_region"
+    },
+    {
+      "model": "XGBoost",
+      "target": "log1p",
+      "mae": 3293.05,
+      "rmse": 5862.73,
+      "r2": 0.671,
+      "mape": 48.8,
+      "latency_p50_ms": 6.145,
+      "latency_p95_ms": 7.521,
+      "interval_coverage": 0.1971,
+      "train_rows": 24751,
+      "test_rows": 3491,
+      "split": "unseen_region"
+    },
+    {
+      "model": "LightGBM",
+      "target": "raw",
+      "mae": 3199.17,
+      "rmse": 5681.66,
+      "r2": 0.691,
+      "mape": 50.67,
+      "latency_p50_ms": 5.733,
+      "latency_p95_ms": 7.511,
+      "interval_coverage": 0.385,
+      "train_rows": 24751,
+      "test_rows": 3491,
+      "split": "unseen_region"
+    },
+    {
+      "model": "LightGBM",
+      "target": "log1p",
+      "mae": 3352.36,
+      "rmse": 6133.1,
+      "r2": 0.6399,
+      "mape": 47.88,
+      "latency_p50_ms": 5.449,
+      "latency_p95_ms": 7.115,
+      "interval_coverage": 0.2125,
+      "train_rows": 24751,
+      "test_rows": 3491,
+      "split": "unseen_region"
+    },
+    {
+      "model": "Keras MLP",
+      "target": "raw",
+      "mae": 3852.3,
+      "rmse": 5918.0,
+      "r2": 0.6648,
+      "mape": 80.62,
+      "latency_p50_ms": 54.404,
+      "latency_p95_ms": 58.575,
+      "interval_coverage": 0.2378,
+      "train_rows": 24751,
+      "test_rows": 3491,
+      "split": "unseen_region"
+    },
+    {
+      "model": "Keras MLP",
+      "target": "log1p",
+      "mae": 3860.55,
+      "rmse": 7002.83,
+      "r2": 0.5306,
+      "mape": 53.52,
+      "latency_p50_ms": 54.868,
+      "latency_p95_ms": 62.931,
+      "interval_coverage": 0.1767,
+      "train_rows": 24751,
+      "test_rows": 3491,
+      "split": "unseen_region"
+    }
+  ],
+  "interval": {
+    "method": "Split-conformal: 10th and 90th percentiles of residuals on the out-of-time test period",
+    "space": "raw",
+    "residual_q10": -960.8221191406251,
+    "residual_q90": 2456.40205078125
+  },
+  "data": {
+    "rows": 28242,
+    "years": [
+      1990,
+      2013
+    ],
+    "regions": 101,
+    "crops": 10
+  },
+  "previous_model": {
+    "model": "Random Forest (GridSearchCV)",
+    "r2": 0.9447,
+    "rmse": 2003.33,
+    "mae": 1014.87,
+    "note": "Previous model used NDVI, which was generated from the yield itself (target leakage), on a random split."
+  },
+  "intended_use": "Country-level yield expectations per crop and year for planning and comparison.",
+  "limitations": [
+    "Trained on country-level FAOSTAT yields, not individual fields.",
+    "Soil, humidity, sunlight, irrigation, fertilizer and disease columns in the dataset are synthetic and are not used by the model.",
+    "Tree models do not extrapolate trends beyond the last training year."
+  ]
+}
