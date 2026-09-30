@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CloudRain, Droplets, Sun, Thermometer, Wind } from 'lucide-react';
-import { ChartCard, GroupedBarChart } from '../../components/charts';
+import { ChartCard, ComposedRainTempChart, GroupedBarChart } from '../../components/charts';
 import {
   Badge,
   Banner,
@@ -19,7 +19,6 @@ import { useGlobalFilters } from '../../store/filters';
 import s from './app.module.css';
 
 const DEFAULT_REGION = 'India';
-
 type Mode = 'dataset' | 'live';
 
 const FACTORS = [
@@ -57,57 +56,70 @@ const FACTORS = [
   },
 ] as const;
 
-function scoreTone(v: number, invert: boolean) {
+function tone(v: number, invert: boolean) {
   const good = invert ? 100 - v : v;
   return good >= 70 ? 'success' : good >= 45 ? 'warning' : 'danger';
 }
+
+const n = (v: number | null | undefined) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 
 export function WeatherPage() {
   const { filters } = useGlobalFilters();
   const region = filters.region || DEFAULT_REGION;
   const [mode, setMode] = useState<Mode>('dataset');
   const q = useWeather(region, mode === 'live');
-  const overview = useWeatherOverview().data;
+  const overview = useWeatherOverview().data?.analytics;
   const data = q.data;
   const a = data?.analytics;
-  const isLive = !!data?.status_claim?.toLowerCase().startsWith('live');
-  const fellBack = mode === 'live' && data && !isLive;
-  const g = overview?.global_averages;
+  const live = data?.mode === 'live';
 
   const raw = a
     ? {
-        rainfall_adequacy_score: formatRainfall(a.average_rainfall_mm),
-        temperature_stress_risk: formatTemperature(a.average_temperature_C ?? null),
-        humidity_balance_score: formatPercent(a.average_humidity_percent),
-        sunlight_exposure_score: `${formatNumber(a.average_sunlight_hours, 1)} h/day`,
+        rainfall_adequacy_score: live
+          ? `${formatNumber(n(a.average_rainfall_mm), 1)} mm over ${data?.period}`
+          : formatRainfall(n(a.average_rainfall_mm)),
+        temperature_stress_risk: formatTemperature(n(a.average_temperature_C)),
+        humidity_balance_score: formatPercent(n(a.average_humidity_percent)),
+        sunlight_exposure_score: `${formatNumber(n(a.average_sunlight_hours), 1)} h/day`,
       }
     : null;
 
+  const ratio = (x: number | null, g: number | null) => (x != null && g ? (x / g) * 100 : 0);
   const comparison =
-    a && g
+    a && overview && !live
       ? [
-          { label: 'Rainfall', region: (a.average_rainfall_mm / g.rainfall_mm) * 100, global: 100 },
+          { label: 'Rainfall', region: ratio(n(a.average_rainfall_mm), n(overview.average_rainfall_mm)), global: 100 },
           {
             label: 'Temperature',
-            region: ((a.average_temperature_C ?? g.temperature_C) / g.temperature_C) * 100,
+            region: ratio(n(a.average_temperature_C), n(overview.average_temperature_C)),
             global: 100,
           },
-          { label: 'Humidity', region: (a.average_humidity_percent / g.humidity_percent) * 100, global: 100 },
-          { label: 'Sunlight', region: (a.average_sunlight_hours / g.sunlight_hours) * 100, global: 100 },
+          {
+            label: 'Humidity',
+            region: ratio(n(a.average_humidity_percent), n(overview.average_humidity_percent)),
+            global: 100,
+          },
+          {
+            label: 'Sunlight',
+            region: ratio(n(a.average_sunlight_hours), n(overview.average_sunlight_hours)),
+            global: 100,
+          },
         ]
       : [];
   const biggest = comparison.length
     ? [...comparison].sort((x, y) => Math.abs(y.region - 100) - Math.abs(x.region - 100))[0]
     : null;
+  const forecast = data?.forecast ?? [];
 
   return (
     <div className={s.page}>
       <PageHeader
         title="Weather"
-        description={`Climate conditions and their scores for ${data?.region ?? region}.`}
+        description={`Climate conditions and scores for ${data?.region ?? region}${live ? ', live from Open-Meteo' : ', from the dataset'}.`}
         meta={
           <>
             <Badge tone="info">{data?.region ?? region}</Badge>
+            {data?.period && <Badge>{data.period}</Badge>}
             {!filters.region && <Badge>Default region · change it in the context bar</Badge>}
           </>
         }
@@ -124,16 +136,16 @@ export function WeatherPage() {
         }
       />
 
-      {fellBack && (
-        <Banner tone="warning">
-          Live weather isn’t available for this region right now, so dataset values are shown.
-        </Banner>
-      )}
-      {q.isError && <ErrorState error={q.error} onRetry={() => q.refetch()} />}
+      {q.isError &&
+        (mode === 'live' ? (
+          <Banner tone="warning">{(q.error as Error).message} Switch back to Dataset to see historical values.</Banner>
+        ) : (
+          <ErrorState error={q.error} onRetry={() => q.refetch()} />
+        ))}
 
       <div className={s.kpis}>
         {FACTORS.map(f => {
-          const v = a ? Number(a[f.key] ?? 0) : null;
+          const v = a ? n(a[f.key]) : null;
           return (
             <Card key={f.key}>
               <div className={s.between} style={{ alignItems: 'flex-start' }}>
@@ -143,10 +155,10 @@ export function WeatherPage() {
                   </span>
                   <span className={s.small}>{f.hint}</span>
                   {v != null && (
-                    <Badge tone={scoreTone(v, f.invert)}>
-                      {scoreTone(v, f.invert) === 'success'
+                    <Badge tone={tone(v, f.invert)}>
+                      {tone(v, f.invert) === 'success'
                         ? 'Favourable'
-                        : scoreTone(v, f.invert) === 'warning'
+                        : tone(v, f.invert) === 'warning'
                           ? 'Watch'
                           : 'Unfavourable'}
                     </Badge>
@@ -175,47 +187,92 @@ export function WeatherPage() {
         })}
       </div>
 
+      {live && forecast.length > 0 && (
+        <Card>
+          <CardHeader title="7-day forecast" subtitle={data?.status_claim} />
+          <div className={s.tileGrid}>
+            {forecast.map(d => (
+              <div key={d.date} className={s.tile}>
+                <div className={s.small}>
+                  {new Date(d.date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}
+                </div>
+                <div className={s.num} style={{ color: 'var(--data-temperature)', fontSize: 'var(--text-lg)' }}>
+                  {formatNumber(d.temp_max_C, 0)}° / {formatNumber(d.temp_min_C, 0)}°
+                </div>
+                <div className={s.num} style={{ color: 'var(--data-water)' }}>
+                  {formatNumber(d.precipitation_mm, 1)} mm
+                </div>
+                <div className={s.small}>{formatNumber(d.sunshine_hours, 1)} h sun</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       <div className={s.grid}>
         <div className={s.s8}>
-          <ChartCard
-            title="Region vs global average"
-            subtitle="Each factor as a percentage of the global average (global = 100)"
-            info="Values above 100 mean the region is wetter, warmer, more humid or sunnier than the average across all records."
-            summary={
-              biggest
-                ? `${biggest.label} differs most from the global average at ${Math.round(biggest.region)}.`
-                : 'Loading comparison.'
-            }
-            insight={
-              biggest
-                ? `${biggest.label} is ${biggest.region >= 100 ? `${Math.round(biggest.region - 100)}% above` : `${Math.round(100 - biggest.region)}% below`} the global average in ${data?.region ?? region}.`
-                : undefined
-            }
-            legend={[
-              { label: data?.region ?? region, color: 'data-water' },
-              { label: 'Global average', color: 'muted' },
-            ]}
-            height={280}
-          >
-            {(c, h) =>
-              comparison.length ? (
-                <GroupedBarChart
-                  data={comparison}
-                  colors={c}
-                  height={h}
-                  fy={v => `${Math.round(v)}`}
-                  series={[
-                    { key: 'region', label: data?.region ?? region, color: c['data-water'] },
-                    { key: 'global', label: 'Global average', color: c.muted },
-                  ]}
-                  refY={100}
-                  refLabel="Global"
-                />
-              ) : (
-                <Skeleton height={h} />
-              )
-            }
-          </ChartCard>
+          {live ? (
+            <ChartCard
+              title="Rainfall and temperature, next 7 days"
+              subtitle="Daily precipitation (bars) and maximum temperature (line)"
+              summary={forecast.length ? `${forecast.length}-day forecast for ${data?.region}.` : 'Loading.'}
+              legend={[
+                { label: 'Rainfall', color: 'data-water' },
+                { label: 'Max temperature', color: 'data-temperature' },
+              ]}
+              height={280}
+            >
+              {(c, h) =>
+                forecast.length ? (
+                  <ComposedRainTempChart
+                    data={forecast.map(d => ({ label: d.date.slice(5), rain: d.precipitation_mm, temp: d.temp_max_C }))}
+                    colors={c}
+                    height={h}
+                  />
+                ) : (
+                  <Skeleton height={h} />
+                )
+              }
+            </ChartCard>
+          ) : (
+            <ChartCard
+              title="Region vs all regions"
+              subtitle="Each factor as a percentage of the all-region average (= 100)"
+              info="Above 100 means the region is wetter, warmer, more humid or sunnier than the average across every record."
+              summary={
+                biggest ? `${biggest.label} differs most, at ${Math.round(biggest.region)}.` : 'Loading comparison.'
+              }
+              insight={
+                biggest
+                  ? `${biggest.label} is ${biggest.region >= 100 ? `${Math.round(biggest.region - 100)}% above` : `${Math.round(100 - biggest.region)}% below`} the all-region average in ${data?.region ?? region}.`
+                  : undefined
+              }
+              legend={[
+                { label: data?.region ?? region, color: 'data-water' },
+                { label: 'All regions', color: 'muted' },
+              ]}
+              height={280}
+            >
+              {(c, h) =>
+                comparison.length ? (
+                  <GroupedBarChart
+                    data={comparison}
+                    colors={c}
+                    height={h}
+                    fy={v => `${Math.round(v)}`}
+                    series={[
+                      { key: 'region', label: data?.region ?? region, color: c['data-water'] },
+                      { key: 'global', label: 'All regions', color: c.muted },
+                    ]}
+                    refY={100}
+                    refLabel="Average"
+                  />
+                ) : (
+                  <Skeleton height={h} />
+                )
+              }
+            </ChartCard>
+          )}
         </div>
 
         <div className={s.s4}>
@@ -223,23 +280,23 @@ export function WeatherPage() {
             <CardHeader
               title="Overall climate score"
               subtitle="Combined rating of the four factors"
-              info="Weighted combination of rainfall adequacy, heat stress (inverted), humidity balance and sunlight exposure, as returned by the weather service."
+              info="0.35 × rainfall + 0.30 × (100 − heat stress) + 0.20 × humidity + 0.15 × sunlight. Each factor is the share of records inside their crop’s optimal band (dataset) or a live-weather heuristic (live)."
             />
-            {a ? (
+            {a && n(a.overall_weather_score) != null ? (
               <div className={s.stack} style={{ alignItems: 'center' }}>
                 <ProgressRing
-                  value={a.overall_weather_score}
+                  value={n(a.overall_weather_score) ?? 0}
                   label="Overall climate score"
                   size={148}
                   stroke={12}
                   color="var(--primary)"
-                  display={formatNumber(a.overall_weather_score, 1)}
+                  display={formatNumber(n(a.overall_weather_score), 1)}
                 />
                 <div className={s.stack} style={{ width: '100%', gap: 'var(--space-2)' }}>
                   {FACTORS.map(f => (
                     <div key={f.key} className={s.between}>
                       <span className={s.muted}>{f.label}</span>
-                      <span className={s.num}>{formatNumber(Number(a[f.key] ?? 0), 0)}</span>
+                      <span className={s.num}>{formatNumber(n(a[f.key]), 0)}</span>
                     </div>
                   ))}
                 </div>
@@ -253,14 +310,8 @@ export function WeatherPage() {
                     alignItems: 'center',
                   }}
                 >
-                  {isLive ? 'Based on a live Open-Meteo reading' : `Based on ${formatCount(a.record_count)} records`}
-                  <InfoTip
-                    text={
-                      isLive
-                        ? `Source: ${data?.status_claim}`
-                        : 'Source: YieldSense dataset (historical records for this region).'
-                    }
-                  />
+                  {live ? `Based on ${data?.period}` : `Based on ${formatCount(n(a.record_count))} records`}
+                  <InfoTip text={`Source: ${data?.data_source}`} />
                 </p>
               </div>
             ) : (
@@ -269,39 +320,44 @@ export function WeatherPage() {
           </Card>
         </div>
 
-        {isLive && a && (
+        {live && data?.current && (
           <div className={s.s12}>
             <Card>
-              <CardHeader title="Current conditions" subtitle={data?.status_claim} />
+              <CardHeader
+                title="Current conditions"
+                subtitle={
+                  data.current.observed_at
+                    ? `Observed ${new Date(data.current.observed_at).toLocaleString()}`
+                    : undefined
+                }
+              />
               <div className={s.tileGrid}>
                 <div className={s.tile}>
                   <div className={s.small}>Temperature</div>
                   <div className={s.num} style={{ fontSize: 'var(--text-xl)' }}>
-                    {formatTemperature(a.average_temperature_C ?? null)}
+                    {formatTemperature(data.current.temperature_C)}
                   </div>
                 </div>
                 <div className={s.tile}>
                   <div className={s.small}>Humidity</div>
                   <div className={s.num} style={{ fontSize: 'var(--text-xl)' }}>
-                    {formatPercent(a.average_humidity_percent)}
+                    {formatPercent(data.current.humidity_percent)}
                   </div>
                 </div>
                 <div className={s.tile}>
-                  <div className={s.small}>Precipitation today</div>
+                  <div className={s.small}>Precipitation</div>
                   <div className={s.num} style={{ fontSize: 'var(--text-xl)' }}>
-                    {formatNumber(a.average_rainfall_mm, 1)} mm
+                    {formatNumber(data.current.precipitation_mm, 1)} mm
                   </div>
                 </div>
-                {a.wind_speed_kmh != null && (
-                  <div className={s.tile}>
-                    <div className={s.small} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                      <Wind size={12} aria-hidden="true" /> Wind
-                    </div>
-                    <div className={s.num} style={{ fontSize: 'var(--text-xl)' }}>
-                      {formatNumber(a.wind_speed_kmh, 1)} km/h
-                    </div>
+                <div className={s.tile}>
+                  <div className={s.small} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                    <Wind size={12} aria-hidden="true" /> Wind
                   </div>
-                )}
+                  <div className={s.num} style={{ fontSize: 'var(--text-xl)' }}>
+                    {formatNumber(data.current.wind_speed_kmh, 1)} km/h
+                  </div>
+                </div>
               </div>
             </Card>
           </div>

@@ -71,14 +71,14 @@ export function DatasetPage() {
 
   const q = useRecords({
     page,
-    limit: pageSize,
-    crop_type: filters.crop || undefined,
+    page_size: pageSize,
+    crop: filters.crop || undefined,
     region: filters.region || undefined,
     search: debounced || undefined,
   });
-  const rows = useMemo(() => q.data?.data ?? [], [q.data]);
-  const total = q.data?.total_records ?? 0;
-  const totalPages = Math.max(1, q.data?.total_pages ?? 1);
+  const rows = useMemo(() => q.data?.items ?? [], [q.data]);
+  const total = q.data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const columns = useMemo<ColumnDef<CropRecord>[]>(
     () => [

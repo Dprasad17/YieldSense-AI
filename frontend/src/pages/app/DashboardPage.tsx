@@ -25,9 +25,9 @@ import {
   Skeleton,
   StatCard,
 } from '../../components/ui';
-import { ErrorState, SampleDataPill } from '../../components/ui/States';
+import { ErrorState } from '../../components/ui/States';
 import { useAuth, useCan } from '../../auth/context';
-import { useDatasetSummary, useEdaMetrics, useRecommendationsHub } from '../../hooks/queries';
+import { contextQuery, useDatasetSummary, useEdaMetrics, useRecommendationsHub } from '../../hooks/queries';
 import {
   formatCount,
   formatIndex,
@@ -65,7 +65,7 @@ export function DashboardPage() {
   const { filters, search } = useGlobalFilters();
   const summaryQ = useDatasetSummary();
   const edaQ = useEdaMetrics();
-  const hubQ = useRecommendationsHub();
+  const hubQ = useRecommendationsHub(contextQuery(filters));
   const [recent] = useState(() => (user ? listRecent(user.username).slice(0, 4) : []));
 
   const kpis = selectSummaryKpis(summaryQ.data);
@@ -94,10 +94,7 @@ export function DashboardPage() {
     ]);
   };
 
-  const recs = [hubQ.data?.irrigation_dispatch, hubQ.data?.spray_window].filter(Boolean) as {
-    title: string;
-    explanation: string;
-  }[];
+  const recs = (hubQ.data?.recommendations ?? []).slice(0, 2);
 
   return (
     <div className={s.page}>
@@ -336,10 +333,9 @@ export function DashboardPage() {
           <Card>
             <CardHeader
               title="Top recommendations"
-              subtitle="Highest-priority actions"
+              subtitle={hubQ.data ? `Highest-priority actions · ${hubQ.data.scope}` : 'Highest-priority actions'}
               actions={
                 <>
-                  <SampleDataPill />
                   <ButtonLink to={`/app/recommendations${search}`} size="sm" variant="ghost">
                     View all
                   </ButtonLink>
@@ -348,28 +344,45 @@ export function DashboardPage() {
             />
             {hubQ.isError ? (
               <ErrorState error={hubQ.error} onRetry={() => hubQ.refetch()} />
+            ) : hubQ.isPending ? (
+              <Skeleton height={140} />
             ) : recs.length ? (
               <ul className={s.list}>
-                {recs.map((r, i) => (
-                  <li
-                    key={r.title}
-                    className={s.tile}
-                    style={{ borderLeft: `3px solid ${i === 0 ? 'var(--danger)' : 'var(--warning)'}` }}
-                  >
-                    <div className={s.row}>
-                      <Badge tone={i === 0 ? 'danger' : 'warning'} icon={TriangleAlert}>
-                        {i === 0 ? 'Critical' : 'High'}
-                      </Badge>
-                      <strong style={{ fontSize: 'var(--text-md)' }}>{r.title}</strong>
-                    </div>
-                    <p className={s.muted} style={{ margin: 'var(--space-2) 0 0' }}>
-                      {r.explanation}
-                    </p>
-                  </li>
-                ))}
+                {recs.map(r => {
+                  const tone =
+                    r.severity === 'critical'
+                      ? 'danger'
+                      : r.severity === 'high'
+                        ? 'warning'
+                        : r.severity === 'medium'
+                          ? 'info'
+                          : 'neutral';
+                  return (
+                    <li
+                      key={r.id}
+                      className={s.tile}
+                      style={{ borderLeft: `3px solid var(--${tone === 'neutral' ? 'border-strong' : tone})` }}
+                    >
+                      <div className={s.row}>
+                        <Badge tone={tone} icon={TriangleAlert}>
+                          {r.severity[0].toUpperCase() + r.severity.slice(1)}
+                        </Badge>
+                        <strong style={{ fontSize: 'var(--text-md)' }}>{r.title}</strong>
+                      </div>
+                      <p className={s.muted} style={{ margin: 'var(--space-2) 0 0' }}>
+                        {r.action}{' '}
+                        {r.impact_kg_ha > 0 &&
+                          `Estimated +${formatYieldWithUnit(r.impact_kg_ha, unit)} on affected records.`}
+                      </p>
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
-              <Skeleton height={140} />
+              <EmptyState
+                title="No issues found"
+                description={`Every checked value for ${hubQ.data?.scope ?? 'this context'} is inside its optimal band.`}
+              />
             )}
           </Card>
         </div>

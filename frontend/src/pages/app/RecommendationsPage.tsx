@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { CheckCircle2, ChevronDown, ChevronUp, Clock, Eye, Radio, Thermometer, Wind, X, Zap } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, ClipboardPlus, Clock, Sparkles, X } from 'lucide-react';
+import { errorMessage } from '../../api/client';
+import type { Recommendation, RecommendationAction } from '../../api/types';
 import {
   Badge,
   Button,
@@ -9,33 +11,19 @@ import {
   ConfirmDialog,
   EmptyState,
   PageHeader,
+  SegmentedControl,
   Skeleton,
   Tabs,
   type Tone,
 } from '../../components/ui';
-import { ErrorState, SampleDataPill } from '../../components/ui/States';
-import { useAuth } from '../../auth/context';
-import { useRecommendationsHub } from '../../hooks/queries';
-import { formatYield } from '../../lib/format';
-import { isRecHidden, readRecStates, setRecState, type RecState } from '../../lib/localStore';
+import { ErrorState } from '../../components/ui/States';
+import { contextQuery, useRecommendationAction, useRecommendationsHub } from '../../hooks/queries';
+import { formatCount, formatNumber, formatPercent, formatYield } from '../../lib/format';
+import { useGlobalFilters } from '../../store/filters';
 import { usePreferences } from '../../store/preferences';
 import s from './app.module.css';
 
-type Severity = 'critical' | 'high' | 'medium' | 'info';
-
-interface Rec {
-  id: string;
-  severity: Severity;
-  category: 'Irrigation' | 'Disease & pest';
-  title: string;
-  window: string;
-  area: string;
-  impactKgHa: number | null;
-  impactText: string;
-  evidence: string[];
-  why: string;
-  primary: string;
-}
+type Severity = Recommendation['severity'];
 
 const SEVERITY: Record<Severity, { label: string; tone: Tone; color: string }> = {
   critical: { label: 'Critical', tone: 'danger', color: 'var(--danger)' },
@@ -44,134 +32,100 @@ const SEVERITY: Record<Severity, { label: string; tone: Tone; color: string }> =
   info: { label: 'Info', tone: 'neutral', color: 'var(--border-strong)' },
 };
 
-/** "+0.92 t/Ha Yield Salvage Potential" → 920 kg/ha. Returns null when there is no yield figure. */
-function parseImpact(text: string | undefined): number | null {
-  const m = text?.match(/([+-]?[\d.]+)\s*(t|kg)\s*\/\s*ha/i);
-  if (!m) return null;
-  const v = Number(m[1]);
-  return m[2].toLowerCase() === 't' ? v * 1000 : v;
-}
+const CATEGORY: Record<Recommendation['category'], string> = {
+  irrigation: 'Irrigation',
+  disease_pest: 'Disease & pest',
+  fertilizer: 'Fertilizer',
+  crop_planning: 'Crop planning',
+  best_practices: 'Best practices',
+};
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function toRecs(hub: Record<string, any> | undefined): Rec[] {
-  if (!hub) return [];
-  const out: Rec[] = [];
-  const irr = hub.irrigation_dispatch;
-  if (irr) {
-    out.push({
-      id: 'irrigation_dispatch',
-      severity: 'critical',
-      category: 'Irrigation',
-      title: String(irr.title),
-      window: 'Act within 36 hours',
-      area: String(irr.affected_area ?? ''),
-      impactKgHa: parseImpact(irr.yield_salvage),
-      impactText: String(irr.yield_salvage ?? ''),
-      evidence: [irr.telemetry_trigger, irr.target_threshold].filter(Boolean).map(String),
-      why: String(irr.explanation ?? ''),
-      primary: 'Dispatch pivot command',
-    });
-  }
-  const spray = hub.spray_window;
-  if (spray) {
-    out.push({
-      id: 'spray_window',
-      severity: 'high',
-      category: 'Disease & pest',
-      title: String(spray.title),
-      window: String(spray.window_status ?? ''),
-      area: '',
-      impactKgHa: parseImpact(spray.prevention_potential),
-      impactText: String(spray.prevention_potential ?? ''),
-      evidence: [],
-      why: String(spray.explanation ?? ''),
-      primary: 'Schedule spray',
-    });
-  }
-  return out;
-}
+const STATUS_LABEL = { open: 'Task open', done: 'Done', dismissed: 'Dismissed', snoozed: 'Snoozed' } as const;
+
+type View = 'active' | 'all';
 
 export function RecommendationsPage() {
-  const { user } = useAuth();
   const { unit } = usePreferences();
-  const q = useRecommendationsHub();
+  const { filters } = useGlobalFilters();
+  const q = useRecommendationsHub(contextQuery(filters));
+  const act = useRecommendationAction();
   const hub = q.data;
-  const recs = useMemo(() => toRecs(hub), [hub]);
-  const [states, setStates] = useState<Record<string, RecState>>(() => (user ? readRecStates(user.username) : {}));
   const [tab, setTab] = useState('all');
+  const [view, setView] = useState<View>('active');
   const [openWhy, setOpenWhy] = useState<string | null>(null);
-  const [confirm, setConfirm] = useState<Rec | null>(null);
-  const [dispatching, setDispatching] = useState(false);
-  const [showHidden, setShowHidden] = useState(false);
+  const [confirm, setConfirm] = useState<Recommendation | null>(null);
 
-  const update = (id: string, st: RecState | null) => {
-    if (!user) return;
-    setRecState(user.username, id, st);
-    setStates(readRecStates(user.username));
-  };
-
-  const visible = recs.filter(r => showHidden || !isRecHidden(states[r.id]));
-  const hiddenCount = recs.length - recs.filter(r => !isRecHidden(states[r.id])).length;
+  const recs = useMemo(() => hub?.recommendations ?? [], [hub]);
+  const isActive = (r: Recommendation) =>
+    !r.task ||
+    r.task.status === 'open' ||
+    (r.task.status === 'snoozed' && !!r.task.snooze_until && new Date(r.task.snooze_until) < new Date());
+  const visible = view === 'active' ? recs.filter(isActive) : recs;
   const categories = Array.from(new Set(recs.map(r => r.category)));
-  const counts = (Object.keys(SEVERITY) as Severity[]).map(k => ({ k, n: recs.filter(r => r.severity === k).length }));
+  const provenance = recs[0]?.rationale_source;
 
-  const doPrimary = () => {
-    if (!confirm) return;
-    setDispatching(true);
-    // Simulated: there is no field hardware endpoint.
-    window.setTimeout(() => {
-      setDispatching(false);
-      update(confirm.id, { status: 'done' });
-      toast.success(`${confirm.primary}: request recorded`);
-      setConfirm(null);
-    }, 900);
+  const run = async (r: Recommendation, action: RecommendationAction) => {
+    try {
+      const res = await act.mutateAsync({ id: r.id, action, snooze_days: 3 });
+      toast.success(res.message);
+    } catch (err) {
+      toast.error(errorMessage(err));
+    }
   };
 
-  const card = (r: Rec) => {
+  const card = (r: Recommendation) => {
     const sev = SEVERITY[r.severity];
-    const st = states[r.id];
     return (
       <Card key={r.id} as="article" className={s.severityCard} style={{ borderLeftColor: sev.color }}>
         <div className={s.stack}>
           <div className={s.row}>
             <Badge tone={sev.tone}>{sev.label}</Badge>
-            <Badge>{r.category}</Badge>
-            {r.window && (
-              <span className={s.small} style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
-                <Clock size={12} aria-hidden="true" /> {r.window}
-              </span>
-            )}
-            {st && (
+            <Badge>{CATEGORY[r.category]}</Badge>
+            <span className={s.small} style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+              <Clock size={12} aria-hidden="true" /> Due in {r.deadline_days} days · {r.deadline}
+            </span>
+            {r.task && (
               <Badge tone="info">
-                {st.status === 'snoozed'
-                  ? `Snoozed until ${new Date(st.until ?? '').toLocaleDateString()}`
-                  : st.status === 'done'
-                    ? 'Done'
-                    : 'Dismissed'}
+                {STATUS_LABEL[r.task.status]}
+                {r.task.status === 'snoozed' && r.task.snooze_until
+                  ? ` until ${new Date(r.task.snooze_until).toLocaleDateString()}`
+                  : ''}
               </Badge>
             )}
           </div>
           <h2 style={{ margin: 0, fontSize: 'var(--text-lg)' }}>{r.title}</h2>
-          {r.area && <span className={s.muted}>{r.area}</span>}
-          <div className={s.num} style={{ color: r.impactKgHa ? 'var(--success)' : 'var(--ink)' }}>
-            Expected impact:{' '}
-            {r.impactKgHa != null ? `+${formatYield(r.impactKgHa, unit)} ${unit} yield protected` : r.impactText}
+          <span className={s.muted}>{r.affected_area}</span>
+          <p style={{ margin: 0 }}>{r.action}</p>
+          <div
+            className={s.num}
+            style={{ color: r.impact_kg_ha > 0 ? 'var(--success)' : 'var(--muted)' }}
+            title={r.impact_basis}
+          >
+            Expected impact: {r.impact_kg_ha > 0 ? '+' : ''}
+            {formatYield(r.impact_kg_ha, unit)} {unit} on affected records
           </div>
-          {r.evidence.length > 0 && (
-            <div className={s.tile}>
-              <div className={s.small} style={{ marginBottom: 'var(--space-1)' }}>
-                Evidence
-              </div>
-              {r.evidence.map(e => (
-                <p key={e} style={{ margin: 0 }}>
-                  {e}
-                </p>
-              ))}
+          <div className={s.tile}>
+            <div className={s.small} style={{ marginBottom: 'var(--space-1)' }}>
+              Evidence
             </div>
-          )}
+            {r.evidence.map(e => (
+              <p key={e.label} style={{ margin: 0 }}>
+                <strong>{e.label}:</strong>{' '}
+                <span className={s.num}>
+                  {formatNumber(e.observed, 2)}
+                  {e.unit}
+                </span>{' '}
+                median vs optimal{' '}
+                <span className={s.num}>
+                  {formatNumber(e.optimal_low, 2)}–{formatNumber(e.optimal_high, 2)}
+                  {e.unit}
+                </span>{' '}
+                · {formatPercent(e.share_affected * 100)} of records affected
+              </p>
+            ))}
+          </div>
           <button
             type="button"
-            className={s.row}
             style={{
               all: 'unset',
               cursor: 'pointer',
@@ -192,71 +146,92 @@ export function RecommendationsPage() {
               <ChevronDown size={14} aria-hidden="true" />
             )}
           </button>
-          {openWhy === r.id && <p style={{ margin: 0, lineHeight: 'var(--leading-normal)' }}>{r.why}</p>}
+          {openWhy === r.id && (
+            <div>
+              <p style={{ margin: 0, lineHeight: 'var(--leading-normal)' }}>{r.rationale}</p>
+              <p className={s.small} style={{ margin: 'var(--space-1) 0 0' }}>
+                {r.rationale_source.startsWith('Groq')
+                  ? `AI rationale · ${r.rationale_source}`
+                  : `Rule-based rationale (${r.rationale_source}); AI text unavailable`}
+              </p>
+            </div>
+          )}
           <div className={s.row}>
-            <Button variant="primary" size="sm" icon={Zap} onClick={() => setConfirm(r)}>
-              {r.primary}
-            </Button>
             <Button
+              variant="primary"
               size="sm"
-              icon={Clock}
-              onClick={() => {
-                update(r.id, { status: 'snoozed', until: new Date(Date.now() + 3 * 864e5).toISOString() });
-                toast('Snoozed for 3 days');
-              }}
+              icon={ClipboardPlus}
+              onClick={() => setConfirm(r)}
+              disabled={act.isPending}
             >
+              {r.action_label}
+            </Button>
+            <Button size="sm" icon={Clock} onClick={() => run(r, 'snooze')} disabled={act.isPending}>
               Snooze
+            </Button>
+            <Button size="sm" variant="ghost" icon={X} onClick={() => run(r, 'dismiss')} disabled={act.isPending}>
+              Dismiss
             </Button>
             <Button
               size="sm"
               variant="ghost"
-              icon={X}
-              onClick={() => {
-                update(r.id, { status: 'dismissed' });
-                toast('Dismissed');
-              }}
+              icon={CheckCircle2}
+              onClick={() => run(r, 'done')}
+              disabled={act.isPending}
             >
-              Dismiss
+              Mark done
             </Button>
-            {st && (
-              <Button size="sm" variant="ghost" onClick={() => update(r.id, null)}>
-                Restore
-              </Button>
-            )}
           </div>
         </div>
       </Card>
     );
   };
 
-  const list = (items: Rec[]) =>
+  const list = (items: Recommendation[]) =>
     items.length ? (
       <div className={s.stack}>{items.map(card)}</div>
     ) : (
       <Card>
         <EmptyState
           icon={CheckCircle2}
-          title="Nothing to act on"
-          description="All recommendations in this view are done, snoozed or dismissed."
+          title={recs.length ? 'Nothing to act on' : 'No issues found'}
+          description={
+            recs.length
+              ? 'Everything here is done, snoozed or dismissed. Switch to “All” to see them.'
+              : `Every checked median for ${hub?.scope ?? 'this context'} is inside its crop’s optimal band.`
+          }
         />
       </Card>
     );
 
-  const phen = hub?.phenology;
-  const micro = hub?.microclimate;
+  const counts = (Object.keys(SEVERITY) as Severity[]).map(k => ({
+    k,
+    n: recs.filter(r => r.severity === k && isActive(r)).length,
+  }));
 
   return (
     <div className={s.page}>
       <PageHeader
         title="Recommendations"
-        description="Prioritised actions with timing, expected impact and the reasoning behind each one."
-        meta={<SampleDataPill reason="The recommendations endpoint currently returns fixed example content." />}
+        description="Checks against the optimal ranges of top-yielding records, with model-estimated impact and the reasoning behind each one."
+        meta={
+          <>
+            <Badge tone="info">
+              {hub?.scope ?? `${filters.region || 'All regions'} · ${filters.crop || 'All crops'}`}
+            </Badge>
+            {hub && <Badge>{formatCount(hub.record_count)} records analysed</Badge>}
+          </>
+        }
         actions={
-          hiddenCount > 0 ? (
-            <Button icon={Eye} variant="ghost" onClick={() => setShowHidden(v => !v)}>
-              {showHidden ? 'Hide' : 'Show'} snoozed & dismissed ({hiddenCount})
-            </Button>
-          ) : undefined
+          <SegmentedControl<View>
+            label="Show"
+            value={view}
+            onChange={setView}
+            options={[
+              { value: 'active', label: 'Active' },
+              { value: 'all', label: 'All' },
+            ]}
+          />
         }
       />
 
@@ -279,7 +254,7 @@ export function RecommendationsPage() {
         <div className={s.s8}>
           {q.isPending ? (
             <Card>
-              <Skeleton height={220} />
+              <Skeleton height={260} />
             </Card>
           ) : (
             <Tabs
@@ -290,7 +265,7 @@ export function RecommendationsPage() {
                 { value: 'all', label: `All (${visible.length})`, content: list(visible) },
                 ...categories.map(c => ({
                   value: c,
-                  label: `${c} (${visible.filter(r => r.category === c).length})`,
+                  label: `${CATEGORY[c]} (${visible.filter(r => r.category === c).length})`,
                   content: list(visible.filter(r => r.category === c)),
                 })),
               ]}
@@ -301,93 +276,75 @@ export function RecommendationsPage() {
         <aside className={`${s.s4} ${s.stack}`}>
           <Card>
             <CardHeader
-              title="Growth stage"
-              subtitle={phen?.stage_name ? `Current: ${phen.stage_name}` : 'Crop phenology'}
+              title="Crop cycle"
+              subtitle={
+                hub?.crop_cycle
+                  ? `${hub.crop_cycle.crop} · about ${hub.crop_cycle.median_days} days`
+                  : 'Pick a crop to see its growth stages'
+              }
             />
-            {phen ? (
-              <ol className={s.timeline}>
-                {(phen.completed as string[]).map(stage => (
-                  <li key={stage}>
-                    <span
-                      className={s.tlDot}
-                      style={{ background: 'var(--success)', borderColor: 'var(--success)' }}
-                      aria-hidden="true"
-                    />
-                    <span className={s.muted}>{stage}</span> <Badge tone="success">Done</Badge>
-                  </li>
-                ))}
-                <li>
-                  <span
-                    className={s.tlDot}
-                    style={{ background: 'var(--warning)', borderColor: 'var(--warning)' }}
-                    aria-hidden="true"
-                  />
-                  <strong>{String(phen.stage_name)}</strong> <Badge tone="warning">Now</Badge>
-                  {phen.warning && (
-                    <div className={s.small} style={{ color: 'var(--warning)' }}>
-                      {String(phen.warning)}
-                    </div>
-                  )}
-                </li>
-                {(phen.future as string[]).map(stage => (
-                  <li key={stage}>
-                    <span className={s.tlDot} aria-hidden="true" />
-                    <span className={s.muted}>{stage}</span>
-                  </li>
-                ))}
-              </ol>
+            {hub?.crop_cycle ? (
+              <>
+                <ol className={s.timeline}>
+                  {hub.crop_cycle.stages.map(st => (
+                    <li key={st.name}>
+                      <span className={s.tlDot} aria-hidden="true" />
+                      <strong>{st.name}</strong>{' '}
+                      <span className={`${s.num} ${s.small}`}>
+                        day {st.start_day}–{st.end_day}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+                <p className={s.small} style={{ margin: 0 }}>
+                  {hub.crop_cycle.source}
+                </p>
+              </>
+            ) : q.isPending ? (
+              <Skeleton height={160} />
             ) : (
-              <Skeleton height={200} />
+              <p className={s.muted} style={{ margin: 0 }}>
+                Choose a crop in the context bar.
+              </p>
             )}
           </Card>
           <Card>
-            <CardHeader title="Field micro-climate" subtitle="Conditions behind these recommendations" />
-            {micro ? (
-              <div className={s.tileGrid}>
-                <div className={s.tile}>
-                  <div className={s.small} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                    <Thermometer size={12} aria-hidden="true" /> Canopy temperature
-                  </div>
-                  <div className={s.num} style={{ fontSize: 'var(--text-xl)' }}>
-                    {String(micro.canopy_temp)}
-                  </div>
-                  <div className={s.small} style={{ color: 'var(--danger)' }}>
-                    {String(micro.canopy_threshold)}
-                  </div>
-                </div>
-                <div className={s.tile}>
-                  <div className={s.small} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                    <Wind size={12} aria-hidden="true" /> Wind inversion
-                  </div>
-                  <div className={s.num} style={{ fontSize: 'var(--text-xl)' }}>
-                    {String(micro.wind_inversion)}
-                  </div>
-                  <div className={s.small}>Delta-T {String(micro.delta_t)}</div>
-                </div>
-              </div>
+            <CardHeader title="Context climate" subtitle={hub?.context?.source} />
+            {hub?.context ? (
+              <dl className={s.dl}>
+                <dt>Temperature</dt>
+                <dd>{formatNumber(hub.context.temperature_C, 1)} °C</dd>
+                <dt>Rainfall</dt>
+                <dd>{formatNumber(hub.context.rainfall_mm, 0)} mm</dd>
+                <dt>Humidity</dt>
+                <dd>{formatPercent(hub.context.humidity_percent)}</dd>
+                <dt>Sunlight</dt>
+                <dd>{formatNumber(hub.context.sunlight_hours, 1)} h/day</dd>
+              </dl>
             ) : (
-              <Skeleton height={100} />
+              <Skeleton height={120} />
             )}
           </Card>
-          <p className={s.small} style={{ margin: 0, display: 'flex', gap: 'var(--space-1)', alignItems: 'center' }}>
-            <Radio size={12} aria-hidden="true" /> Example content from the recommendations service · not generated for
-            your fields yet
-          </p>
+          {provenance && (
+            <p className={s.small} style={{ margin: 0, display: 'flex', gap: 'var(--space-1)', alignItems: 'center' }}>
+              <Sparkles size={12} aria-hidden="true" /> Rationale by {provenance}. Field tasks are tracked in
+              YieldSense; nothing is sent to equipment.
+            </p>
+          )}
         </aside>
       </div>
 
       <ConfirmDialog
         open={!!confirm}
         onOpenChange={v => !v && setConfirm(null)}
-        title={confirm?.primary ?? ''}
-        description={
-          confirm
-            ? `Record this action for “${confirm.title}”? No field equipment is connected, so this is logged for your records.`
-            : ''
-        }
-        confirmLabel="Confirm"
-        onConfirm={doPrimary}
-        loading={dispatching}
+        title={confirm?.action_label ?? ''}
+        description={confirm ? `Create a field task for “${confirm.title}”, due ${confirm.deadline}?` : ''}
+        confirmLabel="Create task"
+        loading={act.isPending}
+        onConfirm={async () => {
+          if (confirm) await run(confirm, 'create_task');
+          setConfirm(null);
+        }}
       />
     </div>
   );

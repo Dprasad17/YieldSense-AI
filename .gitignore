@@ -17,3 +17,6 @@ dist/
 
 # Runtime user store (contains password hashes)
 backend/app/api/users_db.json
+
+# App database (legacy SQLite store)
+backend/data/

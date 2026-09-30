@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { isNetworkError, setUnauthorizedHandler } from '../api/client';
 import { authApi } from '../api/endpoints';
-import { clearSession, readSession, updateSessionUser, writeSession } from '../api/session';
+import { clearSession, readSession, tokenExpiry, updateSessionUser, writeSession } from '../api/session';
 import type { SessionUser, TokenResponse } from '../api/types';
 import { AuthContext, type AuthState, type AuthStatus } from './context';
 import { findDemoAccount } from './demoAccounts';
@@ -95,14 +95,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Any 401 from the API (expired or revoked token) ends the session.
   useEffect(() => {
-    setUnauthorizedHandler(() => {
+    setUnauthorizedHandler(code => {
       if (!readSession()) return;
       const from = location.pathname + location.search;
       void Promise.resolve(navigate('/session-expired', { replace: true, state: { from } })).then(endSession);
-      toast.error('Your session has expired. Please sign in again.');
+      toast.error(
+        code === 'token_expired'
+          ? 'Session expired. Please sign in again.'
+          : 'You were signed out. Please sign in again.',
+      );
     });
     return () => setUnauthorizedHandler(null);
   }, [endSession, navigate, location.pathname, location.search]);
+
+  // End the session exactly when the token expires (60 min), even if no request is made.
+  useEffect(() => {
+    if (status !== 'authenticated' || offlineDemo) return;
+    const token = readSession()?.token;
+    const expiresAt = token ? tokenExpiry(token) : null;
+    if (!expiresAt) return;
+    const id = window.setTimeout(
+      () => {
+        const from = window.location.pathname + window.location.search;
+        void Promise.resolve(navigate('/session-expired', { replace: true, state: { from } })).then(endSession);
+        toast.error('Session expired. Please sign in again.');
+      },
+      Math.max(0, expiresAt - Date.now()),
+    );
+    return () => window.clearTimeout(id);
+  }, [status, offlineDemo, user, endSession, navigate]);
 
   const startSession = useCallback((token: string, next: SessionUser, isOfflineDemo: boolean, remember = true) => {
     writeSession({ token, user: next, offlineDemo: isOfflineDemo }, remember);

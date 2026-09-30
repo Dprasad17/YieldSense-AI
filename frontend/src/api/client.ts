@@ -7,12 +7,15 @@ export const API_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
 export class ApiError extends Error {
   readonly status: number;
   readonly detail: string;
+  /** Machine-readable code from the error envelope, e.g. "token_expired", "rate_limited". */
+  readonly code: string;
 
-  constructor(status: number, detail: string) {
+  constructor(status: number, detail: string, code = 'error') {
     super(detail);
     this.name = 'ApiError';
     this.status = status;
     this.detail = detail;
+    this.code = code;
   }
 }
 
@@ -24,7 +27,7 @@ export class NetworkError extends Error {
   }
 }
 
-type UnauthorizedHandler = () => void;
+type UnauthorizedHandler = (code: string) => void;
 let onUnauthorized: UnauthorizedHandler | null = null;
 
 /** Registered by the auth provider: clears the session and sends the user to /login. */
@@ -73,14 +76,17 @@ async function send(path: string, opts: RequestOptions): Promise<Response> {
 
   if (!res.ok) {
     let detail = res.statusText || `Request failed (${res.status})`;
+    let code = 'error';
     try {
+      // Envelope: {"error": {"code", "message"}}
       const json = await res.json();
-      if (typeof json?.detail === 'string') detail = json.detail;
+      if (typeof json?.error?.message === 'string') detail = json.error.message;
+      if (typeof json?.error?.code === 'string') code = json.error.code;
     } catch {
       // Non-JSON error body: keep the status text.
     }
-    if (res.status === 401 && !opts.skipAuthRedirect) onUnauthorized?.();
-    throw new ApiError(res.status, detail);
+    if (res.status === 401 && !opts.skipAuthRedirect) onUnauthorized?.(code);
+    throw new ApiError(res.status, detail, code);
   }
   return res;
 }
@@ -91,10 +97,14 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
   return (await res.json()) as T;
 }
 
-/** For file downloads (CSV/XLSX exports). */
-export async function apiBlob(path: string, opts: RequestOptions = {}): Promise<Blob> {
+/** For file downloads (CSV/XLSX exports). The filename comes from Content-Disposition when present. */
+export async function apiBlob(
+  path: string,
+  opts: RequestOptions = {},
+): Promise<{ blob: Blob; filename: string | null }> {
   const res = await send(path, opts);
-  return res.blob();
+  const match = /filename="?([^";]+)"?/i.exec(res.headers.get('Content-Disposition') ?? '');
+  return { blob: await res.blob(), filename: match?.[1] ?? null };
 }
 
 export function isNetworkError(err: unknown): err is NetworkError {

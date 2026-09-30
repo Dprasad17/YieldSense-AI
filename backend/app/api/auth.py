@@ -1,126 +1,123 @@
-from fastapi import APIRouter, HTTPException, Depends, status
-from pydantic import BaseModel, EmailStr
-import json
-import os
-from backend.app.core.security import (
-    create_access_token,
-    get_password_hash,
-    verify_password,
-    require_user
-)
+from typing import Literal
 
-router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
-DB_FILE = os.path.join(os.path.dirname(__file__), "users_db.json")
+from backend.app.core.config import settings
+from backend.app.core.errors import ERROR_RESPONSES, RATE_LIMIT_RESPONSE, AppError
+from backend.app.core.ratelimit import login_limiter
+from backend.app.core.security import BCRYPT_MAX_BYTES, create_access_token, hash_password, require_user, verify_password
+from backend.app.services.users import get_user, upsert_user
 
-# Roles a user may pick for themselves at registration. Admin is granted by an admin only.
-SELF_REGISTER_ROLES = {"Farmer", "Agronomist"}
+router = APIRouter(prefix="/api/auth", tags=["Authentication"], responses=ERROR_RESPONSES)
 
-DEMO_USERS = {
-    "admin": ("admin123", "Admin", "admin@yieldsense.ai", "System Administrator"),
-    "farmer": ("farmer123", "Farmer", "farmer@yieldsense.ai", "Ramesh Kumar"),
-    "agronomist": ("agro123", "Agronomist", "agronomist@yieldsense.ai", "Dr. Sarah Jenkins"),
-}
-
-def _demo_user(username: str) -> dict:
-    password, role, email, full_name = DEMO_USERS[username]
-    return {
-        "username": username,
-        "email": email,
-        "hashed_password": get_password_hash(password),
-        "role": role,
-        "full_name": full_name
-    }
-
-def load_users():
-    users = {}
-    if os.path.exists(DB_FILE):
-        with open(DB_FILE, "r", encoding="utf-8") as f:
-            users = json.load(f)
-
-    # Seed any demo account that is missing, including into an existing DB
-    missing = [u for u in DEMO_USERS if u not in users]
-    if missing:
-        for username in missing:
-            users[username] = _demo_user(username)
-        save_users(users)
-    return users
-
-def save_users(users_data):
-    with open(DB_FILE, "w", encoding="utf-8") as f:
-        json.dump(users_data, f, indent=4)
 
 class LoginRequest(BaseModel):
-    username: str
-    password: str
+    username: str = Field(min_length=1, max_length=64)
+    password: str = Field(min_length=1, max_length=256)
+
 
 class RegisterRequest(BaseModel):
-    username: str
+    username: str = Field(min_length=3, max_length=32, pattern=r"^[A-Za-z0-9_.-]+$")
     email: EmailStr
-    password: str
-    role: str = "Farmer"
-    full_name: str = ""
+    password: str = Field(min_length=6)
+    # Admin is granted by an admin only.
+    role: Literal["Farmer", "Agronomist"] = "Farmer"
+    full_name: str = Field("", max_length=80)
+
+    @field_validator("password")
+    @classmethod
+    def fits_bcrypt(cls, v: str) -> str:
+        if len(v.encode("utf-8")) > BCRYPT_MAX_BYTES:
+            raise ValueError(f"must be at most {BCRYPT_MAX_BYTES} bytes")
+        return v
+
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    expires_in: int
     username: str
     role: str
     email: str
-    full_name: str = ""
+    full_name: str
+
+
+class SessionUser(BaseModel):
+    username: str
+    role: str
+    email: str
+    full_name: str
+
+
+class MeResponse(BaseModel):
+    status: str
+    user: SessionUser
+
 
 def _token_response(user: dict) -> dict:
-    token = create_access_token({
-        "sub": user["username"],
-        "role": user["role"],
-        "email": user["email"]
-    })
+    token = create_access_token({"sub": user["username"], "role": user["role"], "email": user["email"]})
     return {
         "access_token": token,
         "token_type": "bearer",
+        "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "username": user["username"],
         "role": user["role"],
         "email": user["email"],
-        "full_name": user.get("full_name") or user["username"]
+        "full_name": user.get("full_name") or user["username"],
     }
 
-@router.post("/login", response_model=TokenResponse)
-def login(request: LoginRequest):
-    users_db = load_users()
-    user = users_db.get(request.username.lower())
-    if not user or not verify_password(request.password, user["hashed_password"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password"
+
+def _client_ip(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+@router.post("/login", response_model=TokenResponse, responses=RATE_LIMIT_RESPONSE)
+def login(body: LoginRequest, request: Request):
+    ip, username = _client_ip(request), body.username.strip().lower()
+    wait = login_limiter.retry_after(ip, username)
+    if wait:
+        raise AppError(
+            429,
+            f"Too many sign-in attempts. Try again in {wait} seconds.",
+            code="rate_limited",
+            headers={"Retry-After": str(wait)},
         )
+
+    user = get_user(username)
+    scheme = (user or {}).get("hash_scheme", "bcrypt")
+    if not user or not verify_password(body.password, user["hashed_password"], scheme):
+        login_limiter.record_failure(ip, username)
+        raise AppError(401, "Incorrect username or password.", code="invalid_credentials")
+    if not user.get("active", True):
+        raise AppError(403, "This account has been deactivated. Contact an administrator.", code="account_inactive")
+
+    # Transparent migration: a legacy SHA-256 hash that just verified is replaced by bcrypt.
+    if scheme != "bcrypt":
+        user = {**user, "hashed_password": hash_password(body.password), "hash_scheme": "bcrypt"}
+        upsert_user(user)
+
+    login_limiter.reset(ip, username)
     return _token_response(user)
 
+
 @router.post("/register", response_model=TokenResponse)
-def register(request: RegisterRequest):
-    users_db = load_users()
-    if request.username.lower() in users_db:
-        raise HTTPException(status_code=400, detail="Username already registered")
-    if request.role not in SELF_REGISTER_ROLES:
-        raise HTTPException(status_code=400, detail=f"Role must be one of: {sorted(SELF_REGISTER_ROLES)}")
-
-    new_user = {
-        "username": request.username,
-        "email": request.email,
-        "hashed_password": get_password_hash(request.password),
-        "role": request.role,
-        "full_name": request.full_name or request.username
+def register(body: RegisterRequest):
+    if get_user(body.username):
+        raise AppError(409, "That username is already taken.", code="username_taken")
+    user = {
+        "username": body.username,
+        "email": body.email,
+        "hashed_password": hash_password(body.password),
+        "hash_scheme": "bcrypt",
+        "role": body.role,
+        "full_name": body.full_name or body.username,
+        "active": True,
     }
-    users_db[request.username.lower()] = new_user
-    save_users(users_db)
-    return _token_response(new_user)
+    upsert_user(user)
+    return _token_response(user)
 
-@router.get("/me")
-def read_current_user_profile(current_user: dict = Depends(require_user)):
-    stored = load_users().get(current_user["username"].lower(), {})
-    return {
-        "status": "authenticated",
-        "user": {
-            **current_user,
-            "full_name": stored.get("full_name") or current_user["username"]
-        }
-    }
+
+@router.get("/me", response_model=MeResponse)
+def read_current_user_profile(user: dict = Depends(require_user)):
+    return {"status": "authenticated", "user": user}

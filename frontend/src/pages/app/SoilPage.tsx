@@ -91,7 +91,7 @@ function PhGauge({ value, band }: { value: number; band: [number, number] | null
 export function SoilPage() {
   const { filters } = useGlobalFilters();
   const crop = filters.crop || DEFAULT_CROP;
-  const q = useSoil(crop);
+  const q = useSoil(crop, filters.region);
   const m = q.data?.soil_metrics as Record<string, number | string> | undefined;
   const g = q.data?.global_soil_averages as Record<string, number> | undefined;
 
@@ -103,10 +103,6 @@ export function SoilPage() {
   const ndvi = Number(m?.average_NDVI_index);
   const phStatus = statusOf(m?.pH_suitability_status as string);
   const fert = statusOf(m?.fertility_assessment as string);
-
-  const guidanceIcon =
-    phStatus.tone === 'success' ? CheckCircle2 : phStatus.tone === 'warning' ? TriangleAlert : XCircle;
-  const GuidanceIcon = guidanceIcon;
 
   return (
     <div className={s.page}>
@@ -213,7 +209,15 @@ export function SoilPage() {
                     <strong>Soil moisture</strong>
                     <span className={s.num}>{formatPercent(moist)}</span>
                   </div>
-                  <RangeBar label="Soil moisture" value={moist} min={0} max={100} format={v => `${Math.round(v)}%`} />
+                  <RangeBar
+                    label="Soil moisture"
+                    value={moist}
+                    min={0}
+                    max={100}
+                    format={v => `${Math.round(v)}%`}
+                    optimalLow={Number(m.optimal_moisture_low) || undefined}
+                    optimalHigh={Number(m.optimal_moisture_high) || undefined}
+                  />
                   {g?.soil_moisture_percent != null && (
                     <span className={s.small}>Global avg {formatPercent(g.soil_moisture_percent)}</span>
                   )}
@@ -240,7 +244,14 @@ export function SoilPage() {
                     <strong>Vegetation index (NDVI)</strong>
                     <span className={s.num}>{formatIndex(ndvi)}</span>
                   </div>
-                  <RangeBar label="NDVI" value={ndvi} min={0} max={1} />
+                  <RangeBar
+                    label="NDVI"
+                    value={ndvi}
+                    min={0}
+                    max={1}
+                    optimalLow={Number(m.optimal_ndvi_low) || undefined}
+                    optimalHigh={Number(m.optimal_ndvi_high) || undefined}
+                  />
                   {g?.NDVI_index != null && <span className={s.small}>Global avg {formatIndex(g.NDVI_index)}</span>}
                 </div>
               </div>
@@ -253,33 +264,69 @@ export function SoilPage() {
         <div className={s.s12}>
           <Card>
             <CardHeader title="Guidance" subtitle={`Soil management for ${q.data?.crop_type ?? crop}`} />
-            {m ? (
+            {q.data ? (
               <ul className={s.list}>
+                {q.data.guidance.map(g => {
+                  const Icon = g.status === 'optimal' ? CheckCircle2 : g.status === 'watch' ? TriangleAlert : XCircle;
+                  const color =
+                    g.status === 'optimal'
+                      ? 'var(--success)'
+                      : g.status === 'watch'
+                        ? 'var(--warning)'
+                        : 'var(--danger)';
+                  return (
+                    <li key={g.finding} className={s.listItem}>
+                      <Icon size={20} color={color} aria-hidden="true" style={{ flexShrink: 0 }} />
+                      <div>
+                        <strong>{g.finding}</strong>
+                        <p style={{ margin: 'var(--space-1) 0 0' }}>{g.action}</p>
+                        <p className={s.small} style={{ margin: 'var(--space-1) 0 0' }}>
+                          Why: {g.why}
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
                 <li className={s.listItem}>
-                  <GuidanceIcon
-                    size={20}
-                    color={`var(--${phStatus.tone === 'success' ? 'success' : phStatus.tone === 'warning' ? 'warning' : 'danger'})`}
-                    aria-hidden="true"
-                    style={{ flexShrink: 0 }}
-                  />
-                  <div>
-                    <strong>
-                      pH {formatIndex(ph)} · {String(m.pH_suitability_status)}
-                    </strong>
-                    <p style={{ margin: 'var(--space-1) 0 0' }}>{String(m.pH_recommendation)}</p>
-                  </div>
+                  <Info size={20} color="var(--info)" aria-hidden="true" style={{ flexShrink: 0 }} />
+                  <p className={s.muted} style={{ margin: 0 }}>
+                    {q.data.general_reference_note}
+                  </p>
                 </li>
-                {q.data?.general_reference_note && (
-                  <li className={s.listItem}>
-                    <Info size={20} color="var(--info)" aria-hidden="true" style={{ flexShrink: 0 }} />
-                    <p className={s.muted} style={{ margin: 0 }}>
-                      {q.data.general_reference_note}
-                    </p>
-                  </li>
-                )}
               </ul>
             ) : (
               <Skeleton height={80} />
+            )}
+          </Card>
+        </div>
+
+        <div className={s.s12}>
+          <Card>
+            <CardHeader
+              title="Crop suitability for this soil profile"
+              subtitle="Share of each crop’s optimal pH, moisture and NDVI bands that the current averages meet"
+            />
+            {q.data ? (
+              <div className={s.tileGrid}>
+                {q.data.crop_suitability.map(c => (
+                  <div key={c.crop} className={s.tile}>
+                    <div className={s.between}>
+                      <strong>{c.crop}</strong>
+                      <span className={s.num}>{formatIndex(c.suitability_index)}</span>
+                    </div>
+                    <span className={s.miniBar} style={{ width: '100%', margin: 'var(--space-2) 0' }}>
+                      <i style={{ width: `${c.suitability_index * 100}%`, background: 'var(--data-soil)' }} />
+                    </span>
+                    <ul style={{ margin: 0, paddingLeft: 'var(--space-4)' }} className={s.small}>
+                      {c.reasons.map(r => (
+                        <li key={r}>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Skeleton height={160} />
             )}
           </Card>
         </div>

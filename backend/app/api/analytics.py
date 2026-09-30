@@ -1,131 +1,225 @@
-from fastapi import APIRouter, Query, HTTPException
-from typing import Optional, Dict, Any, List
+import json
+import os
+from typing import Literal, Optional, cast
 
-router = APIRouter(prefix="/api/analytics", tags=["analytics"])
+import pandas as pd
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 
-@router.get("/metrics")
-def get_eda_metrics():
-    """
-    Returns EDA statistical summary metrics generated from datasets/processed/cleaned_crop_yield.csv
-    """
-    import os, json
-    json_path = os.path.join("datasets", "processed", "eda_summary_metrics.json")
-    if not os.path.exists(json_path):
-        raise HTTPException(status_code=404, detail="EDA summary metrics file not found.")
-    try:
-        with open(json_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to read EDA metrics: {str(e)}")
+from backend.app.api.schemas import context_filters
+from backend.app.core.errors import ERROR_RESPONSES, AppError
+from backend.app.core.security import require_agronomist, require_user
+from backend.app.services import dataset, insights
+from backend.app.services.dataset import Filters
 
-@router.get("/seasonal-trends")
-def get_seasonal_trends(crop_type: Optional[str] = Query(None, description="Optional crop filter")):
-    """
-    Returns multi-year seasonal yield performance trends (2020 - 2024 historical + 2025 projection)
-    """
-    yearly_data = [
-        {"year": 2020, "avg_yield_kg_ha": 3950, "rainfall_mm": 162.4, "temp_C": 23.8, "ndvi": 0.54},
-        {"year": 2021, "avg_yield_kg_ha": 4120, "rainfall_mm": 174.1, "temp_C": 24.2, "ndvi": 0.58},
-        {"year": 2022, "avg_yield_kg_ha": 4080, "rainfall_mm": 158.9, "temp_C": 25.1, "ndvi": 0.56},
-        {"year": 2023, "avg_yield_kg_ha": 4290, "rainfall_mm": 182.5, "temp_C": 24.0, "ndvi": 0.61},
-        {"year": 2024, "avg_yield_kg_ha": 4312, "rainfall_mm": 178.6, "temp_C": 24.5, "ndvi": 0.61},
-        {"year": 2025, "avg_yield_kg_ha": 4480, "rainfall_mm": 185.0, "temp_C": 24.1, "ndvi": 0.64, "is_projection": True}
-    ]
+router = APIRouter(prefix="/api/analytics", tags=["Analytics"], responses=ERROR_RESPONSES)
 
-    crop_yield_averages = {
-        "Rice": {"historical_avg": 4450, "trend_status": "Increasing (+4.2%)", "best_season": "Kharif / Monsoon"},
-        "Maize": {"historical_avg": 4390, "trend_status": "Stable (+2.1%)", "best_season": "Spring / Summer"},
-        "Cotton": {"historical_avg": 4320, "trend_status": "Optimal (+3.8%)", "best_season": "Late Spring"},
-        "Wheat": {"historical_avg": 4280, "trend_status": "Increasing (+5.0%)", "best_season": "Rabi / Winter"},
-        "Soybean": {"historical_avg": 4120, "trend_status": "Moderate (+1.5%)", "best_season": "Monsoon"}
-    }
+EDA_METRICS_PATH = os.path.join("datasets", "processed", "eda_summary_metrics.json")
 
-    if crop_type and crop_type in crop_yield_averages:
-        selected_crop_stats = crop_yield_averages[crop_type]
-    else:
-        selected_crop_stats = {"historical_avg": 4312, "trend_status": "Overall Positive (+3.5%)", "best_season": "Multi-Season"}
 
+class CropBreakdown(BaseModel):
+    count: int
+    avg_yield: float
+    std_yield: Optional[float] = None
+    min_yield: Optional[float] = None
+    max_yield: Optional[float] = None
+
+
+class EdaMetrics(BaseModel):
+    total_records: int
+    overall_stats: dict[str, dict[str, float]]
+    crop_breakdown: dict[str, CropBreakdown]
+    top_crop_by_yield: Optional[str] = None
+
+
+class RegionRank(BaseModel):
+    region: str
+    mean_yield_kg_ha: float
+    median_yield_kg_ha: float
+    record_count: int
+
+
+class RegionRanking(BaseModel):
+    scope: str
+    global_mean_kg_ha: float
+    total_regions: int
+    regions: list[RegionRank]
+
+
+class YearPoint(BaseModel):
+    year: int
+    mean_yield_kg_ha: float
+    median_yield_kg_ha: float
+    record_count: int
+
+
+class Forecast(BaseModel):
+    year: int
+    mean_kg_ha: float
+    p10_kg_ha: float
+    p90_kg_ha: float
+    basis_year: int
+    basis_records: int
+    method: str
+
+
+class SeasonalTrends(BaseModel):
+    granularity: Literal["year"]
+    scope: str
+    series: list[YearPoint]
+    missing_years: list[int]
+    forecast: Optional[Forecast]
+
+
+class FarmRow(BaseModel):
+    farm_id: str
+    region: str
+    crop_type: str
+    year: int
+    yield_kg_ha: float
+    soil_health_index: float
+    soil_pH: float
+    soil_moisture_percent: float
+    ndvi: float
+    risk_rating: Literal["Low", "Medium", "High"]
+    risk_flags: list[str]
+
+
+class FarmComparison(BaseModel):
+    scope: str
+    total_records: int
+    mean_yield_kg_ha: Optional[float]
+    sort: str
+    farms: list[FarmRow]
+    risk_method: str
+
+
+@router.get("/metrics", response_model=EdaMetrics)
+def get_eda_metrics(_user: dict = Depends(require_user)):
+    """EDA summary generated by scripts/run_eda.py."""
+    if not os.path.exists(EDA_METRICS_PATH):
+        raise AppError(404, "EDA summary metrics not found. Run scripts/run_eda.py.")
+    with open(EDA_METRICS_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+class HistogramBin(BaseModel):
+    start: float
+    end: float
+    count: int
+
+
+class ScatterPoint(BaseModel):
+    x: float
+    y: float
+
+
+class Regression(BaseModel):
+    slope: float
+    intercept: float
+    r: float
+    r2: float
+
+
+class BinnedMean(BaseModel):
+    start: float
+    end: float
+    mean_yield_kg_ha: float
+    count: int
+
+
+class EdaCharts(BaseModel):
+    scope: str
+    record_count: int
+    yield_histogram: list[HistogramBin]
+    yield_mean_kg_ha: float
+    yield_median_kg_ha: float
+    rainfall_vs_yield: list[ScatterPoint]
+    rainfall_regression: Regression
+    ph_bins: list[BinnedMean]
+    ph_optimal_low: Optional[float]
+    ph_optimal_high: Optional[float]
+
+
+@router.get("/eda-charts", response_model=EdaCharts)
+def get_eda_charts(
+    f: Filters = Depends(context_filters),
+    bins: int = Query(30, ge=5, le=100),
+    sample: int = Query(400, ge=50, le=2000),
+    _user: dict = Depends(require_agronomist),
+):
+    """Chart-ready EDA data computed from the dataset: yield histogram, rainfall-vs-yield sample
+    with a least-squares fit (r and R² over all filtered records), and mean yield by pH bin."""
+    import numpy as np
+
+    from backend.app.core.agronomy_rules import rules_for
+
+    df = dataset.filter_df(f)
+    if df.empty:
+        raise AppError(404, "No records match these filters.")
+    y = df["yield_kg_per_hectare"].to_numpy(dtype=float)
+    counts, edges = np.histogram(y, bins=bins)
+    rain = df["rainfall_mm"].to_numpy(dtype=float)
+    slope, intercept = np.polyfit(rain, y, 1)
+    r = float(np.corrcoef(rain, y)[0, 1]) if len(df) > 2 else 0.0
+    pts = df.sample(min(sample, len(df)), random_state=42)
+    ph_edges = np.round(np.arange(np.floor(df["soil_pH"].min() * 4) / 4, df["soil_pH"].max() + 0.25, 0.25), 2)
+    ph_groups = df.groupby(pd.cut(df["soil_pH"], ph_edges, include_lowest=True), observed=True)["yield_kg_per_hectare"]
+    crop_rules = rules_for(f.crop) if f.crop else None
+    rng = crop_rules.optimal["soil_pH"] if crop_rules else None
     return {
-        "status": "success",
-        "crop_filter": crop_type or "All Crops",
-        "yearly_trends": yearly_data,
-        "crop_insights": selected_crop_stats,
-        "data_source": "YieldSense AI Analytics Data Warehouse"
+        "scope": f.describe(),
+        "record_count": int(len(df)),
+        "yield_histogram": [
+            {"start": round(float(edges[i]), 1), "end": round(float(edges[i + 1]), 1), "count": int(c)} for i, c in enumerate(counts)
+        ],
+        "yield_mean_kg_ha": round(float(y.mean()), 2),
+        "yield_median_kg_ha": round(float(np.median(y)), 2),
+        "rainfall_vs_yield": [{"x": float(a), "y": float(b)} for a, b in zip(pts["rainfall_mm"], pts["yield_kg_per_hectare"])],
+        "rainfall_regression": {"slope": float(slope), "intercept": float(intercept), "r": round(r, 4), "r2": round(r * r, 4)},
+        "ph_bins": [
+            {"start": float(iv.left), "end": float(iv.right), "mean_yield_kg_ha": round(float(g.mean()), 2), "count": len(g)}
+            for iv, g in ((cast(pd.Interval, k), v) for k, v in ph_groups)
+            if len(g) >= 5
+        ],
+        "ph_optimal_low": rng.low if rng else None,
+        "ph_optimal_high": rng.high if rng else None,
     }
 
-@router.get("/farm-comparison")
-def get_farm_comparison():
-    """
-    Returns side-by-side performance comparison across multiple farm sectors/zones
-    """
-    farms = [
-        {
-            "sector_id": "Sector A1",
-            "name": "Iowa North Parcel",
-            "hectares": 380,
-            "crop_type": "Corn / Maize",
-            "avg_yield_kg_ha": 4520,
-            "soil_health_index": 0.78,
-            "soil_pH": 6.6,
-            "moisture_percent": 38.2,
-            "risk_rating": "Low",
-            "ndvi_index": 0.68
-        },
-        {
-            "sector_id": "Sector B4",
-            "name": "Iowa East Field",
-            "hectares": 520,
-            "crop_type": "Wheat",
-            "avg_yield_kg_ha": 4380,
-            "soil_health_index": 0.72,
-            "soil_pH": 6.4,
-            "moisture_percent": 34.5,
-            "risk_rating": "Medium",
-            "ndvi_index": 0.62
-        },
-        {
-            "sector_id": "Sector C2",
-            "name": "Central USA Delta",
-            "hectares": 290,
-            "crop_type": "Rice",
-            "avg_yield_kg_ha": 4610,
-            "soil_health_index": 0.81,
-            "soil_pH": 6.2,
-            "moisture_percent": 42.0,
-            "risk_rating": "Low",
-            "ndvi_index": 0.74
-        },
-        {
-            "sector_id": "Sector D5",
-            "name": "South USA Basin",
-            "hectares": 410,
-            "crop_type": "Cotton",
-            "avg_yield_kg_ha": 4210,
-            "soil_health_index": 0.65,
-            "soil_pH": 7.1,
-            "moisture_percent": 29.8,
-            "risk_rating": "High",
-            "ndvi_index": 0.54
-        },
-        {
-            "sector_id": "Sector E3",
-            "name": "East Africa Plateau",
-            "hectares": 350,
-            "crop_type": "Soybean",
-            "avg_yield_kg_ha": 4190,
-            "soil_health_index": 0.68,
-            "soil_pH": 6.8,
-            "moisture_percent": 32.1,
-            "risk_rating": "Low",
-            "ndvi_index": 0.59
-        }
-    ]
 
+@router.get("/regions", response_model=RegionRanking)
+def get_region_ranking(
+    crop: Optional[str] = Query(None),
+    limit: int = Query(10, ge=1, le=200),
+    _user: dict = Depends(require_user),
+):
+    crop_name = dataset.canonical(crop, "crop_type") if crop else None
+    if crop and not crop_name:
+        raise AppError(404, f"Unknown crop '{crop}'.")
+    ranking = dataset.region_ranking(crop_name)
+    df = dataset.filter_df(Filters.of(crop=crop_name))
     return {
-        "status": "success",
-        "total_farms_compared": len(farms),
-        "total_hectares_monitored": sum(int(f["hectares"]) for f in farms if isinstance(f["hectares"], (int, float))),
-        "highest_yield_sector": "Sector C2 (4,610 kg/ha)",
-        "farm_comparisons": farms
+        "scope": f"{crop_name or 'All crops'} · mean yield by region",
+        "global_mean_kg_ha": round(float(df["yield_kg_per_hectare"].mean()), 2),
+        "total_regions": len(ranking),
+        "regions": ranking[:limit],
     }
+
+
+@router.get("/seasonal-trends", response_model=SeasonalTrends)
+def get_seasonal_trends(f: Filters = Depends(context_filters), _user: dict = Depends(require_user)):
+    """Yearly yield (sowing years 1990–2013) plus a model-based expectation with a P10–P90 band.
+    All sowing dates in the dataset fall on 15 January, so month/season grouping is not possible."""
+    if dataset.filter_df(f).empty:
+        raise AppError(404, "No records match these filters.")
+    return insights.seasonal_trends(f)
+
+
+@router.get("/farm-comparison", response_model=FarmComparison)
+def get_farm_comparison(
+    f: Filters = Depends(context_filters),
+    limit: int = Query(10, ge=1, le=100),
+    sort: Literal["yield_desc", "yield_asc"] = Query("yield_desc"),
+    _user: dict = Depends(require_user),
+):
+    return insights.farm_comparison(f, limit, sort)

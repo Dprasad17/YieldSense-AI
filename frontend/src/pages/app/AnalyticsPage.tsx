@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { ChevronDown, Download, TrendingUp } from 'lucide-react';
+import { ChevronDown, Download, Printer, TrendingUp } from 'lucide-react';
 import { errorMessage } from '../../api/client';
+import type { FarmComparison } from '../../api/types';
 import { ChartCard, TrendChart, type TrendPoint } from '../../components/charts';
 import {
   Badge,
@@ -14,106 +15,107 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
-  FormField,
   PageHeader,
-  Select,
+  SegmentedControl,
   Skeleton,
   StatCard,
   type Column,
 } from '../../components/ui';
 import { ratingTone, sortRows } from '../../components/ui/helpers';
-import { ErrorState, SampleDataPill } from '../../components/ui/States';
-import { useFarmComparison, useReportExport, useSeasonalTrends } from '../../hooks/queries';
-import { formatDeltaPercent, formatIndex, formatPercent, formatYield, formatYieldWithUnit } from '../../lib/format';
+import { ErrorState } from '../../components/ui/States';
+import { contextQuery, useFarmComparison, useReportExport, useSeasonalTrends } from '../../hooks/queries';
+import {
+  formatCount,
+  formatDeltaPercent,
+  formatIndex,
+  formatPercent,
+  formatYield,
+  formatYieldWithUnit,
+} from '../../lib/format';
 import { useGlobalFilters } from '../../store/filters';
 import { usePreferences } from '../../store/preferences';
 import s from './app.module.css';
 
-// Crops the seasonal-trends endpoint has specific figures for; others fall back to all crops.
-const TREND_CROPS = ['Rice', 'Maize', 'Cotton', 'Wheat', 'Soybean'];
+type Farm = FarmComparison['farms'][number];
+type Sort = 'yield_desc' | 'yield_asc';
 
-interface Farm {
-  sector_id: string;
-  name: string;
-  hectares: number;
-  crop_type: string;
-  avg_yield_kg_ha: number;
-  soil_health_index: number;
-  soil_pH: number;
-  moisture_percent: number;
-  risk_rating: string;
-  ndvi_index: number;
+function download(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export function AnalyticsPage() {
   const { unit } = usePreferences();
-  const { filters, setFilters } = useGlobalFilters();
-  const trendCrop = TREND_CROPS.includes(filters.crop) ? filters.crop : '';
-  const trends = useSeasonalTrends(trendCrop);
-  const farmsQ = useFarmComparison();
+  const { filters } = useGlobalFilters();
+  const ctx = contextQuery(filters);
+  const [order, setOrder] = useState<Sort>('yield_desc');
+  const trends = useSeasonalTrends(ctx);
+  const farmsQ = useFarmComparison({ ...ctx, limit: 25, sort: order });
   const exportM = useReportExport();
-  const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>({ key: 'yield', dir: 'desc' });
+  const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null);
   const [selected, setSelected] = useState<Farm | null>(null);
 
-  const series = useMemo(
-    () => (trends.data?.yearly_trends ?? []) as { year: number; avg_yield_kg_ha: number; is_projection?: boolean }[],
-    [trends.data],
-  );
-  const actual = series.filter(p => !p.is_projection);
-  const projection = series.find(p => p.is_projection);
-  const first = actual[0];
-  const last = actual[actual.length - 1];
-  const prev = actual[actual.length - 2];
+  const series = useMemo(() => trends.data?.series ?? [], [trends.data]);
+  const forecast = trends.data?.forecast;
+  const first = series[0];
+  const last = series[series.length - 1];
+  const prev = series[series.length - 2];
   const years = first && last ? last.year - first.year : 0;
   const cagr =
-    first && last && years > 0 ? (Math.pow(last.avg_yield_kg_ha / first.avg_yield_kg_ha, 1 / years) - 1) * 100 : null;
-  const yoy = last && prev ? ((last.avg_yield_kg_ha - prev.avg_yield_kg_ha) / prev.avg_yield_kg_ha) * 100 : null;
+    first && last && years > 0 ? (Math.pow(last.mean_yield_kg_ha / first.mean_yield_kg_ha, 1 / years) - 1) * 100 : null;
+  const yoy = last && prev ? ((last.mean_yield_kg_ha - prev.mean_yield_kg_ha) / prev.mean_yield_kg_ha) * 100 : null;
 
-  const chart: TrendPoint[] = series.map(p =>
-    p.is_projection
-      ? { x: p.year, forecast: p.avg_yield_kg_ha }
-      : { x: p.year, actual: p.avg_yield_kg_ha, forecast: p === last && projection ? p.avg_yield_kg_ha : undefined },
-  );
+  const chart: TrendPoint[] = [
+    ...series.map(p => ({
+      x: p.year,
+      actual: p.mean_yield_kg_ha,
+      forecast: forecast && p === last ? p.mean_yield_kg_ha : undefined,
+    })),
+    ...(forecast
+      ? [
+          {
+            x: forecast.year,
+            forecast: forecast.mean_kg_ha,
+            band: [forecast.p10_kg_ha, forecast.p90_kg_ha] as [number, number],
+          },
+        ]
+      : []),
+  ];
 
-  const farms = (farmsQ.data?.farm_comparisons ?? []) as Farm[];
-  const best = farms.length ? [...farms].sort((a, b) => b.avg_yield_kg_ha - a.avg_yield_kg_ha)[0] : null;
-  const riskOrder = { high: 3, medium: 2, low: 1 } as Record<string, number>;
+  const farms = farmsQ.data?.farms ?? [];
+  const riskOrder: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
   const riskiest = farms.length
     ? [...farms].sort(
-        (a, b) =>
-          (riskOrder[b.risk_rating.toLowerCase()] ?? 0) - (riskOrder[a.risk_rating.toLowerCase()] ?? 0) ||
-          a.soil_health_index - b.soil_health_index,
+        (a, b) => riskOrder[b.risk_rating] - riskOrder[a.risk_rating] || a.soil_health_index - b.soil_health_index,
       )[0]
     : null;
 
   const columns: Column<Farm>[] = [
     {
       key: 'id',
-      header: 'Sector',
-      render: f => <strong>{f.sector_id}</strong>,
-      sortValue: f => f.sector_id,
+      header: 'Record',
+      render: f => <strong className={s.num}>{f.farm_id}</strong>,
+      sortValue: f => f.farm_id,
       sticky: true,
     },
-    { key: 'name', header: 'Parcel', render: f => f.name, sortValue: f => f.name },
+    { key: 'region', header: 'Region', render: f => f.region, sortValue: f => f.region },
     {
       key: 'crop',
       header: 'Crop',
       render: f => <Badge tone="success">{f.crop_type}</Badge>,
       sortValue: f => f.crop_type,
     },
-    {
-      key: 'ha',
-      header: 'Area (ha)',
-      align: 'right',
-      render: f => f.hectares.toLocaleString('en-US'),
-      sortValue: f => f.hectares,
-    },
+    { key: 'year', header: 'Year', align: 'right', render: f => f.year, sortValue: f => f.year },
     {
       key: 'yield',
-      header: `Avg yield (${unit})`,
+      header: `Yield (${unit})`,
       align: 'right',
-      render: f => formatYield(f.avg_yield_kg_ha, unit),
-      sortValue: f => f.avg_yield_kg_ha,
+      render: f => formatYield(f.yield_kg_ha, unit),
+      sortValue: f => f.yield_kg_ha,
     },
     {
       key: 'health',
@@ -127,31 +129,30 @@ export function AnalyticsPage() {
       key: 'moist',
       header: 'Moisture (%)',
       align: 'right',
-      render: f => formatPercent(f.moisture_percent).replace('%', ''),
-      sortValue: f => f.moisture_percent,
+      render: f => formatPercent(f.soil_moisture_percent).replace('%', ''),
+      sortValue: f => f.soil_moisture_percent,
     },
     {
       key: 'risk',
       header: 'Risk',
-      render: f => <Badge tone={ratingTone(f.risk_rating, false)}>{f.risk_rating}</Badge>,
-      sortValue: f => riskOrder[f.risk_rating.toLowerCase()] ?? 0,
+      render: f => (
+        <Badge tone={ratingTone(f.risk_rating, false)} title={f.risk_flags.join(', ') || 'No flags'}>
+          {f.risk_rating}
+        </Badge>
+      ),
+      sortValue: f => riskOrder[f.risk_rating],
     },
   ];
 
-  const doExport = async (format: 'csv' | 'json') => {
+  const doExport = async (format: 'csv' | 'xlsx') => {
     try {
-      const blob = await exportM.mutateAsync({
+      const { blob, filename } = await exportM.mutateAsync({
         format,
-        crop_type: filters.crop || null,
-        region: filters.region || null,
+        crop_type: ctx.crop ?? null,
+        region: ctx.region ?? null,
       });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `yieldsense-report${filters.crop ? `-${filters.crop.toLowerCase()}` : ''}.${format}`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success('Report downloaded');
+      download(blob, filename ?? `yieldsense-report.${format}`);
+      toast.success('Export downloaded');
     } catch (err) {
       toast.error(`Export failed: ${errorMessage(err)}`);
     }
@@ -161,92 +162,78 @@ export function AnalyticsPage() {
     <div className={s.page}>
       <PageHeader
         title="Analytics & Reports"
-        description="Multi-year yield trends and a performance comparison across farm sectors."
+        description="Yield by year with the model’s expectation, and the best and worst records for your context."
         meta={
-          <SampleDataPill reason="The trends and sector comparison endpoints currently return fixed example data." />
+          <Badge tone="info">
+            {trends.data?.scope ?? `${filters.region || 'All regions'} · ${filters.crop || 'All crops'}`}
+          </Badge>
         }
         actions={
-          <div className={s.row} style={{ gap: 0 }}>
+          <>
             <Button
-              variant="primary"
-              icon={Download}
-              onClick={() => doExport('csv')}
-              loading={exportM.isPending}
-              style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+              icon={Printer}
+              onClick={() => window.open(`/report/productivity${window.location.search}`, '_blank', 'noopener')}
             >
-              Export CSV
+              Print report
             </Button>
-            <DropdownMenu>
-              <DropdownTrigger asChild>
-                <Button
-                  variant="primary"
-                  aria-label="More export formats"
-                  style={{
-                    borderTopLeftRadius: 0,
-                    borderBottomLeftRadius: 0,
-                    borderLeft: '1px solid var(--primary-hover)',
-                    padding: '0 var(--space-2)',
-                  }}
-                >
-                  <ChevronDown size={16} aria-hidden="true" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownContent>
-                <DropdownItem onSelect={() => doExport('csv')}>CSV</DropdownItem>
-                <DropdownItem onSelect={() => doExport('json')}>JSON</DropdownItem>
-              </DropdownContent>
-            </DropdownMenu>
-          </div>
+            <div className={s.row} style={{ gap: 0 }}>
+              <Button
+                variant="primary"
+                icon={Download}
+                onClick={() => doExport('csv')}
+                loading={exportM.isPending}
+                style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+              >
+                Export CSV
+              </Button>
+              <DropdownMenu>
+                <DropdownTrigger asChild>
+                  <Button
+                    variant="primary"
+                    aria-label="More export formats"
+                    style={{
+                      borderTopLeftRadius: 0,
+                      borderBottomLeftRadius: 0,
+                      borderLeft: '1px solid var(--primary-hover)',
+                      padding: '0 var(--space-2)',
+                    }}
+                  >
+                    <ChevronDown size={16} aria-hidden="true" />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownContent>
+                  <DropdownItem onSelect={() => doExport('csv')}>CSV (filtered records)</DropdownItem>
+                  <DropdownItem onSelect={() => doExport('xlsx')}>Excel (filtered records)</DropdownItem>
+                </DropdownContent>
+              </DropdownMenu>
+            </div>
+          </>
         }
       />
 
-      <Card>
-        <div className={s.row}>
-          <div style={{ minWidth: 220 }}>
-            <FormField
-              label="Crop"
-              htmlFor="an-crop"
-              hint={
-                filters.crop && !trendCrop ? 'Trends aren’t available for this crop; showing all crops.' : undefined
-              }
-            >
-              <Select
-                id="an-crop"
-                value={filters.crop}
-                onChange={e => setFilters({ crop: e.target.value })}
-                options={TREND_CROPS}
-                placeholder="All crops"
-              />
-            </FormField>
-          </div>
-          <span className={s.muted}>Region filter applies to exports.</span>
-        </div>
-      </Card>
-
       <div className={s.kpis}>
         <StatCard
-          label="Latest yield"
-          value={last ? formatYield(last.avg_yield_kg_ha, unit) : '—'}
+          label="Latest year"
+          value={last ? formatYield(last.mean_yield_kg_ha, unit) : '—'}
           unit={unit}
-          subtitle={last ? `${last.year} average` : undefined}
+          subtitle={last ? `${last.year} mean · ${formatCount(last.record_count)} records` : undefined}
           icon={TrendingUp}
           accent="var(--data-vegetation)"
         />
         <StatCard
-          label="Year-over-year"
+          label="Year over year"
           value={yoy != null ? formatDeltaPercent(yoy) : '—'}
           subtitle={last && prev ? `${prev.year} → ${last.year}` : undefined}
-          delta={null}
         />
         <StatCard
-          label="Best sector"
-          value={best?.sector_id ?? '—'}
-          subtitle={best ? `${best.name} · ${formatYieldWithUnit(best.avg_yield_kg_ha, unit)}` : undefined}
+          label="Growth per year"
+          value={cagr != null ? formatDeltaPercent(cagr) : '—'}
+          subtitle={first && last ? `CAGR ${first.year}–${last.year}` : undefined}
         />
         <StatCard
-          label="Highest risk"
-          value={riskiest?.sector_id ?? '—'}
-          subtitle={riskiest ? `${riskiest.name} · ${riskiest.risk_rating} risk` : undefined}
+          label="Highest risk record"
+          value={riskiest?.farm_id ?? '—'}
+          subtitle={riskiest ? `${riskiest.risk_rating} · ${riskiest.risk_flags.join(', ') || 'no flags'}` : undefined}
         />
       </div>
 
@@ -254,24 +241,23 @@ export function AnalyticsPage() {
         <ErrorState error={trends.error} onRetry={() => trends.refetch()} />
       ) : (
         <ChartCard
-          title={
-            first && last ? `Yield trajectory (${first.year}–${projection?.year ?? last.year})` : 'Yield trajectory'
-          }
-          subtitle={`Average yield per year${projection ? ', with the projected next year dashed' : ''} · ${trends.data?.crop_filter ?? 'All crops'}`}
+          title={first && last ? `Yield by year (${first.year}–${last.year})` : 'Yield by year'}
+          subtitle="Mean yield per sowing year; the dashed point is the model’s expectation under the latest year’s conditions, with a P10–P90 band"
+          info={forecast?.method}
           summary={
             first && last
-              ? `Yield moved from ${formatYieldWithUnit(first.avg_yield_kg_ha, unit)} in ${first.year} to ${formatYieldWithUnit(last.avg_yield_kg_ha, unit)} in ${last.year}.`
+              ? `Mean yield moved from ${formatYieldWithUnit(first.mean_yield_kg_ha, unit)} in ${first.year} to ${formatYieldWithUnit(last.mean_yield_kg_ha, unit)} in ${last.year}.`
               : 'Loading.'
           }
           insight={
-            cagr != null
-              ? `Compound annual growth of ${formatDeltaPercent(cagr)} between ${first?.year} and ${last?.year}.`
+            forecast
+              ? `Model expectation ${formatYieldWithUnit(forecast.mean_kg_ha, unit)} (P10–P90 ${formatYield(forecast.p10_kg_ha, unit)}–${formatYield(forecast.p90_kg_ha, unit)}).${trends.data?.missing_years.length ? ` No records for ${trends.data.missing_years.join(', ')}.` : ''}`
               : undefined
           }
           actions={cagr != null ? <Badge tone="model">CAGR {formatDeltaPercent(cagr)}</Badge> : undefined}
           legend={[
             { label: 'Actual', color: 'data-vegetation' },
-            { label: 'Projection', color: 'data-model' },
+            { label: 'Model expectation', color: 'data-model' },
           ]}
           height={320}
         >
@@ -283,7 +269,7 @@ export function AnalyticsPage() {
                 height={h}
                 fx={v => String(v)}
                 fy={v => formatYield(v, unit)}
-                forecastLabel="Projection"
+                forecastLabel="Model expectation"
               />
             ) : (
               <Skeleton height={h} />
@@ -294,53 +280,72 @@ export function AnalyticsPage() {
 
       <Card>
         <CardHeader
-          title="Farm performance matrix"
-          subtitle={`${farms.length || '—'} sectors · select a row for details`}
-          actions={<SampleDataPill />}
+          title={order === 'yield_desc' ? 'Top records by yield' : 'Lowest records by yield'}
+          subtitle={
+            farmsQ.data
+              ? `${farmsQ.data.scope} · context mean ${formatYieldWithUnit(farmsQ.data.mean_yield_kg_ha, unit)} · select a row for details`
+              : undefined
+          }
+          info={farmsQ.data?.risk_method}
+          actions={
+            <SegmentedControl<Sort>
+              label="Order"
+              value={order}
+              onChange={setOrder}
+              options={[
+                { value: 'yield_desc', label: 'Top' },
+                { value: 'yield_asc', label: 'Bottom' },
+              ]}
+            />
+          }
         />
         {farmsQ.isError ? (
           <ErrorState error={farmsQ.error} onRetry={() => farmsQ.refetch()} />
-        ) : farms.length ? (
+        ) : farmsQ.isPending ? (
+          <Skeleton height={260} />
+        ) : (
           <DataTable
-            caption="Farm performance by sector"
+            caption="Record comparison"
             columns={columns}
             rows={sortRows(farms, columns, sort)}
-            rowKey={f => f.sector_id}
+            rowKey={f => f.farm_id}
             sort={sort}
             onSortChange={setSort}
             onRowClick={setSelected}
-            maxHeight={480}
+            maxHeight={520}
           />
-        ) : (
-          <Skeleton height={240} />
         )}
       </Card>
 
       <Drawer
         open={!!selected}
         onOpenChange={v => !v && setSelected(null)}
-        title={selected ? `${selected.sector_id} · ${selected.name}` : ''}
+        title={selected ? `Record ${selected.farm_id}` : ''}
       >
         {selected && (
           <dl className={s.dl}>
+            <dt>Region</dt>
+            <dd>{selected.region}</dd>
             <dt>Crop</dt>
             <dd>{selected.crop_type}</dd>
-            <dt>Area</dt>
-            <dd>{selected.hectares.toLocaleString('en-US')} ha</dd>
-            <dt>Average yield</dt>
-            <dd>{formatYieldWithUnit(selected.avg_yield_kg_ha, unit)}</dd>
+            <dt>Year</dt>
+            <dd>{selected.year}</dd>
+            <dt>Yield</dt>
+            <dd>{formatYieldWithUnit(selected.yield_kg_ha, unit)}</dd>
             <dt>Soil health index</dt>
             <dd>{formatIndex(selected.soil_health_index)}</dd>
             <dt>Soil pH</dt>
             <dd>{formatIndex(selected.soil_pH)}</dd>
-            <dt>Moisture</dt>
-            <dd>{formatPercent(selected.moisture_percent)}</dd>
+            <dt>Soil moisture</dt>
+            <dd>{formatPercent(selected.soil_moisture_percent)}</dd>
             <dt>NDVI</dt>
-            <dd>{formatIndex(selected.ndvi_index)}</dd>
-            <dt>Risk rating</dt>
+            <dd>{formatIndex(selected.ndvi)}</dd>
+            <dt>Risk</dt>
             <dd>
               <Badge tone={ratingTone(selected.risk_rating, false)}>{selected.risk_rating}</Badge>
             </dd>
+            <dt>Risk flags</dt>
+            <dd>{selected.risk_flags.join(', ') || 'None'}</dd>
           </dl>
         )}
       </Drawer>

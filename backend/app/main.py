@@ -1,54 +1,80 @@
+import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
 
-from backend.app.core.config import settings
+from backend.app.api.analytics import router as analytics_router
 from backend.app.api.auth import router as auth_router
 from backend.app.api.data import router as data_router
-from backend.app.api.analytics import router as analytics_router
-from backend.app.api.predictions import router as predictions_router
-from backend.app.api.weather import router as weather_router
-from backend.app.api.soil import router as soil_router
+from backend.app.api.domain import (
+    admin_router,
+    farms_router,
+    notifications_router,
+    risk_router,
+    soil_router,
+    weather_router,
+)
+from backend.app.api.predictions import history_router, router as predictions_router
+from backend.app.api.public import router as public_router
+from backend.app.api.recommendations import router as recommendations_router
 from backend.app.api.reports import router as reports_router
+from backend.app.core.config import settings
+from backend.app.core.errors import install_error_handlers
+from backend.app.services.dataset import get_df
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    get_df()  # load the CSV once at startup
+    yield
+
 
 app = FastAPI(
+    lifespan=lifespan,
     title=settings.PROJECT_NAME,
     version=settings.PROJECT_VERSION,
-    description="YieldSense AI - Crop Yield Prediction & Agricultural Productivity Intelligence Platform API"
+    description="YieldSense AI - Crop Yield Prediction & Agricultural Productivity Intelligence Platform API",
 )
 
-# CORS Configuration
+# Auth is a Bearer header, not cookies, so credentials are not needed cross-origin.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
+    expose_headers=["Content-Disposition", "X-Total-Records", "X-Truncated", "Retry-After"],
 )
+install_error_handlers(app)
 
-# Mount Static EDA Plots Directory
 plots_dir = "eda_plots"
 os.makedirs(plots_dir, exist_ok=True)
 app.mount("/eda_plots", StaticFiles(directory=plots_dir), name="eda_plots")
 
-# Include API Routers (Milestone 1 + Milestone 2 + Milestone 3)
-app.include_router(auth_router)
-app.include_router(data_router)
-app.include_router(analytics_router)
-app.include_router(predictions_router)
-app.include_router(weather_router)
-app.include_router(soil_router)
-app.include_router(reports_router)
+for r in (
+    public_router,
+    auth_router,
+    data_router,
+    analytics_router,
+    predictions_router,
+    history_router,
+    recommendations_router,
+    weather_router,
+    soil_router,
+    reports_router,
+    farms_router,
+    risk_router,
+    notifications_router,
+    admin_router,
+):
+    app.include_router(r)
+
 
 @app.get("/")
 def root():
-    return {
-        "status": "online",
-        "platform": settings.PROJECT_NAME,
-        "version": settings.PROJECT_VERSION,
-        "documentation": "/docs"
-    }
+    return {"status": "online", "platform": settings.PROJECT_NAME, "version": settings.PROJECT_VERSION, "documentation": "/docs"}
+
 
 @app.get("/api/health")
 def health_check():

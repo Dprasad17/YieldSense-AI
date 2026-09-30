@@ -86,3 +86,13 @@ export function clearSession() {
 export function getToken(): string | null {
   return get(TOKEN_KEY);
 }
+
+/** Expiry of a JWT in epoch ms, or null if the token has no readable `exp`. */
+export function tokenExpiry(token: string): number | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}

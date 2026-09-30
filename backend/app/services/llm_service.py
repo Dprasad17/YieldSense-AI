@@ -12,6 +12,7 @@ class LLMService:
     def __init__(self):
         self._load_env_file()
         self.groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
+        self.groq_model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant").strip()
         self.gemini_api_key = os.getenv("GEMINI_API_KEY", "").strip()
 
     def _load_env_file(self):
@@ -23,7 +24,7 @@ class LLMService:
                         line = line.strip()
                         if line and not line.startswith("#") and "=" in line:
                             k, v = line.split("=", 1)
-                            os.environ[k.strip()] = v.strip()
+                            os.environ.setdefault(k.strip(), v.strip())
             except Exception as e:
                 print(f"[LLMService] Could not read .env file: {e}")
 
@@ -60,7 +61,7 @@ class LLMService:
         }
 
         body = {
-            "model": "groq/compound-mini",
+            "model": self.groq_model,
             "messages": [
                 {"role": "system", "content": "You are YieldSense AI, an expert agricultural scientist assistant. Respond strictly in JSON format with keys: ai_insights, risk_alerts, recommendations."},
                 {"role": "user", "content": prompt}
@@ -74,7 +75,7 @@ class LLMService:
             res_data = json.loads(response.read().decode("utf-8"))
             content = res_data["choices"][0]["message"]["content"]
             parsed = json.loads(content)
-            parsed["llm_provider"] = "Groq LLM (groq/compound-mini)"
+            parsed["llm_provider"] = f"Groq · {self.groq_model}"
             return parsed
 
     def _call_gemini_api(self, payload: Dict[str, Any], prediction_result: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -123,73 +124,119 @@ Provide a JSON object with:
 """
 
     def _generate_expert_rule_insights(self, payload: Dict[str, Any], prediction_result: Dict[str, Any]) -> Dict[str, Any]:
+        """Deterministic insights. Thresholds come from core/agronomy_rules (derived from the dataset)."""
+        from backend.app.core.agronomy_rules import rules_for
+
         crop = str(payload.get("crop_type", "Crop"))
-        region = str(payload.get("region", "Selected Region"))
+        region = str(payload.get("region", "the selected region"))
         yield_val = float(prediction_result.get("predicted_yield_kg_ha", 0.0))
         prod_rating = str(prediction_result.get("productivity_rating", "Medium"))
-        
-        disease = str(payload.get("crop_disease_status", "None"))
-        ph = float(payload.get("soil_pH", 6.5))
-        temp = float(payload.get("temperature_C", 25.0))
-        moisture = float(payload.get("soil_moisture_%", 40.0))
-        rainfall = float(payload.get("rainfall_mm", 150.0))
-        ndvi = float(payload.get("NDVI_index", 0.6))
-        fertilizer = str(payload.get("fertilizer_type", "NPK"))
-        irrigation = str(payload.get("irrigation_type", "Drip"))
+        rules = rules_for(crop)
 
         risk_alerts: List[str] = []
         recommendations: List[str] = []
 
-        # 1. Pathogen & Disease Diagnostics
-        if disease.lower() not in ["none", "unknown"]:
-            risk_alerts.append(f"HIGH PATHOGEN RISK: {disease} infection detected in {crop} field. Urgent intervention needed.")
-            recommendations.append(f"Apply targeted bio-fungicide for {disease} and trim dense foliage to increase airflow.")
-        else:
-            recommendations.append(f"Maintain routine bio-protective spraying for {crop} to preserve disease-free state.")
+        disease = str(payload.get("crop_disease_status", "None"))
+        if disease.lower() not in ("none", "unknown", ""):
+            risk_alerts.append(f"{disease} disease recorded for this {crop} field.")
+            recommendations.append(f"Scout the field and confirm the pathogen before choosing a {disease.lower()}-stage treatment.")
 
-        # 2. Temperature & Climate Diagnostics
-        if temp > 30.0:
-            risk_alerts.append(f"HEAT STRESS ALERT: High ambient temperature ({temp}°C) exceeds optimal growing range for {crop}.")
-            recommendations.append("Increase early morning drip irrigation frequency to regulate root zone temperature.")
-        elif temp < 16.0:
-            risk_alerts.append(f"COLD STRESS ALERT: Sub-optimal temperature ({temp}°C) slows canopy photosynthetic rate.")
-            recommendations.append("Apply organic mulching to insulate root zone soil temperature.")
-        else:
-            recommendations.append(f"Temperature of {temp}°C is within optimal physiological thermal range for {crop}.")
+        if rules:
+            checks = [
+                ("temperature_C", "Temperature", "°C", "Plan heat-tolerant varieties or shift sowing to a cooler window.", "Protect the root zone from cold with mulching."),
+                ("soil_pH", "Soil pH", "", "Apply agricultural lime to raise pH toward the optimal band.", "Incorporate elemental sulfur or gypsum to lower pH."),
+                ("soil_moisture_%", "Soil moisture", "%", "Schedule irrigation to lift root-zone moisture into the optimal band.", "Improve drainage; moisture is above the optimal band."),
+                ("NDVI_index", "NDVI", "", "Check nutrition and canopy health; vigour is below top-yield fields.", None),
+            ]
+            for feature, label, unit, low_action, high_action in checks:
+                value = payload.get(feature)
+                if value is None:
+                    continue
+                rng = rules.optimal[feature]
+                value = float(value)
+                band_text = f"{rng.low:g}–{rng.high:g}{unit}"
+                if value < rng.low:
+                    risk_alerts.append(f"{label} {value:g}{unit} is below the {crop} optimal band ({band_text}).")
+                    recommendations.append(low_action)
+                elif value > rng.high and high_action:
+                    risk_alerts.append(f"{label} {value:g}{unit} is above the {crop} optimal band ({band_text}).")
+                    recommendations.append(high_action)
 
-        # 3. Soil pH Diagnostics
-        if ph < 5.8:
-            risk_alerts.append(f"SOIL ACIDITY WARNING: Soil pH ({ph}) reduces nitrogen and phosphorus bioavailability.")
-            recommendations.append("Apply agricultural lime (calcium carbonate) at 400-500 kg/ha to buffer soil pH toward 6.5.")
-        elif ph > 7.6:
-            risk_alerts.append(f"SOIL ALKALINITY WARNING: Soil pH ({ph}) restricts micronutrient (iron/zinc) uptake.")
-            recommendations.append("Incorporate elemental sulfur or gypsum to reduce soil alkalinity.")
-        else:
-            recommendations.append(f"Soil pH ({ph}) is in the optimal nutrient absorption band for {crop}.")
-
-        # 4. Irrigation & Hydrological Balance
-        if moisture < 35.0 or rainfall < 100.0:
-            risk_alerts.append(f"MOISTURE DEFICIT: Soil moisture ({moisture}%) and rainfall ({rainfall}mm) are below root demand.")
-            recommendations.append(f"Schedule a 25mm {irrigation} cycle to raise soil moisture index above 50%.")
-        else:
-            recommendations.append(f"Soil moisture ({moisture}%) with {irrigation} irrigation supports strong transpiration.")
-
-        # 5. Canopy Vigor & Fertilizer Guidance
-        if ndvi > 0.65:
-            summary_insight = f"{crop} in {region} shows excellent canopy vigor (NDVI: {ndvi}) with predicted yield of {yield_val:,.0f} kg/ha ({prod_rating} Productivity)."
-            recommendations.append(f"Optimize final split-application of {fertilizer} to maximize grain filling and weight.")
-        else:
-            summary_insight = f"{crop} in {region} shows moderate vegetative density (NDVI: {ndvi}) with predicted yield of {yield_val:,.0f} kg/ha."
-            recommendations.append(f"Boost foliar nitrogen application and monitor canopy expansion weekly.")
-
+        summary_insight = (
+            f"{crop} in {region}: predicted {yield_val:,.0f} kg/ha, which is {prod_rating.lower()} "
+            f"productivity for {crop} in this dataset."
+        )
         if not risk_alerts:
-            risk_alerts.append("No critical agronomic risk flags detected. Environmental parameters remain within optimal bounds.")
+            risk_alerts.append("All checked inputs are within the optimal bands of top-yielding records for this crop.")
+        if not recommendations:
+            recommendations.append("Keep current practices; no input is outside the optimal bands.")
 
         return {
             "ai_insights": summary_insight,
             "risk_alerts": risk_alerts,
             "recommendations": recommendations,
-            "llm_provider": "YieldSense Expert Agronomic Engine"
+            "llm_provider": "YieldSense rule engine",
         }
+
+    def write_rationale(self, rec: Dict[str, Any]) -> tuple[str, str]:
+        """Plain-language "why" for a recommendation. Returns (text, source).
+        Groq writes it when a key is configured; otherwise a deterministic sentence is built from the evidence."""
+        if self.groq_api_key:
+            try:
+                return self._groq_rationale(rec), f"Groq · {self.groq_model}"
+            except Exception as e:
+                print(f"[LLMService] Groq rationale failed: {e}. Using rule-based text.")
+        return self._fallback_rationale(rec), "YieldSense rule engine"
+
+    def _groq_rationale(self, rec: Dict[str, Any]) -> str:
+        evidence = "; ".join(
+            f"{e['label']}: observed {e['observed']}{e['unit']}, optimal {e['optimal_low']}–{e['optimal_high']}{e['unit']}, "
+            f"{round(e['share_affected'] * 100)}% of records affected"
+            for e in rec["evidence"]
+        )
+        prompt = (
+            f"Recommendation: {rec['title']} ({rec['affected_area']}). Evidence: {evidence}. "
+            f"Model-estimated effect of fixing it: {rec['impact_kg_ha']:+.0f} kg/ha. "
+            "In 2-3 plain sentences for a farmer, explain why this matters. Use only the numbers given; "
+            "do not invent measurements, dates or products."
+        )
+        body = {
+            "model": self.groq_model,
+            "messages": [
+                {"role": "system", "content": "You are an agronomist who explains recommendations briefly and factually."},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.2,
+            "max_tokens": 160,
+        }
+        req = urllib.request.Request(
+            "https://api.groq.com/openai/v1/chat/completions",
+            data=json.dumps(body).encode("utf-8"),
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {self.groq_api_key}"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=6) as response:
+            data = json.loads(response.read().decode("utf-8"))
+        text = str(data["choices"][0]["message"]["content"]).strip()
+        if not text:
+            raise ValueError("empty completion")
+        return text
+
+    @staticmethod
+    def _fallback_rationale(rec: Dict[str, Any]) -> str:
+        parts = []
+        for e in rec["evidence"]:
+            parts.append(
+                f"{e['label']} is {e['observed']}{e['unit']} here, while the top-yielding {rec['crop_label']} records sit "
+                f"between {e['optimal_low']} and {e['optimal_high']}{e['unit']} "
+                f"({round(e['share_affected'] * 100)}% of records are outside that band)."
+            )
+        impact = rec["impact_kg_ha"]
+        if impact > 0:
+            parts.append(f"Bringing it into range raises the model's yield estimate by about {impact:,.0f} kg/ha on affected records.")
+        else:
+            parts.append("The yield model shows no measurable gain from changing it, so treat this as a watch item.")
+        return " ".join(parts)
+
 
 llm_service = LLMService()

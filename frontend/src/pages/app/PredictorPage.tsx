@@ -5,7 +5,7 @@ import { z } from 'zod';
 import * as Slider from '@radix-ui/react-slider';
 import { ChevronDown, ChevronUp, Cpu, Dice5, FileDown, Pencil, RotateCcw, Save, Sparkles } from 'lucide-react';
 import { errorMessage } from '../../api/client';
-import { dataApi, predictApi } from '../../api/endpoints';
+import { farmsApi, predictApi } from '../../api/endpoints';
 import type { AIInsights, PredictionInput, PredictionResult } from '../../api/types';
 import { useAuth, useCan } from '../../auth/context';
 import {
@@ -253,9 +253,10 @@ export function PredictorPage() {
   const loadSample = async () => {
     setLoadingSample(true);
     try {
-      const first = await dataApi.records({ page: 1, limit: 1, crop_type: values.crop_type || undefined });
-      const page = 1 + Math.floor(Math.random() * Math.max(1, first.total_records));
-      const rec = (await dataApi.records({ page, limit: 1, crop_type: values.crop_type || undefined })).data[0];
+      const first = await farmsApi.list({ page: 1, page_size: 1, crop: values.crop_type || undefined });
+      const page = 1 + Math.floor(Math.random() * Math.max(1, first.total));
+      const pick = (await farmsApi.list({ page, page_size: 1, crop: values.crop_type || undefined })).items[0];
+      const rec = pick ? (await farmsApi.get(pick.farm_id)).records[0] : undefined;
       if (!rec) throw new Error('No record found');
       setValues({
         crop_type: rec.crop_type,

@@ -153,6 +153,11 @@ describe('selectSummaryKpis', () => {
       avg_ndvi: 0.62,
       total_regions: 101,
       crops_supported: ['Rice', 'Potato', 'Wheat'],
+      median_yield_kg_ha: 3829.5,
+      regions: ['India'],
+      year_min: 1990,
+      year_max: 2013,
+      missing_years: [2003],
     });
     expect(k?.cropCount).toBe(3);
     expect(k?.crops).toEqual(['Potato', 'Rice', 'Wheat']);
