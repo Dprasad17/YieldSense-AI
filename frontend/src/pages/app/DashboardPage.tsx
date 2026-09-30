@@ -12,14 +12,15 @@ import {
   Sprout,
   TriangleAlert,
 } from 'lucide-react';
-import { ChartCard, RankBarChart } from '../../components/charts';
 import {
   Badge,
+  BarList,
   Button,
   ButtonLink,
   Card,
   CardHeader,
   EmptyState,
+  InsightCallout,
   PageHeader,
   Skeleton,
   StatCard,
@@ -187,40 +188,30 @@ export function DashboardPage() {
           {edaQ.isError ? (
             <ErrorState error={edaQ.error} onRetry={() => edaQ.refetch()} />
           ) : (
-            <ChartCard
-              title="Average yield by crop"
-              subtitle={
-                stats
-                  ? `Mean yield per crop · dashed line is the global mean (${formatYieldWithUnit(stats.mean, unit)})`
-                  : 'Mean yield per crop'
-              }
-              summary={
-                ranking.length
-                  ? `${ranking[0].crop} has the highest mean yield at ${formatYieldWithUnit(ranking[0].avgYield, unit)}.`
-                  : 'Loading.'
-              }
-              insight={
-                ranking.length > 1
-                  ? `${ranking[0].crop} yields ${Math.round(ranking[0].avgYield / ranking[ranking.length - 1].avgYield)}× more per hectare than ${ranking[ranking.length - 1].crop}; compare crops within the same type.`
-                  : undefined
-              }
-              height={300}
-            >
-              {(c, h) =>
-                ranking.length ? (
-                  <RankBarChart
-                    data={ranking.map(r => ({ label: r.crop, value: r.avgYield }))}
-                    colors={c}
-                    height={h}
-                    fy={v => formatYield(v, unit)}
-                    benchmark={stats?.mean}
-                    benchmarkLabel="Global mean"
-                  />
-                ) : (
-                  <Skeleton height={h} />
-                )
-              }
-            </ChartCard>
+            <Card>
+              <CardHeader
+                title="Average yield by crop"
+                subtitle="Mean yield per crop across all records"
+                info="Root crops (potato, cassava, yams) produce far more mass per hectare than grains, so compare crops of the same type."
+              />
+              {ranking.length ? (
+                <BarList
+                  label="Mean yield by crop"
+                  items={ranking.map(r => ({ label: r.crop, value: r.avgYield }))}
+                  format={v => formatYieldWithUnit(v, unit)}
+                  benchmark={stats?.mean}
+                  benchmarkLabel="Global mean"
+                />
+              ) : (
+                <Skeleton height={300} />
+              )}
+              {ranking.length > 1 && (
+                <InsightCallout>
+                  {ranking[0].crop} yields {Math.round(ranking[0].avgYield / ranking[ranking.length - 1].avgYield)}×
+                  more per hectare than {ranking[ranking.length - 1].crop}; compare crops within the same type.
+                </InsightCallout>
+              )}
+            </Card>
           )}
         </div>
 
@@ -284,24 +275,22 @@ export function DashboardPage() {
         </div>
 
         <div className={s.s6}>
-          <ChartCard
-            title="Regional yield ranking"
-            subtitle="Five example regions, sorted · dashed line is their average"
-            summary="North India ranks first among the example regions."
-            actions={<SampleDataPill reason="Fixed example regions. The API has no per-region yield endpoint yet." />}
-            height={260}
-          >
-            {(c, h) => (
-              <RankBarChart
-                data={SAMPLE_REGIONS}
-                colors={c}
-                height={h}
-                fy={v => formatYield(v, unit)}
-                benchmark={SAMPLE_REGIONS.reduce((a, r) => a + r.value, 0) / SAMPLE_REGIONS.length}
-                benchmarkLabel="Average"
-              />
-            )}
-          </ChartCard>
+          <Card>
+            <CardHeader
+              title="Regional yield ranking"
+              subtitle="Five example regions, sorted by yield"
+              actions={
+                <SampleDataPill reason="Fixed example regions. No existing endpoint returns yield per region." />
+              }
+            />
+            <BarList
+              label="Example regional yield ranking"
+              items={SAMPLE_REGIONS}
+              format={v => formatYieldWithUnit(v, unit)}
+              benchmark={SAMPLE_REGIONS.reduce((acc, r) => acc + r.value, 0) / SAMPLE_REGIONS.length}
+              benchmarkLabel="Average of these regions"
+            />
+          </Card>
         </div>
 
         <div className={s.s6}>

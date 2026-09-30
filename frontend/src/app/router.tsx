@@ -2,7 +2,6 @@ import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '../auth/guards';
 import type { Permission } from '../auth/permissions';
-import { AppShell } from '../components/shell/AppShell';
 import { RootLayout } from '../pages/RootLayout';
 import { ForbiddenPage, NotFoundPage, RouteErrorPage } from '../pages/SystemPages';
 
@@ -31,6 +30,7 @@ const screens = {
   help: named(app, 'HelpPage'),
 };
 
+const AppShell = named(() => import('../components/shell/AppShell'), 'AppShell');
 const LandingPage = named(() => import('../pages/public/LandingPage'), 'LandingPage');
 const SignInPage = named(pub, 'SignInPage');
 const RegisterPage = named(pub, 'RegisterPage');

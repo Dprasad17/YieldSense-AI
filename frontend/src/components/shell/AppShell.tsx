@@ -156,7 +156,8 @@ function ContextSwitcher() {
     <Popover
       align="start"
       trigger={
-        <button type="button" className={s.context} aria-label="Change region, crop and units" data-tour="context">
+        <button type="button" className={s.context} title="Change region, crop and units" data-tour="context">
+          <span className="sr-only">Context: </span>
           <SlidersHorizontal size={15} aria-hidden="true" />
           <span className={s.contextText}>
             {filters.region || 'All regions'} <span className={s.contextSep}>·</span> {filters.crop || 'All crops'}
@@ -296,11 +297,12 @@ function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownTrigger asChild>
-        <button type="button" className={s.user} aria-label={`Account: ${user.full_name}`}>
+        <button type="button" className={s.user} title="Account menu" data-account-menu>
           <span className={s.avatar} aria-hidden="true">
             {initials(user.full_name) || user.username[0]?.toUpperCase()}
           </span>
           <span className={s.userName}>{user.full_name}</span>
+          <span className="sr-only"> account menu</span>
         </button>
       </DropdownTrigger>
       <DropdownContent>
@@ -448,6 +450,9 @@ export function AppShell() {
   const segment = location.pathname.split('/')[2] ?? '';
   const current = ALL_NAV_ITEMS.find(i => i.path === segment);
   const group = NAV_GROUPS.find(g => g.items.some(i => i.path === segment));
+  useEffect(() => {
+    document.title = `${current?.label ?? 'YieldSense'} · YieldSense AI`;
+  }, [current]);
 
   return (
     <TooltipProvider>
@@ -509,7 +514,7 @@ export function AppShell() {
                 type="button"
                 className={s.search}
                 onClick={() => setPaletteOpen(true)}
-                aria-label="Search (Ctrl+K)"
+                title="Search (Ctrl+K)"
                 data-tour="search"
               >
                 <Search size={15} aria-hidden="true" />

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -35,7 +35,10 @@ function useRedirectTarget(): string {
 
 // ---------------------------------------------------------------- Layout
 
-function AuthLayout({ children }: { children: ReactNode }) {
+function AuthLayout({ children, title }: { children: ReactNode; title: string }) {
+  useEffect(() => {
+    document.title = `${title} · YieldSense AI`;
+  }, [title]);
   return (
     <TooltipProvider>
       <div className={s.auth}>
@@ -136,7 +139,7 @@ export function SignInPage() {
   };
 
   return (
-    <AuthLayout>
+    <AuthLayout title="Sign in">
       <div>
         <h2 className={s.formTitle}>Sign in</h2>
         <p className={s.formSub}>Welcome back. Sign in to continue to your dashboard.</p>
@@ -330,7 +333,7 @@ export function RegisterPage() {
   };
 
   return (
-    <AuthLayout>
+    <AuthLayout title="Create account">
       <div>
         <h2 className={s.formTitle}>Create your account</h2>
         <p className={s.formSub}>Two quick steps.</p>
@@ -477,7 +480,7 @@ export function SessionExpiredPage() {
   const navigate = useNavigate();
   const from = (location.state as { from?: string } | null)?.from;
   return (
-    <AuthLayout>
+    <AuthLayout title="Session expired">
       <div>
         <h2 className={s.formTitle}>Your session has expired</h2>
         <p className={s.formSub}>For your security you were signed out. Sign in again to pick up where you left off.</p>

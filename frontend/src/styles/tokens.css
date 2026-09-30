@@ -45,6 +45,13 @@
   --danger-soft: rgba(239, 90, 90, 0.12);
   --info-soft: rgba(76, 141, 246, 0.12);
 
+  /* Text on tinted (soft) backgrounds: meet 4.5:1 contrast */
+  --success-ink: #4fd694;
+  --warning-ink: #f2b95c;
+  --danger-ink: #ff8a8a;
+  --info-ink: #86b1ff;
+  --model-ink: #b9a3f7;
+
   /* NDVI scale (low → high) */
   --ndvi-0: #a50026;
   --ndvi-1: #f46d43;
@@ -117,6 +124,11 @@
 
   /* Texture opacity for the field-grid canvas pattern */
   --texture-opacity: 0.03;
+  --success-ink: #4fd694;
+  --warning-ink: #f2b95c;
+  --danger-ink: #ff8a8a;
+  --info-ink: #86b1ff;
+  --model-ink: #b9a3f7;
 }
 
 /* Light theme: OS preference (when no explicit theme is set), or data-theme="light" on any element. */
@@ -141,6 +153,16 @@
     --shadow-md: 0 8px 24px rgba(15, 26, 20, 0.08);
     --shadow-lg: 0 16px 48px rgba(15, 26, 20, 0.12);
     --texture-opacity: 0.05;
+    --success-ink: #17663f;
+    --warning-ink: #7a4f00;
+    --danger-ink: #b42318;
+    --info-ink: #1d4fd6;
+    --model-ink: #5b35b8;
+    --success-ink: #17663f;
+    --warning-ink: #7a4f00;
+    --danger-ink: #b42318;
+    --info-ink: #1d4fd6;
+    --model-ink: #5b35b8;
   }
 }
 
@@ -164,6 +186,11 @@
   --shadow-md: 0 8px 24px rgba(15, 26, 20, 0.08);
   --shadow-lg: 0 16px 48px rgba(15, 26, 20, 0.12);
   --texture-opacity: 0.05;
+  --success-ink: #17663f;
+  --warning-ink: #7a4f00;
+  --danger-ink: #b42318;
+  --info-ink: #1d4fd6;
+  --model-ink: #5b35b8;
 }
 
 /* Dark theme scoped to an element (e.g. a dark preview inside a light page). */
@@ -187,6 +214,11 @@
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.45);
   --texture-opacity: 0.03;
+  --success-ink: #4fd694;
+  --warning-ink: #f2b95c;
+  --danger-ink: #ff8a8a;
+  --info-ink: #86b1ff;
+  --model-ink: #b9a3f7;
 }
 
 [data-theme] {

@@ -596,7 +596,7 @@
   grid-template-columns: 2fr repeat(3, 1fr);
   gap: var(--space-8);
 }
-.footer h4 {
+.footerHeading {
   margin: 0 0 var(--space-3);
   color: var(--ink);
   font-size: var(--text-sm);

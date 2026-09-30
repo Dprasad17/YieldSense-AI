@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import {
@@ -240,6 +241,9 @@ function Preview() {
 
 export function LandingPage() {
   const { status } = useAuth();
+  useEffect(() => {
+    document.title = 'YieldSense AI · Crop yield intelligence';
+  }, []);
   const signedIn = status === 'authenticated';
   return (
     <div className={s.landing}>
@@ -427,7 +431,7 @@ export function LandingPage() {
             </p>
           </div>
           <div>
-            <h4>Product</h4>
+            <h2 className={s.footerHeading}>Product</h2>
             <ul>
               <li>
                 <a href="#features">Features</a>
@@ -441,7 +445,7 @@ export function LandingPage() {
             </ul>
           </div>
           <div>
-            <h4>Data</h4>
+            <h2 className={s.footerHeading}>Data</h2>
             <ul>
               <li>
                 <a href="https://www.fao.org/faostat/" target="_blank" rel="noreferrer">
@@ -461,7 +465,7 @@ export function LandingPage() {
             </ul>
           </div>
           <div>
-            <h4>Account</h4>
+            <h2 className={s.footerHeading}>Account</h2>
             <ul>
               <li>
                 <Link to="/login">Sign in</Link>

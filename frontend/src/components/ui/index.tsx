@@ -1124,3 +1124,56 @@ export function Pagination({
     </div>
   );
 }
+
+/** Accessible horizontal ranking without a chart library: label, bar, value, optional benchmark marker. */
+export function BarList({
+  items,
+  format,
+  color = 'var(--data-vegetation)',
+  benchmark,
+  benchmarkLabel = 'Average',
+  label,
+}: {
+  items: { label: string; value: number }[];
+  format: (v: number) => string;
+  color?: string;
+  benchmark?: number;
+  benchmarkLabel?: string;
+  label: string;
+}) {
+  const max = Math.max(...items.map(i => i.value), benchmark ?? 0) || 1;
+  return (
+    <div>
+      <ul className={s.barList} aria-label={label}>
+        {items.map(i => (
+          <li key={i.label} className={s.barRow}>
+            <span className={s.barLabel}>{i.label}</span>
+            <span className={s.barTrack} aria-hidden="true">
+              <span className={s.barFill} style={{ width: `${(i.value / max) * 100}%`, background: color }} />
+              {benchmark != null && <span className={s.barMark} style={{ left: `${(benchmark / max) * 100}%` }} />}
+            </span>
+            <span className={s.barValue}>{format(i.value)}</span>
+          </li>
+        ))}
+      </ul>
+      {benchmark != null && (
+        <p
+          style={{
+            margin: 'var(--space-3) 0 0',
+            fontSize: 'var(--text-xs)',
+            color: 'var(--muted)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+          }}
+        >
+          <span
+            aria-hidden="true"
+            style={{ width: 2, height: 12, background: 'var(--warning)', display: 'inline-block' }}
+          />
+          {benchmarkLabel}: {format(benchmark)}
+        </p>
+      )}
+    </div>
+  );
+}

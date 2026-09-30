@@ -220,7 +220,7 @@ export const TrendChart = memo(function TrendChart({
   const main = color ?? colors['data-vegetation'];
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <ComposedChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
+      <ComposedChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
         <CartesianGrid stroke={colors.border} strokeDasharray="3 3" vertical={false} />
         <XAxis dataKey="x" {...axisProps(colors)} tickFormatter={v => (typeof v === 'number' ? fx(v) : String(v))} />
         <YAxis {...axisProps(colors)} tickFormatter={fy} width={64} axisLine={false} />
@@ -279,7 +279,12 @@ export const RankBarChart = memo(function RankBarChart({
   const fill = color ?? colors['data-vegetation'];
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 24, bottom: 0, left: 8 }}>
+      <BarChart
+        accessibilityLayer={false}
+        data={data}
+        layout="vertical"
+        margin={{ top: 4, right: 24, bottom: 0, left: 8 }}
+      >
         <CartesianGrid stroke={colors.border} strokeDasharray="3 3" horizontal={false} />
         <XAxis type="number" {...axisProps(colors)} tickFormatter={fy} />
         <YAxis type="category" dataKey="label" {...axisProps(colors)} width={110} axisLine={false} />
@@ -326,7 +331,7 @@ export const BarCompareChart = memo(function BarCompareChart({
 }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 16, right: 16, bottom: 0, left: 8 }}>
+      <BarChart accessibilityLayer={false} data={data} margin={{ top: 16, right: 16, bottom: 0, left: 8 }}>
         <CartesianGrid stroke={colors.border} strokeDasharray="3 3" vertical={false} />
         <XAxis dataKey="label" {...axisProps(colors)} tickFormatter={fx} interval="preserveStartEnd" />
         <YAxis {...axisProps(colors)} tickFormatter={fy} width={56} axisLine={false} />
@@ -369,7 +374,7 @@ export const ComposedRainTempChart = memo(function ComposedRainTempChart({
   const deg: Fmt = v => `${v.toFixed(1)} °C`;
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+      <ComposedChart accessibilityLayer={false} data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
         <CartesianGrid stroke={colors.border} strokeDasharray="3 3" vertical={false} />
         <XAxis dataKey="label" {...axisProps(colors)} />
         <YAxis yAxisId="rain" {...axisProps(colors)} tickFormatter={mm} width={60} axisLine={false} />
@@ -440,7 +445,7 @@ export const ScatterFitChart = memo(function ScatterFitChart({
   const [lo, hi] = [Math.min(...xs), Math.max(...xs)];
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <ScatterChart margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
+      <ScatterChart accessibilityLayer={false} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
         <CartesianGrid stroke={colors.border} strokeDasharray="3 3" />
         <XAxis
           type="number"
@@ -519,7 +524,7 @@ export const BandCurveChart = memo(function BandCurveChart({
 }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data} margin={{ top: 16, right: 16, bottom: 0, left: 8 }}>
+      <LineChart accessibilityLayer={false} data={data} margin={{ top: 16, right: 16, bottom: 0, left: 8 }}>
         <CartesianGrid stroke={colors.border} strokeDasharray="3 3" vertical={false} />
         <XAxis type="number" dataKey="x" domain={['dataMin', 'dataMax']} {...axisProps(colors)} tickFormatter={fx} />
         <YAxis {...axisProps(colors)} tickFormatter={fy} width={64} axisLine={false} />
@@ -604,7 +609,7 @@ export const GroupedBarChart = memo(function GroupedBarChart({
   const names = Object.fromEntries(series.map(s => [s.key, s.label]));
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 16, right: 16, bottom: 0, left: 8 }}>
+      <BarChart accessibilityLayer={false} data={data} margin={{ top: 16, right: 16, bottom: 0, left: 8 }}>
         <CartesianGrid stroke={colors.border} strokeDasharray="3 3" vertical={false} />
         <XAxis dataKey="label" {...axisProps(colors)} />
         <YAxis {...axisProps(colors)} tickFormatter={fy} width={56} axisLine={false} />
