@@ -7,6 +7,7 @@ import { farmsApi, soilTestsApi } from '../../api/endpoints';
 import type { Farm, FarmInput, FarmRecord, FarmRecordInput, SoilTestInput } from '../../api/types';
 import { useAuth, useCan } from '../../auth/context';
 import { FarmMap } from '../../components/FarmMap';
+import { FarmSoilPanel } from '../../components/FarmSoilPanel';
 import {
   Badge,
   Button,
@@ -42,6 +43,7 @@ import { formatCount, formatIndex, formatNumber, formatYield, formatYieldWithUni
 import { setPrefill } from '../../lib/localStore';
 import { usePreferences } from '../../store/preferences';
 import s from './app.module.css';
+import x from './extras.module.css';
 
 const IRRIGATION = ['Drip', 'Sprinkler', 'Flood', 'Rainfed'] as const;
 type Irrigation = (typeof IRRIGATION)[number];
@@ -137,7 +139,7 @@ function FarmForm({
         </>
       }
     >
-      <div className={s.sectionBody} style={{ padding: 0 }}>
+      <div className={`${s.sectionBody} ${x.p0}`}>
         <FormField label="Farm name" htmlFor="ff-name" error={errors.name}>
           <Input id="ff-name" value={v.name} onChange={set('name')} invalid={!!errors.name} />
         </FormField>
@@ -180,14 +182,7 @@ function FarmForm({
                     key={c}
                     type="button"
                     aria-pressed={on}
-                    className={s.chip}
-                    style={{
-                      cursor: 'pointer',
-                      paddingRight: 'var(--space-3)',
-                      background: on ? 'var(--primary-soft)' : 'var(--surface-2)',
-                      borderColor: on ? 'var(--primary)' : 'var(--border)',
-                      font: 'inherit',
-                    }}
+                    className={`${s.chip} ${x.chipBtn} ${on ? x.chipOn : ''}`}
                     onClick={() => setV(p => ({ ...p, crops: on ? p.crops.filter(x => x !== c) : [...p.crops, c] }))}
                   >
                     {c}
@@ -220,13 +215,13 @@ function FarmForm({
         <FormField label="Soil type" htmlFor="ff-soiltype" hint="Optional, e.g. Sandy loam">
           <Input id="ff-soiltype" value={v.soil_type} onChange={set('soil_type')} />
         </FormField>
-        <div className={s.row} style={{ alignItems: 'flex-start' }}>
-          <div style={{ flex: 1 }}>
+        <div className={`${s.row} ${x.alignStart}`}>
+          <div className={x.flex1}>
             <FormField label="Latitude" htmlFor="ff-lat" hint="Optional">
               <Input id="ff-lat" type="number" step="0.0001" value={v.latitude} onChange={set('latitude')} />
             </FormField>
           </div>
-          <div style={{ flex: 1 }}>
+          <div className={x.flex1}>
             <FormField label="Longitude" htmlFor="ff-lon">
               <Input id="ff-lon" type="number" step="0.0001" value={v.longitude} onChange={set('longitude')} />
             </FormField>
@@ -273,7 +268,7 @@ export function FarmsPage() {
         }
       />
       <div className={s.row}>
-        <div style={{ flex: '1 1 280px', maxWidth: 420 }}>
+        <div className={x.searchBox}>
           <Input
             icon={Search}
             placeholder="Search farms, regions or owners…"
@@ -330,18 +325,15 @@ export function FarmsPage() {
         </Card>
       ) : (
         <>
-          <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+          <div className={`${s.grid} ${x.cardGrid}`}>
             {q.data.items.map(f => (
-              <Link key={f.id} to={`/app/farms/${f.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Link key={f.id} to={`/app/farms/${f.id}`} className={x.plainLink}>
                 <Card>
                   <div className={s.between}>
-                    <strong style={{ fontSize: 'var(--text-lg)' }}>{f.name}</strong>
+                    <strong className={x.textLg}>{f.name}</strong>
                     <Badge>{formatNumber(f.area_ha, 1)} ha</Badge>
                   </div>
-                  <div
-                    className={s.muted}
-                    style={{ display: 'flex', alignItems: 'center', gap: 4, margin: 'var(--space-1) 0 var(--space-3)' }}
-                  >
+                  <div className={`${s.muted} ${x.metaRow}`}>
                     <MapPin size={14} aria-hidden="true" /> {f.region}
                     {privileged && <span> · {f.owner}</span>}
                   </div>
@@ -352,7 +344,7 @@ export function FarmsPage() {
                       </Badge>
                     ))}
                   </div>
-                  <div className={s.between} style={{ marginTop: 'var(--space-3)' }}>
+                  <div className={`${s.between} ${x.mt3}`}>
                     <span className={s.small}>{formatCount(f.record_count)} season records</span>
                     <span className={s.num}>
                       {f.latest_yield_kg_ha != null ? formatYieldWithUnit(f.latest_yield_kg_ha, unit) : '—'}
@@ -462,11 +454,11 @@ function RecordForm({
       }
     >
       {error && (
-        <p style={{ color: 'var(--danger)', marginTop: 0 }} role="alert">
+        <p className={x.errorP} role="alert">
           {error}
         </p>
       )}
-      <div className={s.sectionBody} style={{ padding: 0 }}>
+      <div className={`${s.sectionBody} ${x.p0}`}>
         <FormField label="Year" htmlFor="fr-year">
           <Input id="fr-year" type="number" value={v.year} onChange={set('year')} />
         </FormField>
@@ -596,11 +588,11 @@ function SoilTestForm({
       }
     >
       {error && (
-        <p style={{ color: 'var(--danger)', marginTop: 0 }} role="alert">
+        <p className={x.errorP} role="alert">
           {error}
         </p>
       )}
-      <div className={s.sectionBody} style={{ padding: 0 }}>
+      <div className={`${s.sectionBody} ${x.p0}`}>
         <FormField label="Sampled on" htmlFor="st-date">
           <Input id="st-date" type="date" value={v.sampled_on} onChange={set('sampled_on')} />
         </FormField>
@@ -620,13 +612,13 @@ function SoilTestForm({
             onChange={set('organic_matter_percent')}
           />
         </FormField>
-        <FormField label="Nitrogen (N)" htmlFor="st-n">
+        <FormField label="Available N" htmlFor="st-n" hint="kg N/ha">
           <Input id="st-n" type="number" suffix="kg/ha" value={v.nitrogen_kg_ha} onChange={set('nitrogen_kg_ha')} />
         </FormField>
-        <FormField label="Phosphorus (P)" htmlFor="st-p">
+        <FormField label="Available P" htmlFor="st-p" hint="kg P/ha (elemental, Olsen)">
           <Input id="st-p" type="number" suffix="kg/ha" value={v.phosphorus_kg_ha} onChange={set('phosphorus_kg_ha')} />
         </FormField>
-        <FormField label="Potassium (K)" htmlFor="st-k">
+        <FormField label="Available K" htmlFor="st-k" hint="kg K/ha (elemental)">
           <Input id="st-k" type="number" suffix="kg/ha" value={v.potassium_kg_ha} onChange={set('potassium_kg_ha')} />
         </FormField>
         <FormField label="Laboratory" htmlFor="st-lab">
@@ -674,7 +666,7 @@ export function FarmDetailPage() {
         header: 'Actions',
         render: r =>
           canEdit ? (
-            <span className={s.row} style={{ gap: 4, flexWrap: 'nowrap' }}>
+            <span className={`${s.row} ${x.rowTight}`}>
               <IconButton
                 icon={Pencil}
                 label={`Edit ${r.year} season`}
@@ -780,7 +772,7 @@ export function FarmDetailPage() {
                     value={f.context_crop}
                     onChange={e => setCrop(e.target.value)}
                     options={f.crops}
-                    style={{ width: 150 }}
+                    className={x.w150}
                   />
                 ) : undefined
               }
@@ -801,7 +793,7 @@ export function FarmDetailPage() {
               <dt>Soil moisture</dt>
               <dd>{f.soil_moisture_percent != null ? `${formatNumber(f.soil_moisture_percent, 1)}%` : '—'}</dd>
             </dl>
-            <div className={s.row} style={{ marginTop: 'var(--space-4)' }}>
+            <div className={`${s.row} ${x.mt4}`}>
               {f.risks
                 .filter(r => r.level !== 'Low')
                 .map(r => (
@@ -858,7 +850,7 @@ export function FarmDetailPage() {
               <ul className={s.list}>
                 {f.recommendations.map(r => (
                   <li key={r.id} className={s.between}>
-                    <span className={s.row} style={{ gap: 'var(--space-2)' }}>
+                    <span className={`${s.row} ${x.gap2}`}>
                       <Badge
                         tone={
                           r.severity === 'critical'
@@ -926,6 +918,10 @@ export function FarmDetailPage() {
         </div>
 
         <div className={s.s12}>
+          <FarmSoilPanel farmId={f.id} farmName={f.name} />
+        </div>
+
+        <div className={s.s12}>
           <Card>
             <CardHeader
               title="Soil tests"
@@ -984,7 +980,15 @@ export function FarmDetailPage() {
         />
       )}
       {soilForm && (
-        <SoilTestForm farmId={f.id} open={soilForm} onOpenChange={setSoilForm} onSaved={() => soil.refetch()} />
+        <SoilTestForm
+          farmId={f.id}
+          open={soilForm}
+          onOpenChange={setSoilForm}
+          onSaved={() => {
+            void soil.refetch();
+            refresh();
+          }}
+        />
       )}
       <ConfirmDialog
         open={confirmDelete}

@@ -39,6 +39,7 @@ import { formatDeltaPercent, formatYield } from '../../lib/format';
 import { setPrefill } from '../../lib/localStore';
 import { usePreferences } from '../../store/preferences';
 import s from './app.module.css';
+import x from './extras.module.css';
 
 // ================================================================ Prediction history
 
@@ -177,7 +178,7 @@ export function HistoryPage() {
       key: 'actions',
       header: 'Actions',
       render: p => (
-        <span className={s.row} style={{ gap: 'var(--space-1)', flexWrap: 'nowrap' }}>
+        <span className={`${s.row} ${x.rowTight1}`}>
           <Button size="sm" icon={RotateCcw} onClick={() => rerun(p)} loading={reruns[p.id]?.loading}>
             Re-run
           </Button>
@@ -222,8 +223,8 @@ export function HistoryPage() {
         meta={q.data ? <Badge>{q.data.total} predictions</Badge> : undefined}
       />
       <Card>
-        <div className={s.row} style={{ alignItems: 'flex-end' }}>
-          <div style={{ flex: '1 1 160px' }}>
+        <div className={`${s.row} ${x.alignEnd}`}>
+          <div className={x.grow160}>
             <FormField label="Crop" htmlFor="h-crop">
               <Select
                 id="h-crop"
@@ -234,7 +235,7 @@ export function HistoryPage() {
               />
             </FormField>
           </div>
-          <div style={{ flex: '1 1 160px' }}>
+          <div className={x.grow160}>
             <FormField label="Region" htmlFor="h-region">
               <Select
                 id="h-region"
@@ -245,7 +246,7 @@ export function HistoryPage() {
               />
             </FormField>
           </div>
-          <div style={{ flex: '1 1 200px' }}>
+          <div className={x.grow200}>
             <FormField label="Farm" htmlFor="h-farm">
               <Select
                 id="h-farm"
@@ -285,17 +286,17 @@ export function HistoryPage() {
               </Button>
             }
           />
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }} aria-label="Prediction comparison">
+          <div className={x.scrollX}>
+            <table className={x.tableFull} aria-label="Prediction comparison">
               <thead>
                 <tr>
-                  <th scope="col" style={{ textAlign: 'left' }}>
+                  <th scope="col" className={x.tl}>
                     Field
                   </th>
-                  <th scope="col" style={{ textAlign: 'right' }}>
+                  <th scope="col" className={x.tr}>
                     A · {new Date(a.created_at).toLocaleDateString()}
                   </th>
-                  <th scope="col" style={{ textAlign: 'right' }}>
+                  <th scope="col" className={x.tr}>
                     B · {new Date(b.created_at).toLocaleDateString()}
                   </th>
                 </tr>
@@ -318,27 +319,18 @@ export function HistoryPage() {
                   ['Risk', a.risk_rating, b.risk_rating] as const,
                   ['Model', modelLabel(a), modelLabel(b)] as const,
                 ].map(([label, va, vb]) => (
-                  <tr
-                    key={label}
-                    style={{
-                      background: va !== vb ? 'color-mix(in srgb, var(--warning) 12%, transparent)' : undefined,
-                    }}
-                  >
-                    <th scope="row" style={{ textAlign: 'left', fontWeight: 500, padding: '4px 8px' }}>
+                  <tr key={label} className={va !== vb ? x.rowDiff : undefined}>
+                    <th scope="row" className={x.cmpHead}>
                       {label}
                     </th>
-                    <td className={s.num} style={{ textAlign: 'right', padding: '4px 8px' }}>
-                      {va}
-                    </td>
-                    <td className={s.num} style={{ textAlign: 'right', padding: '4px 8px' }}>
-                      {vb}
-                    </td>
+                    <td className={`${s.num} ${x.cmpCell}`}>{va}</td>
+                    <td className={`${s.num} ${x.cmpCell}`}>{vb}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className={s.small} style={{ margin: 'var(--space-2) 0 0' }}>
+          <p className={`${s.small} ${x.mt2Only}`}>
             B vs A:{' '}
             {formatDeltaPercent(((b.predicted_yield_kg_ha - a.predicted_yield_kg_ha) / a.predicted_yield_kg_ha) * 100)}
           </p>
@@ -347,7 +339,7 @@ export function HistoryPage() {
 
       <Card>
         {picked.length === 1 && (
-          <p className={s.small} style={{ marginTop: 0 }}>
+          <p className={`${s.small} ${x.mt0}`}>
             <GitCompare size={12} aria-hidden="true" /> Pick one more prediction to compare.
           </p>
         )}
@@ -482,20 +474,16 @@ export function NotificationsPage() {
           />
         ) : (
           <>
-            <ul className={s.stack} style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            <ul className={`${s.stack} ${x.listReset}`}>
               {items.map(n => (
-                <li
-                  key={n.id}
-                  className={s.tile}
-                  style={{ borderLeft: n.read ? undefined : '3px solid var(--primary)' }}
-                >
+                <li key={n.id} className={`${s.tile} ${n.read ? '' : x.unread}`}>
                   <div className={s.between}>
-                    <span className={s.row} style={{ gap: 'var(--space-2)' }}>
+                    <span className={`${s.row} ${x.gap2}`}>
                       <Badge tone={SEVERITY_TONE[n.severity] ?? 'neutral'}>{n.severity}</Badge>
                       <Badge>{n.category}</Badge>
                       <span className={s.small}>{timeAgo(n.created_at)}</span>
                     </span>
-                    <span className={s.row} style={{ gap: 'var(--space-1)' }}>
+                    <span className={`${s.row} ${x.gap1}`}>
                       {n.link && (
                         <Button
                           size="sm"
@@ -512,7 +500,7 @@ export function NotificationsPage() {
                       </Button>
                     </span>
                   </div>
-                  <strong style={{ display: 'block', marginTop: 'var(--space-1)' }}>
+                  <strong className={x.blockMt1}>
                     {!n.read && <span className="sr-only">Unread: </span>}
                     {n.title}
                   </strong>

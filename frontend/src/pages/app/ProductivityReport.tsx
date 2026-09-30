@@ -17,14 +17,12 @@ import { formatCount, formatDeltaPercent, formatPercent, formatYield } from '../
 import { filtersSearch, useGlobalFilters } from '../../store/filters';
 import { usePreferences } from '../../store/preferences';
 import s from './app.module.css';
-
-const cell = { padding: '6px 8px', borderBottom: '1px solid var(--border)' } as const;
-const num = { ...cell, textAlign: 'right', fontFamily: 'var(--font-mono)' } as const;
+import x from './extras.module.css';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section style={{ marginTop: 'var(--space-6)', breakInside: 'avoid' }}>
-      <h2 style={{ fontSize: 'var(--text-lg)', margin: '0 0 var(--space-2)' }}>{title}</h2>
+    <section className={x.reportSection}>
+      <h2 className={x.h2}>{title}</h2>
       {children}
     </section>
   );
@@ -70,20 +68,8 @@ export function ProductivityReportPage() {
   const loading = trends.isPending || top.isPending || risk.isPending || hub.isPending;
 
   return (
-    <div
-      data-theme="light"
-      style={{ background: 'var(--surface-2)', minHeight: '100vh', padding: 'var(--space-6) 16px' }}
-    >
-      <div
-        className="no-print"
-        style={{
-          maxWidth: 794,
-          margin: '0 auto var(--space-4)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          gap: 8,
-        }}
-      >
+    <div data-theme="light" className={x.reportPage}>
+      <div className={`no-print ${x.reportBar}`}>
         <Link to={`/app/analytics${filtersSearch(new URLSearchParams(window.location.search))}`} className={s.row}>
           <ArrowLeft size={16} aria-hidden="true" /> Back to Analytics
         </Link>
@@ -91,28 +77,16 @@ export function ProductivityReportPage() {
           Print or save as PDF
         </Button>
       </div>
-      <article
-        style={{
-          maxWidth: 794,
-          margin: '0 auto',
-          background: 'var(--surface)',
-          padding: 'clamp(20px, 5vw, 48px)',
-          border: '1px solid var(--border)',
-          color: 'var(--ink)',
-        }}
-      >
-        <header
-          className={s.between}
-          style={{ borderBottom: '2px solid var(--primary)', paddingBottom: 'var(--space-4)' }}
-        >
+      <article className={x.reportSheet}>
+        <header className={`${s.between} ${x.reportHeader}`}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 'var(--text-xl)' }}>
-              YieldSense <span style={{ color: 'var(--primary)' }}>AI</span>
+            <div className={x.brand}>
+              YieldSense <span className={x.primaryText}>AI</span>
             </div>
-            <h1 style={{ fontSize: 'var(--text-lg)', margin: 0 }}>Productivity report</h1>
+            <h1 className={x.h2Flat}>Productivity report</h1>
             <div className={s.small}>{context}</div>
           </div>
-          <div className={s.small} style={{ textAlign: 'right' }}>
+          <div className={`${s.small} ${x.tr}`}>
             Generated {new Date().toLocaleString()}
             <br />
             {model ? `${model.name} v${model.version ?? ''}` : ''}
@@ -120,7 +94,7 @@ export function ProductivityReportPage() {
         </header>
 
         {loading ? (
-          <div className={s.stack} style={{ marginTop: 'var(--space-6)' }}>
+          <div className={`${s.stack} ${x.mt6}`}>
             <Skeleton height={80} />
             <Skeleton height={200} />
             <Skeleton height={160} />
@@ -128,13 +102,7 @@ export function ProductivityReportPage() {
         ) : (
           <>
             <Section title="Summary">
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                  gap: 'var(--space-3)',
-                }}
-              >
+              <div className={x.statGrid}>
                 {[
                   [
                     last ? `Mean yield ${last.year}` : 'Mean yield',
@@ -151,11 +119,9 @@ export function ProductivityReportPage() {
                       : '',
                   ],
                 ].map(([label, value, sub]) => (
-                  <div key={label} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
+                  <div key={label} className={x.statBox}>
                     <div className={s.small}>{label}</div>
-                    <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700 }} className={s.num}>
-                      {value}
-                    </div>
+                    <div className={`${x.brand} ${s.num}`}>{value}</div>
                     <div className={s.small}>{sub}</div>
                   </div>
                 ))}
@@ -167,19 +133,19 @@ export function ProductivityReportPage() {
               {series.length === 0 ? (
                 <p className={s.muted}>No records in this context.</p>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
+                <table className={x.tableSm}>
                   <thead>
                     <tr>
-                      <th scope="col" style={{ ...cell, textAlign: 'left' }}>
+                      <th scope="col" className={x.cellHead}>
                         Year
                       </th>
-                      <th scope="col" style={num}>
+                      <th scope="col" className={x.cellNum}>
                         Mean ({unit})
                       </th>
-                      <th scope="col" style={num}>
+                      <th scope="col" className={x.cellNum}>
                         Median ({unit})
                       </th>
-                      <th scope="col" style={num}>
+                      <th scope="col" className={x.cellNum}>
                         Records
                       </th>
                     </tr>
@@ -187,10 +153,10 @@ export function ProductivityReportPage() {
                   <tbody>
                     {series.slice(-12).map(p => (
                       <tr key={p.year}>
-                        <td style={cell}>{p.year}</td>
-                        <td style={num}>{formatYield(p.mean_yield_kg_ha, unit)}</td>
-                        <td style={num}>{formatYield(p.median_yield_kg_ha, unit)}</td>
-                        <td style={num}>{formatCount(p.record_count)}</td>
+                        <td className={x.cell}>{p.year}</td>
+                        <td className={x.cellNum}>{formatYield(p.mean_yield_kg_ha, unit)}</td>
+                        <td className={x.cellNum}>{formatYield(p.median_yield_kg_ha, unit)}</td>
+                        <td className={x.cellNum}>{formatCount(p.record_count)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -201,22 +167,22 @@ export function ProductivityReportPage() {
 
             {(myFarms.data?.farms.length ?? 0) > 0 && (
               <Section title="Farms vs regional reference">
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
+                <table className={x.tableSm}>
                   <thead>
                     <tr>
-                      <th scope="col" style={{ ...cell, textAlign: 'left' }}>
+                      <th scope="col" className={x.cellHead}>
                         Farm
                       </th>
-                      <th scope="col" style={{ ...cell, textAlign: 'left' }}>
+                      <th scope="col" className={x.cellHead}>
                         Latest season
                       </th>
-                      <th scope="col" style={num}>
+                      <th scope="col" className={x.cellNum}>
                         Yield
                       </th>
-                      <th scope="col" style={num}>
+                      <th scope="col" className={x.cellNum}>
                         Reference
                       </th>
-                      <th scope="col" style={num}>
+                      <th scope="col" className={x.cellNum}>
                         Δ
                       </th>
                     </tr>
@@ -224,14 +190,14 @@ export function ProductivityReportPage() {
                   <tbody>
                     {myFarms.data?.farms.map(f => (
                       <tr key={f.farm_id}>
-                        <td style={cell}>
+                        <td className={x.cell}>
                           {f.name}
                           <div className={s.small}>{f.region}</div>
                         </td>
-                        <td style={cell}>{f.latest_year ? `${f.latest_year} · ${f.latest_crop}` : '—'}</td>
-                        <td style={num}>{formatYield(f.latest_yield_kg_ha, unit)}</td>
-                        <td style={num}>{formatYield(f.reference_kg_ha, unit)}</td>
-                        <td style={num}>{formatDeltaPercent(f.delta_pct)}</td>
+                        <td className={x.cell}>{f.latest_year ? `${f.latest_year} · ${f.latest_crop}` : '—'}</td>
+                        <td className={x.cellNum}>{formatYield(f.latest_yield_kg_ha, unit)}</td>
+                        <td className={x.cellNum}>{formatYield(f.reference_kg_ha, unit)}</td>
+                        <td className={x.cellNum}>{formatDeltaPercent(f.delta_pct)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -241,19 +207,19 @@ export function ProductivityReportPage() {
             )}
 
             <Section title="Highest and lowest yields">
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
+              <table className={x.tableSm}>
                 <thead>
                   <tr>
-                    <th scope="col" style={{ ...cell, textAlign: 'left' }}>
+                    <th scope="col" className={x.cellHead}>
                       Record
                     </th>
-                    <th scope="col" style={{ ...cell, textAlign: 'left' }}>
+                    <th scope="col" className={x.cellHead}>
                       Region · crop · year
                     </th>
-                    <th scope="col" style={num}>
+                    <th scope="col" className={x.cellNum}>
                       Yield ({unit})
                     </th>
-                    <th scope="col" style={{ ...cell, textAlign: 'left' }}>
+                    <th scope="col" className={x.cellHead}>
                       Risk
                     </th>
                   </tr>
@@ -261,12 +227,12 @@ export function ProductivityReportPage() {
                 <tbody>
                   {[...(top.data?.farms ?? []), ...(bottom.data?.farms ?? []).slice().reverse()].map((r, i) => (
                     <tr key={`${r.farm_id}-${i}`}>
-                      <td style={cell}>{r.farm_id}</td>
-                      <td style={cell}>
+                      <td className={x.cell}>{r.farm_id}</td>
+                      <td className={x.cell}>
                         {r.region} · {r.crop_type} · {r.year}
                       </td>
-                      <td style={num}>{formatYield(r.yield_kg_ha, unit)}</td>
-                      <td style={cell}>
+                      <td className={x.cellNum}>{formatYield(r.yield_kg_ha, unit)}</td>
+                      <td className={x.cell}>
                         <Badge tone={ratingTone(r.risk_rating, false)}>{r.risk_rating}</Badge>
                       </td>
                     </tr>
@@ -280,9 +246,9 @@ export function ProductivityReportPage() {
               {(risk.data?.risks ?? []).length === 0 ? (
                 <p className={s.muted}>No records in this context.</p>
               ) : (
-                <ul style={{ margin: 0, paddingLeft: 'var(--space-5)' }}>
+                <ul className={x.listIndent}>
                   {risk.data?.risks.map(r => (
-                    <li key={r.type} style={{ marginBottom: 4 }}>
+                    <li key={r.type} className={x.mb4}>
                       <strong>{r.label}</strong> — {r.level} (score {r.score}/25):{' '}
                       {formatPercent(r.share_affected * 100)} of records affected. {r.mitigation}
                     </li>
@@ -295,9 +261,9 @@ export function ProductivityReportPage() {
               {(hub.data?.recommendations ?? []).length === 0 ? (
                 <p className={s.muted}>No recommendations for this context.</p>
               ) : (
-                <ol style={{ margin: 0, paddingLeft: 'var(--space-5)' }}>
+                <ol className={x.listIndent}>
                   {hub.data?.recommendations.slice(0, 6).map(r => (
-                    <li key={r.id} style={{ marginBottom: 6 }}>
+                    <li key={r.id} className={x.mb6}>
                       <strong>{r.title}</strong> <Badge>{r.severity}</Badge>
                       <div>{r.action}</div>
                       <div className={s.small}>
@@ -313,10 +279,7 @@ export function ProductivityReportPage() {
           </>
         )}
 
-        <footer
-          className={s.small}
-          style={{ marginTop: 'var(--space-8)', borderTop: '1px solid var(--border)', paddingTop: 'var(--space-3)' }}
-        >
+        <footer className={`${s.small} ${x.reportFooter}`}>
           Data: country-level FAOSTAT yields, rainfall and temperature (1990–2013); soil, humidity, sunlight,
           irrigation, fertilizer and disease columns are synthetic. Forecasts are model estimates and should be used
           alongside local expertise.

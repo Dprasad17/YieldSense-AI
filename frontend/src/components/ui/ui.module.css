@@ -57,8 +57,8 @@
   background: var(--surface-2);
 }
 .danger {
-  background: var(--danger);
-  color: var(--primary-ink);
+  background: var(--danger-strong);
+  color: var(--on-danger-strong);
 }
 .danger:hover:not(:disabled) {
   filter: brightness(1.08);
@@ -333,7 +333,7 @@
   width: 16px;
   height: 16px;
   border-radius: var(--radius-full);
-  background: var(--ink);
+  background: var(--switch-thumb);
   transform: translateX(2px);
   transition: transform var(--duration-fast) var(--ease-out);
   box-shadow: var(--shadow-sm);

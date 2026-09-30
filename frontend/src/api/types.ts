@@ -69,7 +69,15 @@ export interface ModelCard {
     model: string;
     target: string;
     note: string;
-    results: { variant: string; dropped: string[]; rmse: number; r2: number; mae: number; delta_rmse: number; delta_r2: number }[];
+    results: {
+      variant: string;
+      dropped: string[];
+      rmse: number;
+      r2: number;
+      mae: number;
+      delta_rmse: number;
+      delta_r2: number;
+    }[];
   };
   previous_version?: {
     version?: string;
@@ -89,6 +97,59 @@ export type MyFarmComparison = S['MyFarmComparison'];
 export type ClimateTrend = S['ClimateTrend'];
 export type OptimalBand = S['OptimalBand'];
 export type SystemMetrics = S['SystemMetrics'];
+export type FarmSoil = S['FarmSoil'];
+export type NutrientRating = S['NutrientRating'];
+/** Real-soil assessment returned inside FarmSoil.assessment. */
+export interface FarmSoilAssessment {
+  ph: { value: number; source: string; rating: string };
+  organic_carbon: { value_percent: number; source: string; rating: 'Low' | 'Medium' | 'High' };
+  cec: { value: number; unit: string; source: string; rating: 'Low' | 'Medium' | 'High' };
+  texture: string;
+  fertility: { score: number; class: 'Low' | 'Moderate' | 'High'; basis: string };
+  soil_health_index: number;
+  crop_suitability: {
+    crop: string;
+    grown_on_farm: boolean;
+    ph_range: string;
+    ph_score: number;
+    suitability_index: number;
+    reasons: string[];
+  }[];
+  method: string;
+}
+/** Shape of SystemMetrics.recommendations and .processing (served as free-form objects). */
+export interface RecommendationEffectiveness {
+  tasks: number;
+  done: number;
+  completion_rate: number | null;
+  median_hours_task_to_done: number | null;
+  median_hours_alert_to_action: number | null;
+  alert_to_action_measured: number;
+  per_user: {
+    username: string;
+    tasks: number;
+    done: number;
+    completion_rate: number | null;
+    median_hours_to_done: number | null;
+  }[];
+  outcomes: {
+    task: string;
+    farm_id: number;
+    season: number;
+    crop_type: string;
+    yield_kg_ha: number;
+    reference_kg_ha: number | null;
+  }[];
+  outcome_note: string;
+}
+export interface ProcessingSpeed {
+  available: boolean;
+  seed?: { seconds: number | null; crop_records: number | null; rows_per_sec: number | null } | null;
+  validation_ms_per_row_median?: number | null;
+  validations_measured?: number;
+  import_rows_per_sec_median?: number | null;
+  imports_measured?: number;
+}
 export type ActiveModel = S['ActiveModel'];
 
 export type PredictionInput = S['YieldPredictionRequest'];

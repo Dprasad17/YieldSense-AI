@@ -1,0 +1,382 @@
+/* Layout helpers for the farm, management, activity, risk, report and model screens. */
+.p0 {
+  padding: 0px;
+}
+.alignStart {
+  align-items: flex-start;
+}
+.flex1 {
+  flex: 1;
+}
+.searchBox {
+  flex: 1 1 280px;
+  max-width: 420px;
+}
+.cardGrid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.plainLink {
+  text-decoration: none;
+  color: inherit;
+}
+.textLg {
+  font-size: var(--text-lg);
+}
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: var(--space-1) 0 var(--space-3);
+}
+.mt3 {
+  margin-top: var(--space-3);
+}
+.errorP {
+  color: var(--danger);
+  margin-top: 0px;
+}
+.rowTight {
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+.w150 {
+  width: 150px;
+}
+.mt4 {
+  margin-top: var(--space-4);
+}
+.gap2 {
+  gap: var(--space-2);
+}
+.m0 {
+  margin: 0px;
+}
+.scrollX {
+  overflow-x: auto;
+}
+.sparkBox {
+  width: 140px;
+  height: 32px;
+}
+.dl4 {
+  grid-template-columns: repeat(4, auto);
+  justify-content: start;
+  column-gap: var(--space-8);
+}
+.tl {
+  text-align: left;
+}
+.contents {
+  display: contents;
+}
+.rowTight1 {
+  gap: var(--space-1);
+  flex-wrap: nowrap;
+}
+.alignEnd {
+  align-items: flex-end;
+}
+.grow160 {
+  flex: 1 1 160px;
+}
+.grow200 {
+  flex: 1 1 200px;
+}
+.tableFull {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tr {
+  text-align: right;
+}
+.cmpHead {
+  text-align: left;
+  font-weight: 500;
+  padding: 4px 8px;
+}
+.cmpCell {
+  text-align: right;
+  padding: 4px 8px;
+}
+.mt2Only {
+  margin: var(--space-2) 0 0;
+}
+.mt0 {
+  margin-top: 0px;
+}
+.listReset {
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+}
+.gap1 {
+  gap: var(--space-1);
+}
+.blockMt1 {
+  display: block;
+  margin-top: var(--space-1);
+}
+.matrixRowHead {
+  align-self: center;
+  padding-right: 6px;
+}
+.strongInk {
+  font-weight: 600;
+  color: var(--ink);
+}
+.tc {
+  text-align: center;
+}
+.listPlain {
+  list-style: none;
+  padding-left: 0px;
+}
+.reportSection {
+  margin-top: var(--space-6);
+  break-inside: avoid;
+}
+.h2 {
+  font-size: var(--text-lg);
+  margin: 0 0 var(--space-2);
+}
+.reportPage {
+  background: var(--surface-2);
+  min-height: 100vh;
+  padding: var(--space-6) 16px;
+}
+.reportHeader {
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: var(--space-4);
+}
+.brand {
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+.primaryText {
+  color: var(--primary);
+}
+.h2Flat {
+  font-size: var(--text-lg);
+  margin: 0px;
+}
+.mt6 {
+  margin-top: var(--space-6);
+}
+.statBox {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.tableSm {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.listIndent {
+  margin: 0px;
+  padding-left: var(--space-5);
+}
+.mb4 {
+  margin-bottom: 4px;
+}
+.mb6 {
+  margin-bottom: 6px;
+}
+.reportFooter {
+  margin-top: var(--space-8);
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-3);
+}
+.mt3Only {
+  margin: var(--space-3) 0 0;
+}
+.dim {
+  opacity: 0.75;
+}
+.rel {
+  position: relative;
+}
+.bellPanel {
+  width: min(340px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.spread {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mutedP {
+  color: var(--muted);
+  margin: 0px;
+}
+.listStack {
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rowSm {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.tinyMuted {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.fill {
+  height: 100%;
+  width: 100%;
+}
+.inlineRow {
+  display: inline-flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Farm form */
+.chipBtn {
+  cursor: pointer;
+  padding-right: var(--space-3);
+  background: var(--surface-2);
+  border-color: var(--border);
+  font: inherit;
+}
+.chipOn {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+/* Data collection */
+.dropZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-8);
+  border-style: dashed;
+  cursor: pointer;
+  text-align: center;
+}
+/* History comparison and notifications */
+.rowDiff {
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+}
+.unread {
+  border-left: 3px solid var(--primary);
+}
+/* Risk matrix */
+.matrix {
+  display: grid;
+  grid-template-columns: auto repeat(5, minmax(56px, 1fr));
+  gap: 4px;
+  min-width: 340px;
+  font-size: var(--text-xs);
+}
+.matrixCell {
+  min-height: 56px;
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cellLow {
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+}
+.cellModerate {
+  background: color-mix(in srgb, var(--warning) 18%, transparent);
+}
+.cellHigh {
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+.cellCritical {
+  background: color-mix(in srgb, var(--danger) 32%, transparent);
+}
+/* Productivity report */
+.reportBar {
+  max-width: 794px;
+  margin: 0 auto var(--space-4);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.reportSheet {
+  max-width: 794px;
+  margin: 0 auto;
+  background: var(--surface);
+  padding: clamp(20px, 5vw, 48px);
+  border: 1px solid var(--border);
+  color: var(--ink);
+}
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+}
+.cell,
+.cellHead,
+.cellNum {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.cellHead {
+  text-align: left;
+}
+.cellNum {
+  text-align: right;
+  font-family: var(--font-mono);
+}
+/* Model table */
+.served {
+  font-weight: 600;
+}
+/* Notification bell */
+.bellBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--danger-strong);
+  color: var(--on-danger-strong);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+.bellItem {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+.bellItemUnread {
+  background: var(--surface-2);
+}
+.bellTitle {
+  display: block;
+  font-weight: 400;
+  margin-top: 2px;
+}
+.bellTitleUnread {
+  font-weight: 600;
+}
+/* Farm map */
+.mapFrame {
+  height: var(--map-height, 260px);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}

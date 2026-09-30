@@ -36,16 +36,17 @@ class LLMService:
         # Try Groq API first if key available
         if self.groq_api_key:
             try:
-                res = self._call_groq_api(payload, prediction_result)
+                res = self._valid_insights(self._call_groq_api(payload, prediction_result))
                 if res:
                     return res
+                log.warning("[LLMService] Groq returned an incomplete insight; using the rule engine.")
             except Exception as e:
                 log.warning(f"[LLMService] Groq API call failed: {e}. Falling back to Agronomic Engine...")
 
         # Try Gemini API second if key available
         if self.gemini_api_key:
             try:
-                res = self._call_gemini_api(payload, prediction_result)
+                res = self._valid_insights(self._call_gemini_api(payload, prediction_result))
                 if res:
                     return res
             except Exception as e:
@@ -53,6 +54,22 @@ class LLMService:
 
         # Fallback to deterministic Agronomic AI Expert Engine
         return self._generate_expert_rule_insights(payload, prediction_result)
+
+    @staticmethod
+    def _valid_insights(res: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """The LLM is asked for JSON with three keys; anything else is rejected so the caller falls back."""
+        if not isinstance(res, dict):
+            return None
+        text = res.get("ai_insights")
+        alerts, recs = res.get("risk_alerts"), res.get("recommendations")
+        if not isinstance(text, str) or not text.strip() or not isinstance(alerts, list) or not isinstance(recs, list):
+            return None
+        return {
+            "ai_insights": text.strip(),
+            "risk_alerts": [str(a) for a in alerts][:8],
+            "recommendations": [str(r) for r in recs][:8],
+            "llm_provider": str(res.get("llm_provider") or "LLM"),
+        }
 
     def _call_groq_api(self, payload: Dict[str, Any], prediction_result: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         url = "https://api.groq.com/openai/v1/chat/completions"
@@ -108,22 +125,30 @@ class LLMService:
             return parsed
 
     def _build_prompt(self, payload: Dict[str, Any], prediction_result: Dict[str, Any]) -> str:
+        labels = [
+            ("soil_pH", "Soil pH", ""), ("soil_moisture_%", "Soil moisture", "%"), ("humidity_%", "Humidity", "%"),
+            ("sunlight_hours", "Sunlight", " h/day"), ("irrigation_type", "Irrigation", ""),
+            ("fertilizer_type", "Fertilizer", ""), ("crop_disease_status", "Disease status", ""),
+        ]
+        conditions = "\n".join(f"- {label}: {payload[key]}{unit}" for key, label, unit in labels if payload.get(key) not in (None, ""))
         return f"""
-Analyze the following agricultural telemetry data and yield forecast:
-- Crop Type: {payload.get('crop_type')}
+Yield forecast to explain (country-level model; inputs are national figures):
+- Crop: {payload.get('crop_type')}
 - Region: {payload.get('region')}
-- Predicted Yield: {prediction_result.get('predicted_yield_kg_ha')} kg/ha (Rating: {prediction_result.get('productivity_rating')})
-- Risk Rating: {prediction_result.get('risk_rating')}
-- Soil pH: {payload.get('soil_pH')}, Soil Moisture: {payload.get('soil_moisture_%')}%
-- Temperature: {payload.get('temperature_C')}°C, Rainfall: {payload.get('rainfall_mm')} mm
-- Humidity: {payload.get('humidity_%')}%, Sunlight: {payload.get('sunlight_hours')} hrs
-- Irrigation: {payload.get('irrigation_type')}, Fertilizer: {payload.get('fertilizer_type')}
-- Disease Status: {payload.get('crop_disease_status')}
+- Season year: {payload.get('year')}
+- Predicted yield: {prediction_result.get('predicted_yield_kg_ha')} kg/ha (productivity: {prediction_result.get('productivity_rating')}, P10-P90 {prediction_result.get('low_kg_ha')}-{prediction_result.get('high_kg_ha')} kg/ha)
+- Risk rating: {prediction_result.get('risk_rating')}; flags: {', '.join(prediction_result.get('risk_flags') or []) or 'none'}
+- Temperature: {payload.get('temperature_C')} °C (annual mean)
+- Rainfall: {payload.get('rainfall_mm')} mm (long-term country average, not this season's rain)
+Field conditions reported by the user (not used by the model):
+{conditions or '- none reported'}
 
-Provide a JSON object with:
-"ai_insights": String summary of yield driver performance,
-"risk_alerts": List of strings detailing active crop risks,
-"recommendations": List of strings detailing actionable agronomic steps.
+Rules: use only the values above. Do not invent measurements, pests, nutrients, dates or products that are not listed.
+If a field condition was not reported, do not comment on it. Keep each list to at most 3 short items.
+Return a JSON object with exactly these keys:
+"ai_insights": string, 2-3 sentences on what drives this estimate,
+"risk_alerts": list of strings (empty list if none),
+"recommendations": list of strings.
 """
 
     def _generate_expert_rule_insights(self, payload: Dict[str, Any], prediction_result: Dict[str, Any]) -> Dict[str, Any]:

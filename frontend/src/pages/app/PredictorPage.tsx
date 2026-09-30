@@ -716,7 +716,9 @@ export function PredictorPage() {
                         tone={insights.llm_provider.startsWith('Groq') ? 'model' : 'neutral'}
                         title={insights.llm_provider}
                       >
-                        {insights.llm_provider.startsWith('Groq') ? `AI · ${insights.llm_provider}` : 'Fallback · rule engine'}
+                        {insights.llm_provider.startsWith('Groq')
+                          ? `AI · ${insights.llm_provider}`
+                          : 'Fallback · rule engine'}
                       </Badge>
                     )}
                   </div>

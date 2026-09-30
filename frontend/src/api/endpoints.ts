@@ -27,6 +27,7 @@ import type {
   CropRecord,
   MeResponse,
   ModelCard,
+  FarmSoil,
   SystemMetrics,
   MyFarmsResponse,
   ClimateTrend,
@@ -127,6 +128,7 @@ export const farmsApi = {
   list: (q: { page: number; page_size: number; search?: string; region?: string; mine?: boolean }) =>
     apiRequest<FarmsPage>('/api/farms', { query: q }),
   get: (id: number, crop?: string) => apiRequest<FarmDetail>(`/api/farms/${id}`, { query: { crop } }),
+  soil: (id: number) => apiRequest<FarmSoil>(`/api/farms/${id}/soil`),
   create: (body: FarmInput) => apiRequest<Farm>('/api/farms', { method: 'POST', body }),
   update: (id: number, body: Partial<FarmInput>) => apiRequest<Farm>(`/api/farms/${id}`, { method: 'PATCH', body }),
   remove: (id: number) => apiRequest<void>(`/api/farms/${id}`, { method: 'DELETE' }),

@@ -7,6 +7,7 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import { apiRequest } from '../api/client';
 import { Skeleton } from './ui';
+import x from '../pages/app/extras.module.css';
 
 const icon = L.icon({
   iconUrl: markerIcon,
@@ -46,21 +47,11 @@ export function FarmMap({ region, name, latitude, longitude, height = 260 }: Pro
     };
   }, [has, region]);
 
-  if (error)
-    return (
-      <p style={{ color: 'var(--muted)', margin: 0 }}>
-        Map unavailable for {region}. Add coordinates to the farm to show it.
-      </p>
-    );
+  if (error) return <p className={x.mutedP}>Map unavailable for {region}. Add coordinates to the farm to show it.</p>;
   if (!pos) return <Skeleton height={height} />;
   return (
-    <div style={{ height, borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border)' }}>
-      <MapContainer
-        center={[pos.lat, pos.lon]}
-        zoom={has ? 11 : 5}
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={false}
-      >
+    <div className={x.mapFrame} style={{ '--map-height': `${height}px` } as React.CSSProperties}>
+      <MapContainer center={[pos.lat, pos.lon]} zoom={has ? 11 : 5} className={x.fill} scrollWheelZoom={false}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

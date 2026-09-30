@@ -241,3 +241,15 @@ def test_my_farms_comparison_and_prediction_delete(client, auth):
     assert client.delete(f"/api/predictions/{p['id']}", headers=auth("agronomist")).status_code == 404
     assert client.delete(f"/api/predictions/{p['id']}", headers=auth("farmer")).status_code == 204
     assert client.get(f"/api/predictions/{p['id']}", headers=auth("farmer")).status_code == 404
+
+
+def test_incomplete_llm_insight_falls_back(client, auth, monkeypatch):
+    from backend.app.services.llm_service import llm_service
+
+    monkeypatch.setattr(llm_service, "groq_api_key", "test-key")
+    monkeypatch.setattr(llm_service, "gemini_api_key", "")
+    monkeypatch.setattr(llm_service, "_call_groq_api", lambda payload, result: {"ai_insights": "text", "risk_alerts": [], "llm_provider": "Groq · test"})
+    res = client.post("/api/predict/insights", json=PREDICT_BODY, headers=auth("farmer"))
+    assert res.status_code == 200 and res.json()["llm_provider"] == "YieldSense rule engine (fallback)"
+    monkeypatch.setattr(llm_service, "_call_groq_api", lambda payload, result: {"ai_insights": "ok", "risk_alerts": [], "recommendations": ["a"], "llm_provider": "Groq · test"})
+    assert client.post("/api/predict/insights", json=PREDICT_BODY, headers=auth("farmer")).json()["llm_provider"] == "Groq · test"

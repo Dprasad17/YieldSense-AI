@@ -10,16 +10,16 @@ What is and isn't done is tracked in [docs/milestone-1-3-checklist.md](docs/mile
 
 | Area | What it does |
 | --- | --- |
-| Yield Predictor | XGBoost model v2 with a P10–P90 range. The form is split into **Model inputs** (crop, region, year, rainfall, temperature, pesticides, growing period) and optional **Field conditions**, which drive risk flags only. Includes what-if scenarios. |
+| Yield Predictor | XGBoost model v2.1 with a P10–P90 range. The form is split into **Model inputs** (crop, region, year, rainfall, temperature, pesticides) and optional **Field conditions**, which drive risk flags only. Includes what-if scenarios. |
 | Prediction history | Saved on the server. Filter, compare two predictions, re-run with the current model, delete. |
 | Farms & data collection | Farms CRUD, seasons, map, soil tests. A CSV/XLSX import wizard (upload → map → validate → import). |
 | Recommendations | Rule engine with model-estimated impact. The rationale is written live by Groq when available and labelled as a rule-based fallback otherwise. Tasks, snooze and dismiss are saved. |
 | Risk assessment | Likelihood × impact matrix, yearly timeline, yield anomalies (>3σ), mitigation. |
 | Analytics & reports | Yearly trend with next-year forecast band, your farms vs regional reference, CSV/XLSX export, printable report at `/report/productivity`. |
-| Weather & soil | Live 7-day Open-Meteo forecast, yearly ERA5 climate trend, optimal bands for every soil/climate metric. |
-| Model performance | 6 models × 2 targets × 3 splits from the model card, selection rule, interval coverage, permutation importance, column provenance. |
+| Weather & soil | Live 7-day Open-Meteo forecast and yearly ERA5 climate trend. Real soil per farm from ISRIC SoilGrids (pH, organic carbon, nitrogen, texture, CEC) plus soil-test nutrient ratings (N, P, K, organic carbon) against Soil Health Card limits, with fertilizer guidance. |
+| Model performance | 6 models × 2 targets × 3 splits from the model card, selection rule, held-out interval coverage, weather-feature ablation, before/after comparison, permutation importance, column provenance. |
 | Notifications | Bell with unread count and a notifications page for risk alerts and high-priority recommendations. |
-| Admin | Users & roles, audit log, system metrics (API and inference p50/p95). |
+| Admin | Users & roles, audit log, system metrics (API and inference p50/p95, recommendation effectiveness, data processing speed). |
 
 Global context (Farm · Region · Crop · Year) lives in the URL and applies to every screen.
 
@@ -50,7 +50,8 @@ flowchart LR
 
 - **Auth:** JWT that expires after 60 minutes, bcrypt password hashes, and a login rate limit. Three roles (Farmer, Agronomist, Admin), enforced on both the server and the client. Every `/api` route except login, register, health and public stats requires a token, and a test checks every route in the OpenAPI schema.
 - **Data:** `crop_records` holds the reference dataset (28,242 FAOSTAT country · crop · year rows, 1990–2013). Only crop, region, year, yield, rainfall, temperature and pesticides are real. The soil, humidity, sunlight, irrigation, fertilizer, disease and crop-duration columns are synthetic, and NDVI is derived from yield. `GET /api/data/provenance` and the UI badges show this for every column.
-- **Model:** `scripts/train_models_v2.py` trains Linear, Ridge, RF, XGBoost, LightGBM and a Keras MLP on raw and log1p targets, and evaluates them on random, temporal (train ≤ 2008 / test 2009–2013) and unseen-region splits. The served model has the lowest temporal RMSE; models within 1% count as tied and the lower p95 latency wins. The P10–P90 interval uses split-conformal residuals from the out-of-time period.
+- **Soil:** farm soil comes from the ISRIC SoilGrids REST API (0–30 cm), cached in MongoDB, together with the farm's soil tests. If SoilGrids is unreachable the app shows an error instead of substituting synthetic values.
+- **Model:** `scripts/train_models_v2.py` trains Linear, Ridge, RF, XGBoost, LightGBM and a Keras MLP on raw and log1p targets, and evaluates them on random, temporal (train ≤ 2008 / test 2009–2013) and unseen-region splits. The served model (XGBoost v2.1.0, 6 inputs) has R² 0.9528 and RMSE 2,065 kg/ha on the temporal split. The P10–P90 interval uses split-conformal residuals; on held-out years (2011–2013) it covers 74.5% of yields against a nominal 80%. Rainfall in the data is one long-term value per country, so the model has no year-to-year rainfall effect.
 - **Observability:** every response carries `X-Request-ID` and `Server-Timing`, and every request writes one JSON log line. `GET /api/health` checks PostgreSQL, MongoDB and the model. `GET /api/admin/metrics` reports rolling p50/p95 latency per route and for inference.
 
 Schema and ERD: [docs/database-schema.md](docs/database-schema.md).
@@ -72,7 +73,7 @@ Schema and ERD: [docs/database-schema.md](docs/database-schema.md).
 
 ```powershell
 python -m venv .venv; .\.venv\Scripts\activate
-pip install -r requirements.txt -r requirements-dev.txt
+pip install -r requirements.txt -r requirements-dev.txt   # API runtime + tests (no TensorFlow)
 copy backend\.env.example backend\.env    # set DATABASE_URL, TEST_DATABASE_URL, SECRET_KEY
 copy .env.example .env                    # optional: GROQ_API_KEY for AI rationale text
 alembic -c backend/alembic.ini upgrade head
@@ -83,7 +84,7 @@ python -m uvicorn backend.app.main:app --port 8000
 - API docs: http://localhost:8000/docs
 - Health: http://localhost:8000/api/health
 - Generate `SECRET_KEY` with `python -c "import secrets; print(secrets.token_urlsafe(48))"`. With `APP_ENV=production` the API refuses to start without one.
-- To retrain the model, run `python scripts/train_models_v2.py`. It writes `models/v2/model.pkl` and `model_card.json`.
+- To retrain the model, first `pip install -r requirements-train.txt` (adds TensorFlow, LightGBM and the plotting libraries, which the API doesn't need), then run `python scripts/train_models_v2.py`. It writes `models/v2/model.pkl` and `model_card.json`.
 
 ### 3. Frontend
 
@@ -115,7 +116,8 @@ Demo accounts: `farmer / farmer123`, `agronomist / agro123`, `admin / admin123`.
 | ![Predictor](docs/screenshots/predictor.png) | ![Risk](docs/screenshots/risk.png) |
 | ![Model performance](docs/screenshots/model-performance.png) | ![Dataset explorer](docs/screenshots/dataset-explorer.png) |
 | ![Farms](docs/screenshots/farms.png) | ![Weather](docs/screenshots/weather.png) |
-| ![Users and system metrics](docs/screenshots/users.png) | ![Landing](docs/screenshots/landing.png) |
+| ![Real soil for a farm](docs/screenshots/farm-soil.png) | ![Users and system metrics](docs/screenshots/users.png) |
+| ![Landing](docs/screenshots/landing.png) | |
 
 ## Repository layout
 

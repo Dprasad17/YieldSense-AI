@@ -21,23 +21,8 @@ const TOKENS = [
 
 export type ChartColors = Record<(typeof TOKENS)[number], string>;
 
-const FALLBACK: ChartColors = {
-  ink: '#e7eee9',
-  muted: '#8b978f',
-  border: '#222d26',
-  surface: '#111814',
-  'surface-2': '#172019',
-  primary: '#2fbf7a',
-  'data-water': '#4c8df6',
-  'data-temperature': '#e8a33a',
-  'data-soil': '#b07a4f',
-  'data-vegetation': '#3cc47c',
-  'data-model': '#9b7bf0',
-  success: '#2fbf7a',
-  warning: '#e8a33a',
-  danger: '#ef5a5a',
-  info: '#4c8df6',
-};
+/** Before the computed values are read (first render, SSR), charts reference the tokens directly. */
+const FALLBACK = Object.fromEntries(TOKENS.map(t => [t, `var(--${t})`])) as ChartColors;
 
 function read(el: Element): ChartColors {
   const cs = getComputedStyle(el);

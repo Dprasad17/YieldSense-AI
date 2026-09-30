@@ -33,6 +33,13 @@
   --data-vegetation: #3cc47c;
   --data-model: #9b7bf0;
 
+  /* Theme-independent: solid fills that carry white text (4.5:1 or better in both themes) */
+  --danger-strong: #b42318; /* 6.6:1 with --on-danger-strong */
+  --on-danger-strong: #ffffff;
+  --switch-thumb: #ffffff;
+  --print-bg: #ffffff;
+  --print-ink: #000000;
+
   /* Status */
   --success: #2fbf7a;
   --warning: #e8a33a;

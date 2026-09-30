@@ -18,6 +18,7 @@ Nutrient ratings (soil tests) follow the Indian Soil Health Card critical limits
   be confirmed from an official source, so we treat the numbers as elemental and show oxide equivalents.
 """
 import json
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -81,10 +82,26 @@ class SoilGridsUnavailable(Exception):
     """SoilGrids could not be reached or returned no data for the point."""
 
 
+class SoilGridsNoData(SoilGridsUnavailable):
+    """The point is masked in SoilGrids (urban area, water, outside coverage)."""
+
+
+# Offsets (degrees) tried in order when the exact point is masked: ~35 km diagonals, then ~55 km east/west
+# (cities are usually larger than a 10 km step, so nearer rings just cost extra slow calls).
+NEARBY_OFFSETS = [(0.25, 0.25), (-0.25, -0.25), (0.25, -0.25), (-0.25, 0.25), (0.5, 0.0), (-0.5, 0.0)]
+
+
 def _http_json(url: str) -> dict:
+    """GET with one retry: the public SoilGrids endpoint often times out on the first call."""
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=SOILGRIDS_TIMEOUT_S) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    for attempt in (1, 2):
+        try:
+            with urllib.request.urlopen(req, timeout=SOILGRIDS_TIMEOUT_S) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except (TimeoutError, urllib.error.URLError):
+            if attempt == 2:
+                raise
+    raise TimeoutError("unreachable")
 
 
 def _parse(raw: dict) -> dict:
@@ -97,7 +114,7 @@ def _parse(raw: dict) -> dict:
         by_depth = {d["label"]: (d.get("values") or {}).get("mean") for d in layer["depths"]}
         vals = [(by_depth.get(lbl), w) for lbl, w in DEPTHS]
         if any(v is None for v, _ in vals):
-            raise SoilGridsUnavailable("SoilGrids has no soil data at this point (water, urban or outside coverage).")
+            raise SoilGridsNoData("SoilGrids has no soil data at or near this point (water, urban or outside coverage).")
         weighted = sum(v * w for v, w in vals) / sum(w for _, w in vals)
         out[key] = {"label": label, "unit": unit, "value_0_30cm": round(weighted / div, 2), "by_depth": {lbl: round(v / div, 2) for (v, _), (lbl, _) in zip(vals, DEPTHS)}}
     return out
@@ -111,14 +128,43 @@ def fetch_soilgrids(lat: float, lon: float) -> dict:
     cached = mongo.cache_get("soilgrids_cache", key)
     if cached is not None:
         return {**cached, "cached": True}
-    params = [("lon", lon), ("lat", lat), *[("property", p) for p in PROPERTIES], *[("depth", d) for d, _ in DEPTHS], ("value", "mean")]
-    try:
-        raw = _http_json(SOILGRIDS_URL + "?" + urllib.parse.urlencode(params))
-    except Exception as e:
-        raise SoilGridsUnavailable(f"SoilGrids (ISRIC) is unreachable right now: {e.__class__.__name__}. Try again later.") from e
-    data = {"latitude": lat, "longitude": lon, "properties": _parse(raw), "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    # City centres and water are masked in SoilGrids. Try the exact point, then the nearest surrounding
+    # pixels (about 35 km, then 55 km away) and say which point was used. Still real data, never synthetic.
+    props, used, last = None, (lat, lon), None
+    for dlat, dlon in [(0.0, 0.0), *NEARBY_OFFSETS]:
+        plat, plon = round(lat + dlat, 4), round(lon + dlon, 4)
+        params = [("lon", plon), ("lat", plat), *[("property", p) for p in PROPERTIES], *[("depth", d) for d, _ in DEPTHS], ("value", "mean")]
+        try:
+            raw = _http_json(SOILGRIDS_URL + "?" + urllib.parse.urlencode(params))
+        except Exception as e:
+            raise SoilGridsUnavailable(f"SoilGrids (ISRIC) is unreachable right now: {e.__class__.__name__}. Try again later.") from e
+        try:
+            props, used = _parse(raw), (plat, plon)
+            break
+        except SoilGridsNoData as e:
+            last = e
+    if props is None:
+        raise last or SoilGridsNoData("SoilGrids has no soil data at or near this point.")
+    exact = used == (round(lat, 4), round(lon, 4))
+    data = {
+        "latitude": lat,
+        "longitude": lon,
+        "sampled_latitude": used[0],
+        "sampled_longitude": used[1],
+        "sampled_note": None if exact else f"The exact point has no SoilGrids data (urban or water); values are from the nearest pixel with data, about {_km(lat, lon, *used):.0f} km away.",
+        "properties": props,
+        "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
     mongo.cache_set("soilgrids_cache", key, data, expires_at=datetime.now(timezone.utc) + timedelta(days=CACHE_DAYS))
     return {**data, "cached": False}
+
+
+def _km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    import math
+
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    a = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(math.radians(lon2 - lon1) / 2) ** 2
+    return 6371 * 2 * math.asin(math.sqrt(a))
 
 
 def rate(value: Optional[float], low: float, high: float) -> Optional[str]:

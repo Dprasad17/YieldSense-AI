@@ -207,6 +207,17 @@ export function useFarm(id: number | null, crop?: string) {
 }
 
 /** Invalidate farm lists and details after a change. */
+/** Real soil for a farm (SoilGrids + soil tests). Slow on the first call, cached on the server after that. */
+export function useFarmSoil(id: number | null) {
+  return useQuery({
+    queryKey: ['farms', 'soil', id],
+    queryFn: () => farmsApi.soil(id as number),
+    enabled: id != null,
+    staleTime: 60 * 60_000,
+    retry: false,
+  });
+}
+
 export function useFarmsInvalidate() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: ['farms'] });

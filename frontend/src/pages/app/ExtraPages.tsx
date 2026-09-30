@@ -511,9 +511,7 @@ export function HelpPage() {
           <Card>
             <CardHeader title="How predictions work" />
             <ol style={{ margin: 0, paddingLeft: 'var(--space-5)', lineHeight: 1.7 }}>
-              <li>
-                You enter the model inputs: crop, region, season year, rainfall, temperature and pesticides.
-              </li>
+              <li>You enter the model inputs: crop, region, season year, rainfall, temperature and pesticides.</li>
               <li>The inputs are encoded exactly as during training.</li>
               <li>
                 The XGBoost model adds up many small decision trees; the P10–P90 range comes from its errors on

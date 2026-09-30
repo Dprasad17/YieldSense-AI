@@ -19,6 +19,7 @@ import { ErrorState } from '../../components/ui/States';
 import { useModelCard, useProvenance } from '../../hooks/queries';
 import { formatCount, formatIndex, formatLatency, formatNumber, formatPercent } from '../../lib/format';
 import s from './app.module.css';
+import x from './extras.module.css';
 
 const SPLITS: { value: SplitKey; label: string }[] = [
   { value: 'temporal', label: 'Temporal' },
@@ -53,7 +54,7 @@ export function ModelPerformancePage() {
       header: 'Model',
       sticky: true,
       render: r => (
-        <span style={{ fontWeight: isServed(r) ? 600 : 400 }}>
+        <span className={isServed(r) ? x.served : undefined}>
           {r.model}
           {isServed(r) && (
             <>
@@ -200,7 +201,7 @@ export function ModelPerformancePage() {
               <Skeleton height={320} />
             )}
             {best && (
-              <p className={s.small} style={{ margin: 'var(--space-3) 0 0' }}>
+              <p className={`${s.small} ${x.mt3Only}`}>
                 Sorted by RMSE (kg/ha). Lowest on this split: {best.model} ({best.target}), RMSE{' '}
                 {formatCount(best.rmse)}, trained on {formatCount(best.train_rows)} rows and tested on{' '}
                 {formatCount(best.test_rows)}.
@@ -236,7 +237,7 @@ export function ModelPerformancePage() {
             <CardHeader title="Selection rule" subtitle="How the served model was chosen" />
             {card ? (
               <div className={s.stack}>
-                <p style={{ margin: 0 }}>{card.selection_rule}</p>
+                <p className={x.m0}>{card.selection_rule}</p>
                 {card.previous_model && (
                   <Banner tone="info">
                     <strong>Previous model: {card.previous_model.model}.</strong> R²{' '}
@@ -299,14 +300,16 @@ export function ModelPerformancePage() {
                     key: 'd',
                     header: 'ΔRMSE',
                     align: 'right',
-                    render: r => (r.delta_rmse === 0 ? '—' : `${r.delta_rmse > 0 ? '+' : ''}${formatCount(r.delta_rmse)}`),
+                    render: r =>
+                      r.delta_rmse === 0 ? '—' : `${r.delta_rmse > 0 ? '+' : ''}${formatCount(r.delta_rmse)}`,
                   },
                   { key: 'r2', header: 'R²', align: 'right', render: r => formatNumber(r.r2, 4) },
                   {
                     key: 'dr2',
                     header: 'ΔR²',
                     align: 'right',
-                    render: r => (r.delta_r2 === 0 ? '—' : `${r.delta_r2 > 0 ? '+' : ''}${formatNumber(r.delta_r2, 4)}`),
+                    render: r =>
+                      r.delta_r2 === 0 ? '—' : `${r.delta_r2 > 0 ? '+' : ''}${formatNumber(r.delta_r2, 4)}`,
                   },
                 ]}
               />
@@ -326,7 +329,11 @@ export function ModelPerformancePage() {
                 caption="Model version comparison"
                 compact
                 rows={[
-                  { v: `v${card?.previous_version?.version}`, features: card?.previous_version?.features, r: prev.metrics },
+                  {
+                    v: `v${card?.previous_version?.version}`,
+                    features: card?.previous_version?.features,
+                    r: prev.metrics,
+                  },
                   { v: `v${card?.version}`, features: card?.features, r: m },
                 ]}
                 rowKey={x => x.v}
@@ -369,7 +376,7 @@ export function ModelPerformancePage() {
                   </li>
                 ))}
                 {card.excluded_features.map(f => (
-                  <li key={f.feature} className={s.between} style={{ opacity: 0.75 }}>
+                  <li key={f.feature} className={`${s.between} ${x.dim}`}>
                     <span>
                       <s>{byColumn.get(f.feature)?.label ?? f.feature}</s> <span className={s.small}>{f.reason}</span>
                     </span>
@@ -422,7 +429,7 @@ export function ModelPerformancePage() {
             <CardHeader title="Model card" subtitle="Intended use and limitations" />
             {card ? (
               <div className={s.stack}>
-                <p style={{ margin: 0 }}>{card.intended_use}</p>
+                <p className={x.m0}>{card.intended_use}</p>
                 <dl className={s.dl}>
                   <dt>Training data</dt>
                   <dd>

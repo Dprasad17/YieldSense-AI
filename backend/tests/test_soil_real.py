@@ -63,3 +63,31 @@ def test_farm_soil_outage_is_an_error_not_synthetic(client, auth, monkeypatch):
     farm = client.get("/api/farms", headers=auth("farmer")).json()["items"][1]
     res = client.get(f"/api/farms/{farm['id']}/soil", headers=auth("farmer"))
     assert res.status_code == 502 and res.json()["error"]["code"] == "soilgrids_unavailable"
+
+
+def test_masked_point_uses_nearest_pixel_with_data(monkeypatch):
+    raw = json.load(open(FIXTURE, encoding="utf-8"))
+    empty = json.loads(json.dumps(raw))
+    for layer in empty["properties"]["layers"]:
+        for d in layer["depths"]:
+            d["values"]["mean"] = None
+    calls = []
+
+    def fake(url):
+        calls.append(url)
+        return empty if len(calls) < 3 else raw
+
+    monkeypatch.setattr(soil_real, "_http_json", fake)
+    data = soil_real.fetch_soilgrids(12.97, 77.59)
+    assert len(calls) == 3 and data["properties"]["ph"]["value_0_30cm"] == 7.25
+    assert (data["sampled_latitude"], data["sampled_longitude"]) != (12.97, 77.59) and "nearest pixel" in data["sampled_note"]
+
+
+def test_no_data_anywhere_is_an_error(monkeypatch):
+    raw = json.load(open(FIXTURE, encoding="utf-8"))
+    for layer in raw["properties"]["layers"]:
+        for d in layer["depths"]:
+            d["values"]["mean"] = None
+    monkeypatch.setattr(soil_real, "_http_json", lambda url: raw)
+    with pytest.raises(soil_real.SoilGridsNoData):
+        soil_real.fetch_soilgrids(0.0, -30.0)

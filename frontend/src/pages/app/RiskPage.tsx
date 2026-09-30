@@ -22,6 +22,7 @@ import { formatCount, formatPercent, formatYield } from '../../lib/format';
 import { filtersSearch, useGlobalFilters } from '../../store/filters';
 import { usePreferences } from '../../store/preferences';
 import s from './app.module.css';
+import x from './extras.module.css';
 
 type Risk = RiskAssessment['risks'][number];
 type Anomaly = RiskAssessment['anomalies'][number];
@@ -32,9 +33,8 @@ const LEVEL_TONE: Record<Risk['level'], Tone> = {
   High: 'danger',
   Critical: 'danger',
 };
+// Drought and flood are left out: rainfall is one long-term value per country, so they don't vary by year.
 const SERIES: { key: Risk['type']; label: string; color: string }[] = [
-  { key: 'drought', label: 'Drought', color: 'data-temperature' },
-  { key: 'flood', label: 'Flood', color: 'data-water' },
   { key: 'heat', label: 'Heat', color: 'danger' },
   { key: 'pest_disease', label: 'Pest & disease', color: 'data-vegetation' },
   { key: 'soil', label: 'Soil pH', color: 'data-soil' },
@@ -43,30 +43,22 @@ const SERIES: { key: Risk['type']; label: string; color: string }[] = [
 function cellLevel(score: number): Risk['level'] {
   return score <= 4 ? 'Low' : score <= 9 ? 'Moderate' : score <= 15 ? 'High' : 'Critical';
 }
-const CELL_BG: Record<Risk['level'], string> = {
-  Low: 'color-mix(in srgb, var(--success) 14%, transparent)',
-  Moderate: 'color-mix(in srgb, var(--warning) 18%, transparent)',
-  High: 'color-mix(in srgb, var(--danger) 18%, transparent)',
-  Critical: 'color-mix(in srgb, var(--danger) 32%, transparent)',
+const CELL_CLASS: Record<Risk['level'], string> = {
+  Low: x.cellLow,
+  Moderate: x.cellModerate,
+  High: x.cellHigh,
+  Critical: x.cellCritical,
 };
 
 /** 5×5 likelihood × impact matrix with each risk placed in its cell. */
 function RiskMatrix({ risks }: { risks: Risk[] }) {
   const at = (l: number, i: number) => risks.filter(r => r.likelihood === l && r.impact === i);
   return (
-    <div role="table" aria-label="Risk matrix: impact by likelihood" style={{ overflowX: 'auto' }}>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'auto repeat(5, minmax(56px, 1fr))',
-          gap: 4,
-          minWidth: 340,
-          fontSize: 'var(--text-xs)',
-        }}
-      >
+    <div role="table" aria-label="Risk matrix: impact by likelihood" className={x.scrollX}>
+      <div className={x.matrix}>
         {[5, 4, 3, 2, 1].map(impact => (
-          <div key={impact} role="row" style={{ display: 'contents' }}>
-            <div role="rowheader" className={s.small} style={{ alignSelf: 'center', paddingRight: 6 }}>
+          <div key={impact} role="row" className={x.contents}>
+            <div role="rowheader" className={`${s.small} ${x.matrixRowHead}`}>
               Impact {impact}
             </div>
             {[1, 2, 3, 4, 5].map(l => {
@@ -77,18 +69,10 @@ function RiskMatrix({ risks }: { risks: Risk[] }) {
                   key={l}
                   role="cell"
                   title={`Likelihood ${l} × impact ${impact} = ${l * impact} (${level})`}
-                  style={{
-                    minHeight: 56,
-                    borderRadius: 'var(--radius-sm)',
-                    background: CELL_BG[level],
-                    padding: 4,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                  }}
+                  className={`${x.matrixCell} ${CELL_CLASS[level]}`}
                 >
                   {here.map(r => (
-                    <span key={r.type} style={{ fontWeight: 600, color: 'var(--ink)' }}>
+                    <span key={r.type} className={x.strongInk}>
                       {r.label}
                     </span>
                   ))}
@@ -97,10 +81,10 @@ function RiskMatrix({ risks }: { risks: Risk[] }) {
             })}
           </div>
         ))}
-        <div role="row" style={{ display: 'contents' }}>
+        <div role="row" className={x.contents}>
           <div />
           {[1, 2, 3, 4, 5].map(l => (
-            <div key={l} role="columnheader" className={s.small} style={{ textAlign: 'center' }}>
+            <div key={l} role="columnheader" className={`${s.small} ${x.tc}`}>
               Likelihood {l}
             </div>
           ))}
@@ -220,20 +204,24 @@ export function RiskPage() {
               <Card>
                 <CardHeader title="Mitigation" subtitle="Highest score first" />
                 {data ? (
-                  <ul className={s.list} style={{ listStyle: 'none', paddingLeft: 0 }}>
+                  <ul className={`${s.list} ${x.listPlain}`}>
                     {risks.map(r => (
-                      <li key={r.type} className={s.stack} style={{ gap: 'var(--space-1)' }}>
+                      <li key={r.type} className={`${s.stack} ${x.gap1}`}>
                         <div className={s.between}>
                           <strong>{r.label}</strong>
-                          <Badge tone={LEVEL_TONE[r.level]}>
-                            {r.level} · {r.score}
-                          </Badge>
+                          <span className={s.row}>
+                            {r.structural && <Badge tone="info">Structural</Badge>}
+                            <Badge tone={LEVEL_TONE[r.level]}>
+                              {r.level} · {r.score}
+                            </Badge>
+                          </span>
                         </div>
                         <span className={s.small}>
                           {r.trigger}: {formatPercent(r.share_affected * 100)} of records; median yield{' '}
                           {r.median_yield_loss_pct > 0 ? `${r.median_yield_loss_pct}% lower` : 'not lower'} than
                           unaffected records.
                         </span>
+                        {r.note && <span className={s.small}>{r.note}</span>}
                         <span>{r.mitigation}</span>
                         <Link
                           to={`/app/recommendations${search ? `${search}&` : '?'}category=${r.recommendation_category}`}
@@ -253,7 +241,7 @@ export function RiskPage() {
             <div className={s.s12}>
               <ChartCard
                 title="Risk timeline"
-                subtitle="Share of records breaching each threshold, by year"
+                subtitle="Share of records breaching each threshold, by year. Drought and flood are climate-zone risks (rainfall is constant per country), so they have no yearly line"
                 summary={
                   timeline.length
                     ? `Risk shares from ${timeline[0].x} to ${timeline[timeline.length - 1].x}.`

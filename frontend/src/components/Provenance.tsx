@@ -1,5 +1,6 @@
 import type { ColumnProvenance } from '../api/types';
 import { Badge, type Tone } from './ui';
+import x from '../pages/app/extras.module.css';
 
 const TONE: Record<ColumnProvenance['provenance'], Tone> = { real: 'success', synthetic: 'warning', derived: 'info' };
 const SHORT: Record<ColumnProvenance['provenance'], string> = { real: 'R', synthetic: 'S', derived: 'D' };
@@ -19,7 +20,7 @@ export function ProvenanceBadge({ entry, compact }: { entry: ColumnProvenance | 
 
 export function ProvenanceLegend() {
   return (
-    <span style={{ display: 'inline-flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+    <span className={x.inlineRow}>
       <Badge tone="success">R · Real</Badge>
       <Badge tone="warning">S · Synthetic</Badge>
       <Badge tone="info">D · Derived</Badge>

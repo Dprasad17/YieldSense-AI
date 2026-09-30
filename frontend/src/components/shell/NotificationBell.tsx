@@ -10,6 +10,7 @@ import { useGlobalFilters } from '../../store/filters';
 import { Badge, Button, Popover, Skeleton } from '../ui';
 import ui from '../ui/ui.module.css';
 import { SEVERITY_TONE, timeAgo } from '../../lib/notifications';
+import x from '../../pages/app/extras.module.css';
 
 /** Top-bar bell: unread count, the five latest notifications, mark read, and a link to the full list. */
 export function NotificationBell() {
@@ -41,40 +42,22 @@ export function NotificationBell() {
       trigger={
         <button
           type="button"
-          className={clsx(ui.btn, ui.iconBtn, ui.ghost)}
+          className={`${clsx(ui.btn, ui.iconBtn, ui.ghost)} ${x.rel}`}
           aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'}
           title="Notifications"
           data-notification-bell
-          style={{ position: 'relative' }}
         >
           <Bell size={17} aria-hidden="true" />
           {unread > 0 && (
-            <span
-              aria-hidden="true"
-              style={{
-                position: 'absolute',
-                top: 2,
-                right: 2,
-                minWidth: 16,
-                height: 16,
-                padding: '0 4px',
-                borderRadius: 8,
-                background: 'var(--danger-ink)',
-                color: 'var(--bg)',
-                fontSize: 10,
-                fontWeight: 700,
-                lineHeight: '16px',
-                textAlign: 'center',
-              }}
-            >
+            <span aria-hidden="true" className={x.bellBadge}>
               {unread > 99 ? '99+' : unread}
             </span>
           )}
         </button>
       }
     >
-      <div style={{ width: 'min(340px, calc(100vw - 32px))', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className={x.bellPanel}>
+        <div className={x.spread}>
           <strong>Notifications</strong>
           <Button
             size="sm"
@@ -90,34 +73,24 @@ export function NotificationBell() {
         {q.isPending ? (
           <Skeleton height={120} />
         ) : q.isError ? (
-          <p style={{ margin: 0, color: 'var(--muted)' }}>Notifications couldn’t be loaded.</p>
+          <p className={x.mutedP}>Notifications couldn’t be loaded.</p>
         ) : q.data.items.length === 0 ? (
-          <p style={{ margin: 0, color: 'var(--muted)' }}>You’re all caught up.</p>
+          <p className={x.mutedP}>You’re all caught up.</p>
         ) : (
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <ul className={x.listStack}>
             {q.data.items.map(n => (
               <li key={n.id}>
                 <button
                   type="button"
                   onClick={() => openItem(n)}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    background: n.read ? 'transparent' : 'var(--surface-2)',
-                    border: 0,
-                    borderRadius: 'var(--radius-sm)',
-                    padding: 8,
-                    cursor: 'pointer',
-                    color: 'inherit',
-                    font: 'inherit',
-                  }}
+                  className={`${x.bellItem} ${n.read ? '' : x.bellItemUnread}`}
                 >
-                  <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span className={x.rowSm}>
                     {!n.read && <span className="sr-only">Unread: </span>}
                     <Badge tone={SEVERITY_TONE[n.severity] ?? 'neutral'}>{n.category}</Badge>
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{timeAgo(n.created_at)}</span>
+                    <span className={x.tinyMuted}>{timeAgo(n.created_at)}</span>
                   </span>
-                  <span style={{ display: 'block', fontWeight: n.read ? 400 : 600, marginTop: 2 }}>{n.title}</span>
+                  <span className={`${x.bellTitle} ${n.read ? '' : x.bellTitleUnread}`}>{n.title}</span>
                 </button>
               </li>
             ))}

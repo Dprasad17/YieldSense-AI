@@ -116,7 +116,7 @@ export function RecommendationsPage() {
             title={r.impact_basis}
           >
             {r.impact_kg_ha == null ? (
-              <>Impact not estimated: this column isn’t a model input (synthetic in the dataset).</>
+              <>Impact {r.impact_basis.charAt(0).toLowerCase() + r.impact_basis.slice(1)}</>
             ) : (
               <>
                 Expected impact: {r.impact_kg_ha > 0 ? '+' : ''}

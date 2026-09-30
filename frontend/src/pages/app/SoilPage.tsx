@@ -1,6 +1,7 @@
 import { CheckCircle2, Info, Layers, Leaf, TestTube, TriangleAlert, XCircle } from 'lucide-react';
 import {
   Badge,
+  Banner,
   Card,
   CardHeader,
   DataTable,
@@ -11,11 +12,13 @@ import {
   type Tone,
 } from '../../components/ui';
 import type { OptimalBand } from '../../api/types';
+import { FarmSoilPanel } from '../../components/FarmSoilPanel';
 import { ErrorState } from '../../components/ui/States';
 import { useSoil } from '../../hooks/queries';
 import { formatCount, formatIndex, formatPercent } from '../../lib/format';
 import { useGlobalFilters } from '../../store/filters';
 import s from './app.module.css';
+import x from './extras.module.css';
 
 const DEFAULT_CROP = 'Wheat';
 
@@ -128,6 +131,24 @@ export function SoilPage() {
           </>
         }
       />
+
+      {filters.farm ? (
+        <FarmSoilPanel farmId={Number(filters.farm)} />
+      ) : (
+        <Banner tone="info">
+          Select a farm in the context bar to see real soil data for it (ISRIC SoilGrids and your soil tests, with
+          nutrient ratings).
+        </Banner>
+      )}
+
+      <div className={s.between}>
+        <h2 className={x.h2Flat}>Reference dataset view</h2>
+        <Badge tone="warning">Synthetic soil columns</Badge>
+      </div>
+      <p className={x.mutedP}>
+        The figures below come from the reference dataset, where soil pH and moisture were generated, not measured. They
+        show the workflow; they are not evidence about any real field.
+      </p>
 
       {q.isError && <ErrorState error={q.error} onRetry={() => q.refetch()} />}
 

@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const APP = process.env.APP ?? 'http://localhost:5199';
+const API = process.env.API ?? 'http://localhost:8765';
 // Chromium-based browser with remote debugging (Edge on Windows by default).
 const EDGE = process.env.BROWSER_PATH ?? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
 const PORT = 9335;
@@ -205,18 +206,18 @@ await check('predictor: validation, predict, insight, what-if, save, history', a
   await go('/app/predict');
   await waitText('Model inputs');
   await waitText('Field conditions (optional)');
-  await waitText('7/7');
+  await waitText('6/6');
   await evaluate(`[...document.querySelectorAll('button[type=submit]')].pop().click()`);
   await waitText('Productivity:', 30000);
   await waitText('What if?');
   await waitText('Likely range (P10–P90)');
-  await waitText('XGBoost v2.0.0');
+  await waitText('XGBoost v2.1.0');
   await noText('NDVI');
   await noText('Methodological', 'docs/');
   await clickText('button', 'View in history');
   await waitUrl('/app/history');
   await waitText('Prediction history');
-  await waitText('XGBoost v2.0.0');
+  await waitText('XGBoost v2.1.0');
   await waitFor(
     () => evaluate(`[...document.querySelectorAll('tbody button')].some(b => b.innerText.trim() === 'Re-run')`),
     're-run button',
@@ -315,7 +316,7 @@ await check('phase C: farm selector scopes recommendations', async () => {
 
 await check('phase E: history compare two predictions', async () => {
   await go('/app/predict');
-  await waitText('7/7');
+  await waitText('6/6');
   await evaluate(`[...document.querySelectorAll('button[type=submit]')].pop().click()`);
   await waitText('Likely range', 30000);
   await go('/app/history');
@@ -334,9 +335,51 @@ await check('predictor: harvest estimate for the selected farm', async () => {
     `[...document.querySelectorAll('a')].find(a => a.innerText.includes('Green Valley')).getAttribute('href').split('/').pop()`,
   );
   await go('/app/predict?farm=' + id + '&region=India&crop=Rice');
-  await waitText('7/7');
+  await waitText('6/6');
   await evaluate(`[...document.querySelectorAll('button[type=submit]')].pop().click()`);
   await waitText('Estimated harvest for Green Valley Farm', 30000);
+});
+await check('phase G: predictor has 6 model inputs, no rainfall what-if, labelled insight', async () => {
+  await go('/app/predict?region=India&crop=Rice');
+  await waitText('6/6');
+  await noText('Growing period');
+  await waitText('cross-country association');
+  await evaluate(`[...document.querySelectorAll('button[type=submit]')].pop().click()`);
+  await waitText('Likely range', 30000);
+  await waitText('Rainfall is left out');
+  await waitFor(async () => /AI · Groq|Fallback · rule engine/.test(await text()), 'insight source label', 40000);
+});
+await check('phase G: real soil (SoilGrids) and nutrient ratings on the farm and Soil pages', async () => {
+  await go('/app/farms');
+  await waitText('Green Valley Farm');
+  const id = await evaluate(
+    `[...document.querySelectorAll('a')].find(a => a.innerText.includes('Green Valley')).getAttribute('href').split('/').pop()`,
+  );
+  const status = await evaluate(
+    `fetch('${API}/api/soil-tests', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (localStorage.getItem('yieldsense_token') || sessionStorage.getItem('yieldsense_token')) }, body: JSON.stringify({ farm_id: ${'${id}'}, sampled_on: '2026-09-01', ph: 7.9, nitrogen_kg_ha: 240, phosphorus_kg_ha: 14, potassium_kg_ha: 310, organic_carbon_percent: 0.62 }) }).then(r => r.status)`.replace(
+      '${id}',
+      id,
+    ),
+  );
+  if (status !== 201) throw new Error('soil test POST ' + status);
+  await go('/app/farms/' + id);
+  await waitText('Real · SoilGrids', 150000);
+  await waitText('Nutrient analysis');
+  await waitText('Fertilizer guidance');
+  await waitText('Available N');
+  await waitText('Low below / High above');
+  await go('/app/soil?farm=' + id + '&region=India&crop=Rice');
+  await waitText('Real · SoilGrids', 150000);
+  await waitText('Reference dataset view');
+  await waitText('Synthetic soil columns');
+});
+await check('phase G: rainfall impact is not estimated; drought and flood are structural', async () => {
+  await go('/app/recommendations?region=Egypt');
+  await waitText('cross-country association', 40000);
+  await go('/app/risk?region=India&crop=Rice');
+  await waitText('Risk timeline');
+  await waitText('Structural');
+  await waitText('climate-zone risks');
 });
 await check('phase E: risk page matrix, timeline, anomalies, mitigation', async () => {
   await go('/app/risk?region=India&crop=Rice');
@@ -465,6 +508,10 @@ await check('admin: users, audit log, system metrics, agronomist screens', async
   await waitText('API latency p50 / p95');
   await waitText('Inference p50 / p95');
   await waitText('Busiest routes');
+  await waitText('Recommendation effectiveness');
+  await waitText('Completion rate');
+  await waitText('Data processing speed');
+  await waitText('rows/s');
   await go('/app/models');
   await waitText('Model comparison');
   await go('/app/data');
@@ -491,7 +538,7 @@ await check('agronomist: dataset explorer table, drawer → predictor prefill', 
   await clickText('button', 'Predict with these values');
   await waitUrl('/app/predict');
   await waitText('Model inputs');
-  await waitText('7/7');
+  await waitText('6/6');
 });
 await check('agronomist: EDA 4 real charts, no orphan', async () => {
   await go('/app/eda');
@@ -507,6 +554,10 @@ await check('agronomist: model performance from the model card', async () => {
   await go('/app/models');
   await waitText('Model comparison');
   await waitText('Served');
+  await waitText('P10–P90 coverage · held out');
+  await waitText('Weather impact (ablation)');
+  await waitText('without rainfall');
+  await waitText('Before / after · v2.0.0 → v2.1.0');
   await waitText('Selection rule');
   await waitText('Permutation importance');
   await waitText('Keras MLP');

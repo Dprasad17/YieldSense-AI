@@ -101,8 +101,8 @@ body {
 
 @media print {
   body {
-    background: #fff !important;
-    color: #000 !important;
+    background: var(--print-bg) !important;
+    color: var(--print-ink) !important;
   }
   .no-print {
     display: none !important;

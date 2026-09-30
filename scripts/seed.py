@@ -49,10 +49,11 @@ CSV_COLUMNS = {
     "NDVI_index": "ndvi_index",
 }
 
+# Coordinates are farmland points (Karnal district, central Punjab, Bogura), not city centres: SoilGrids masks urban pixels.
 DEMO_FARMS = [
-    {"name": "Green Valley Farm", "region": "India", "area_ha": 12.5, "crops": ["Rice", "Wheat"], "irrigation_type": "Drip", "soil_ph": 6.4, "soil_moisture_percent": 38.0, "soil_type": "Alluvial loam", "latitude": 28.61, "longitude": 77.21},
-    {"name": "Riverbend Fields", "region": "Pakistan", "area_ha": 20.0, "crops": ["Wheat", "Maize"], "irrigation_type": "Flood", "soil_ph": 7.6, "soil_moisture_percent": 31.0, "soil_type": "Silty clay", "latitude": 31.52, "longitude": 74.36},
-    {"name": "Hillside Potatoes", "region": "Bangladesh", "area_ha": 6.0, "crops": ["Potato", "Rice"], "irrigation_type": "Sprinkler", "soil_ph": 5.9, "soil_moisture_percent": 44.0, "soil_type": "Sandy loam", "latitude": 23.81, "longitude": 90.41},
+    {"name": "Green Valley Farm", "region": "India", "area_ha": 12.5, "crops": ["Rice", "Wheat"], "irrigation_type": "Drip", "soil_ph": 6.4, "soil_moisture_percent": 38.0, "soil_type": "Alluvial loam", "latitude": 29.69, "longitude": 76.85},
+    {"name": "Riverbend Fields", "region": "Pakistan", "area_ha": 20.0, "crops": ["Wheat", "Maize"], "irrigation_type": "Flood", "soil_ph": 7.6, "soil_moisture_percent": 31.0, "soil_type": "Silty clay", "latitude": 31.85, "longitude": 73.95},
+    {"name": "Hillside Potatoes", "region": "Bangladesh", "area_ha": 6.0, "crops": ["Potato", "Rice"], "irrigation_type": "Sprinkler", "soil_ph": 5.9, "soil_moisture_percent": 44.0, "soil_type": "Sandy loam", "latitude": 24.95, "longitude": 89.25},
 ]
 SEASONS = range(2009, 2014)
 

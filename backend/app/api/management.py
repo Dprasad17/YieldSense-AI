@@ -466,7 +466,7 @@ def get_farm_soil(farm_id: int, user: dict = Depends(require_user)):
     return {
         "farm_id": farm_id,
         "source": "real (SoilGrids)",
-        "location": location,
+        "location": {**location, "sampled_latitude": soil.get("sampled_latitude"), "sampled_longitude": soil.get("sampled_longitude"), "sampled_note": soil.get("sampled_note")},
         "fetched_at": soil["fetched_at"],
         "cached": soil["cached"],
         "properties": soil["properties"],

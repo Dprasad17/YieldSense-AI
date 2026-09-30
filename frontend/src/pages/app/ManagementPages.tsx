@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { CheckCircle2, FileUp, History, ShieldCheck, Upload as UploadIcon } from 'lucide-react';
 import { errorMessage } from '../../api/client';
 import { uploadsApi } from '../../api/endpoints';
-import type { AdminUser, Upload, UploadKind } from '../../api/types';
+import type { AdminUser, ProcessingSpeed, RecommendationEffectiveness, Upload, UploadKind } from '../../api/types';
 import { useAuth, useCan } from '../../auth/context';
 import {
   Badge,
@@ -28,6 +28,7 @@ import { ErrorState } from '../../components/ui/States';
 import { useAdminUsers, useAuditLog, useFarms, useSystemMetrics, useUpdateUser, useUploads } from '../../hooks/queries';
 import { formatCount } from '../../lib/format';
 import s from './app.module.css';
+import x from './extras.module.css';
 
 const KINDS: { value: UploadKind; label: string; help: string; privileged?: boolean; farm?: boolean }[] = [
   {
@@ -191,17 +192,7 @@ export function DataCollectionPage() {
               )}
               <label
                 htmlFor="dc-file"
-                className={s.tile}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 'var(--space-2)',
-                  padding: 'var(--space-8)',
-                  borderStyle: 'dashed',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                }}
+                className={`${s.tile} ${x.dropZone}`}
                 onDragOver={e => e.preventDefault()}
                 onDrop={e => {
                   e.preventDefault();
@@ -239,11 +230,11 @@ export function DataCollectionPage() {
 
           {step === 2 && upload && (
             <div className={s.stack}>
-              <p className={s.muted} style={{ margin: 0 }}>
+              <p className={`${s.muted} ${x.m0}`}>
                 {upload.filename} · {formatCount(upload.row_count)} rows. Match each field to a column in your file; we
                 guessed where we could.
               </p>
-              <div className={s.sectionBody} style={{ padding: 0 }}>
+              <div className={`${s.sectionBody} ${x.p0}`}>
                 {upload.fields.map(f => (
                   <FormField
                     key={f.name}
@@ -336,7 +327,7 @@ export function DataCollectionPage() {
             subtitle={upload ? `First rows of ${upload.filename}` : 'Appears after upload'}
           />
           {upload ? (
-            <div style={{ overflowX: 'auto' }}>
+            <div className={x.scrollX}>
               <DataTable
                 caption="File preview"
                 compact
@@ -451,7 +442,7 @@ export function UsersPage() {
           disabled={u.username === me?.username}
           onChange={e => setPending({ user: u, role: e.target.value })}
           options={['Farmer', 'Agronomist', 'Admin']}
-          style={{ width: 140, height: 32 }}
+          className={x.sparkBox}
         />
       ),
     },
@@ -481,16 +472,13 @@ export function UsersPage() {
         }
       />
       <Card>
-        <dl
-          className={s.dl}
-          style={{ gridTemplateColumns: 'repeat(4, auto)', justifyContent: 'start', columnGap: 'var(--space-8)' }}
-        >
+        <dl className={`${s.dl} ${x.dl4}`}>
           <dt>Farmer</dt>
-          <dd style={{ textAlign: 'left' }}>Predictions, weather, soil, recommendations, risk, farms, analytics</dd>
+          <dd className={x.tl}>Predictions, weather, soil, recommendations, risk, farms, analytics</dd>
           <dt>Agronomist</dt>
-          <dd style={{ textAlign: 'left' }}>Farmer screens + EDA, dataset, model performance, reference imports</dd>
+          <dd className={x.tl}>Farmer screens + EDA, dataset, model performance, reference imports</dd>
           <dt>Admin</dt>
-          <dd style={{ textAlign: 'left' }}>Everything + users & roles</dd>
+          <dd className={x.tl}>Everything + users & roles</dd>
         </dl>
       </Card>
       <Tabs
@@ -578,6 +566,11 @@ function SystemMetricsPanel({ enabled }: { enabled: boolean }) {
   const m = q.data;
   const ms = (v: number | null | undefined) => (v == null ? '—' : `${v.toFixed(1)} ms`);
   const hours = Math.floor(m.uptime_s / 3600);
+  const rec = m.recommendations as unknown as RecommendationEffectiveness;
+  const proc = m.processing as unknown as ProcessingSpeed;
+  const pct = (v: number | null | undefined) => (v == null ? '—' : `${(v * 100).toFixed(0)}%`);
+  const hrs = (v: number | null | undefined) =>
+    v == null ? '—' : v < 1 ? `${Math.round(v * 60)} min` : `${v.toFixed(1)} h`;
   return (
     <div className={s.stack}>
       <div className={s.kpis}>
@@ -618,10 +611,94 @@ function SystemMetricsPanel({ enabled }: { enabled: boolean }) {
         />
       </Card>
       <Card>
+        <CardHeader
+          title="Recommendation effectiveness"
+          subtitle="Task completion and time to action, from saved recommendation tasks"
+        />
+        <div className={s.kpis}>
+          <StatCard
+            label="Completion rate"
+            value={pct(rec.completion_rate)}
+            subtitle={`${rec.done} of ${rec.tasks} tasks done`}
+          />
+          <StatCard label="Task created → done" value={hrs(rec.median_hours_task_to_done)} subtitle="Median" />
+          <StatCard
+            label="Alert → first action"
+            value={hrs(rec.median_hours_alert_to_action)}
+            subtitle={`Median over ${rec.alert_to_action_measured} alerts`}
+          />
+          <StatCard
+            label="Yield outcomes"
+            value={formatCount(rec.outcomes.length)}
+            subtitle="Seasons recorded after a done task"
+          />
+        </div>
+        {rec.per_user.length > 0 && (
+          <DataTable
+            caption="Task completion per user"
+            compact
+            rows={rec.per_user}
+            rowKey={u => u.username}
+            columns={[
+              { key: 'u', header: 'User', render: u => u.username },
+              { key: 't', header: 'Tasks', align: 'right', render: u => u.tasks },
+              { key: 'd', header: 'Done', align: 'right', render: u => u.done },
+              { key: 'r', header: 'Completion', align: 'right', render: u => pct(u.completion_rate) },
+              { key: 'h', header: 'Median to done', align: 'right', render: u => hrs(u.median_hours_to_done) },
+            ]}
+          />
+        )}
+        {rec.outcomes.length > 0 && (
+          <DataTable
+            caption="Yield after completed tasks"
+            compact
+            rows={rec.outcomes}
+            rowKey={o => `${o.farm_id}-${o.season}-${o.crop_type}-${o.task}`}
+            columns={[
+              { key: 'task', header: 'Task', render: o => o.task },
+              { key: 's', header: 'Season', render: o => `${o.season} · ${o.crop_type}` },
+              { key: 'y', header: 'Yield (kg/ha)', align: 'right', render: o => formatCount(o.yield_kg_ha) },
+              { key: 'ref', header: 'Regional reference', align: 'right', render: o => formatCount(o.reference_kg_ha) },
+            ]}
+          />
+        )}
+        <p className={s.small}>{rec.outcome_note}</p>
+      </Card>
+      <Card>
+        <CardHeader
+          title="Data processing speed"
+          subtitle="Measured on real runs: the last seed and recorded uploads"
+        />
+        {proc.available ? (
+          <dl className={s.dl}>
+            <dt>Seed (reference dataset)</dt>
+            <dd>
+              {proc.seed?.seconds != null
+                ? `${formatCount(proc.seed.crop_records)} rows in ${proc.seed.seconds} s (${formatCount(proc.seed.rows_per_sec)} rows/s)`
+                : 'Not measured yet (run scripts/seed.py --reset)'}
+            </dd>
+            <dt>Upload validation</dt>
+            <dd>
+              {proc.validation_ms_per_row_median != null
+                ? `${proc.validation_ms_per_row_median} ms per row (median of ${proc.validations_measured} uploads)`
+                : 'No uploads validated yet'}
+            </dd>
+            <dt>Upload import</dt>
+            <dd>
+              {proc.import_rows_per_sec_median != null
+                ? `${formatCount(proc.import_rows_per_sec_median)} rows/s (median of ${proc.imports_measured} imports)`
+                : 'No uploads imported yet'}
+            </dd>
+          </dl>
+        ) : (
+          <p className={s.muted}>MongoDB is unavailable, so processing metrics can’t be read.</p>
+        )}
+      </Card>
+      <Card>
         <CardHeader title="Database" />
         <dl className={s.dl}>
           {Object.entries(m.database).map(([k, v]) => (
-            <div key={k} style={{ display: 'contents' }}>
+            <div key={k} className={x.contents}>
               <dt>{k.replace('_', ' ')}</dt>
               <dd>{formatCount(v)}</dd>
             </div>
