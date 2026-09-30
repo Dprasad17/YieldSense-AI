@@ -386,3 +386,59 @@ def admin_update_user(username: str, body: UserPatch, admin: dict = Depends(requ
 def admin_audit(page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200),
                 _admin: dict = Depends(require_admin)):
     return store.list_audit(page, page_size)
+
+
+class LatencySummary(BaseModel):
+    count: int
+    p50_ms: Optional[float]
+    p95_ms: Optional[float]
+
+
+class RouteLatency(LatencySummary):
+    route: str
+    requests: int
+
+
+class ApiLatency(BaseModel):
+    requests_total: int
+    status: dict[str, int]
+    overall: LatencySummary
+    routes: list[RouteLatency]
+
+
+class SystemMetrics(BaseModel):
+    uptime_s: int
+    version: str
+    api: ApiLatency
+    inference: LatencySummary
+    model: Optional[dict]
+    database: dict[str, int]
+    mongo: bool
+
+
+@admin_router.get("/metrics", response_model=SystemMetrics)
+def admin_system_metrics(_admin: dict = Depends(require_admin)):
+    """API and inference latency (p50/p95 over a rolling window since start-up), plus row counts."""
+    from sqlalchemy import func as sa_func, select
+
+    from backend.app.core.config import settings
+    from backend.app.core.observability import api_metrics, uptime_seconds
+    from backend.app.db import mongo
+    from backend.app.db.models import CropRecord as CropRecordRow, Farm, Notification as NotificationRow, Prediction, User
+    from backend.app.db.session import session_scope
+    from backend.app.services.ml_service import active_model_summary, ml_service
+
+    with session_scope() as s:
+        counts = {
+            name: int(s.scalar(select(sa_func.count()).select_from(model)) or 0)
+            for name, model in (("crop_records", CropRecordRow), ("users", User), ("farms", Farm), ("predictions", Prediction), ("notifications", NotificationRow))
+        }
+    return {
+        "uptime_s": uptime_seconds(),
+        "version": settings.PROJECT_VERSION,
+        "api": api_metrics.summary(),
+        "inference": ml_service.latency.summary(),
+        "model": active_model_summary(),
+        "database": counts,
+        "mongo": mongo.ping(),
+    }

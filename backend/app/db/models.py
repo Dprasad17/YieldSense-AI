@@ -16,6 +16,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -160,7 +161,11 @@ class Prediction(Base):
 
     user: Mapped[User] = relationship()
 
-    __table_args__ = (Index("ix_predictions_user_created", "user_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_predictions_user_created", "user_id", "created_at"),
+        # Agronomists and admins list everyone's predictions newest first.
+        Index("ix_predictions_created", "created_at"),
+    )
 
 
 class RecommendationAction(Base):
@@ -183,7 +188,10 @@ class RecommendationAction(Base):
 
     user: Mapped[User] = relationship()
 
-    __table_args__ = (UniqueConstraint("recommendation_id", "user_id", name="uq_rec_action_user"),)
+    __table_args__ = (
+        UniqueConstraint("recommendation_id", "user_id", name="uq_rec_action_user"),
+        Index("ix_rec_actions_user_updated", "user_id", "updated_at"),
+    )
 
 
 class Notification(Base):
@@ -205,6 +213,8 @@ class Notification(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "dedupe_key", name="uq_notification_dedupe"),
         Index("ix_notifications_user_created", "user_id", "created_at"),
+        # Unread count on every page load (the bell): only unread rows are indexed.
+        Index("ix_notifications_user_unread", "user_id", postgresql_where=text("read_at IS NULL")),
     )
 
 

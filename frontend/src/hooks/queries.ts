@@ -268,6 +268,10 @@ export function useUpdateUser() {
   });
 }
 
+export function useSystemMetrics(enabled: boolean) {
+  return useQuery({ queryKey: ['admin', 'metrics'], queryFn: adminApi.metrics, enabled, refetchInterval: 15_000 });
+}
+
 export function useAuditLog() {
   const can = useCan();
   return useQuery({

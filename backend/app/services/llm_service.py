@@ -3,6 +3,7 @@ import json
 import urllib.request
 import urllib.error
 from typing import Dict, Any, List, Optional
+from backend.app.core.observability import log
 
 class LLMService:
     """
@@ -26,7 +27,7 @@ class LLMService:
                             k, v = line.split("=", 1)
                             os.environ.setdefault(k.strip(), v.strip())
             except Exception as e:
-                print(f"[LLMService] Could not read .env file: {e}")
+                log.warning(f"[LLMService] Could not read .env file: {e}")
 
     def generate_agricultural_insights(self, payload: Dict[str, Any], prediction_result: Dict[str, Any]) -> Dict[str, Any]:
         # Try Groq API first if key available
@@ -36,7 +37,7 @@ class LLMService:
                 if res:
                     return res
             except Exception as e:
-                print(f"[LLMService] Groq API call failed: {e}. Falling back to Agronomic Engine...")
+                log.warning(f"[LLMService] Groq API call failed: {e}. Falling back to Agronomic Engine...")
 
         # Try Gemini API second if key available
         if self.gemini_api_key:
@@ -45,7 +46,7 @@ class LLMService:
                 if res:
                     return res
             except Exception as e:
-                print(f"[LLMService] Gemini API call failed: {e}. Falling back to Agronomic Engine...")
+                log.warning(f"[LLMService] Gemini API call failed: {e}. Falling back to Agronomic Engine...")
 
         # Fallback to deterministic Agronomic AI Expert Engine
         return self._generate_expert_rule_insights(payload, prediction_result)
@@ -193,7 +194,7 @@ Provide a JSON object with:
                 mongo.cache_set("llm_cache", key, text)
                 return text, f"Groq · {self.groq_model}"
             except Exception as e:
-                print(f"[LLMService] Groq rationale failed: {e}. Using rule-based text.")
+                log.warning(f"[LLMService] Groq rationale failed: {e}. Using rule-based text.")
         return self._fallback_rationale(rec), "YieldSense rule engine (fallback)"
 
     def _groq_rationale(self, rec: Dict[str, Any]) -> str:

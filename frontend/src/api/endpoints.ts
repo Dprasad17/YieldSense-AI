@@ -27,6 +27,7 @@ import type {
   CropRecord,
   MeResponse,
   ModelCard,
+  SystemMetrics,
   MyFarmsResponse,
   ClimateTrend,
   ProvenanceRegistry,
@@ -181,6 +182,7 @@ export const adminApi = {
   updateUser: (username: string, patch: { role?: string; active?: boolean }) =>
     apiRequest<AdminUser>(`/api/admin/users/${encodeURIComponent(username)}`, { method: 'PATCH', body: patch }),
   audit: (q: { page?: number; page_size?: number } = {}) => apiRequest<AuditPage>('/api/admin/audit', { query: q }),
+  metrics: () => apiRequest<SystemMetrics>('/api/admin/metrics'),
 };
 
 export const reportsApi = {

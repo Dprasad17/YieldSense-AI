@@ -713,6 +713,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin System Metrics
+         * @description API and inference latency (p50/p95 over a rolling window since start-up), plus row counts.
+         */
+        get: operations["admin_system_metrics_api_admin_metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/farms": {
         parameters: {
             query?: never;
@@ -1017,6 +1037,18 @@ export interface components {
              * @enum {string}
              */
             direction: "high" | "low";
+        };
+        /** ApiLatency */
+        ApiLatency: {
+            /** Requests Total */
+            requests_total: number;
+            /** Status */
+            status: {
+                [key: string]: number;
+            };
+            overall: components["schemas"]["LatencySummary"];
+            /** Routes */
+            routes: components["schemas"]["RouteLatency"][];
         };
         /** AuditEntry */
         AuditEntry: {
@@ -1595,6 +1627,15 @@ export interface components {
             /** Count */
             count: number;
         };
+        /** LatencySummary */
+        LatencySummary: {
+            /** Count */
+            count: number;
+            /** P50 Ms */
+            p50_ms: number | null;
+            /** P95 Ms */
+            p95_ms: number | null;
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Username */
@@ -2146,6 +2187,19 @@ export interface components {
             /** Soil */
             soil: number;
         };
+        /** RouteLatency */
+        RouteLatency: {
+            /** Count */
+            count: number;
+            /** P50 Ms */
+            p50_ms: number | null;
+            /** P95 Ms */
+            p95_ms: number | null;
+            /** Route */
+            route: string;
+            /** Requests */
+            requests: number;
+        };
         /** ScatterPoint */
         ScatterPoint: {
             /** X */
@@ -2266,6 +2320,25 @@ export interface components {
             source: string;
             /** Created At */
             created_at: string;
+        };
+        /** SystemMetrics */
+        SystemMetrics: {
+            /** Uptime S */
+            uptime_s: number;
+            /** Version */
+            version: string;
+            api: components["schemas"]["ApiLatency"];
+            inference: components["schemas"]["LatencySummary"];
+            /** Model */
+            model: {
+                [key: string]: unknown;
+            } | null;
+            /** Database */
+            database: {
+                [key: string]: number;
+            };
+            /** Mongo */
+            mongo: boolean;
         };
         /** Task */
         Task: {
@@ -4925,6 +4998,62 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Page_AuditEntry_"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    admin_system_metrics_api_admin_metrics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemMetrics"];
                 };
             };
             /** @description Not signed in or session expired */

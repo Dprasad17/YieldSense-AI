@@ -6,6 +6,7 @@ from pymongo import ASCENDING, DESCENDING, MongoClient
 from pymongo.database import Database
 
 from backend.app.core.config import settings
+from backend.app.core.observability import log
 
 
 @lru_cache(maxsize=1)
@@ -55,4 +56,4 @@ def cache_set(collection: str, key: str, value: Any, expires_at=None) -> None:
     try:
         db()[collection].update_one({"key": key}, {"$set": doc}, upsert=True)
     except Exception as e:  # the cache is best-effort
-        print(f"[mongo] cache write failed: {e}")
+        log.warning(f"[mongo] cache write failed: {e}")

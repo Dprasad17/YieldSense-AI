@@ -23,10 +23,26 @@ def _csv_env(name: str, default: str) -> list[str]:
     return [v.strip() for v in os.getenv(name, default).split(",") if v.strip()]
 
 
+def _secret_key() -> str:
+    key = os.getenv("SECRET_KEY", "")
+    if key and key != "change-me":
+        if len(key) < 32:
+            raise RuntimeError("SECRET_KEY must be at least 32 characters.")
+        return key
+    if os.getenv("APP_ENV", "development") == "production":
+        raise RuntimeError("SECRET_KEY is required when APP_ENV=production.")
+    import secrets
+
+    return secrets.token_urlsafe(48)
+
+
 class Settings:
     PROJECT_NAME: str = "YieldSense AI Platform"
     PROJECT_VERSION: str = "2.0.0"
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "yieldsense_ai_super_secret_jwt_key_2026")
+    APP_ENV: str = os.getenv("APP_ENV", "development")
+    # JWT signing secret. Required in production; in development a random per-process secret is
+    # used when unset (sessions then end on restart). Never a hardcoded default.
+    SECRET_KEY: str = _secret_key()
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 

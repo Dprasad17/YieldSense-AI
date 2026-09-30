@@ -24,7 +24,9 @@ from backend.app.api.recommendations import router as recommendations_router
 from backend.app.api.reports import router as reports_router
 from backend.app.core.config import settings
 from backend.app.core.errors import install_error_handlers
+from backend.app.core.observability import RequestContextMiddleware
 from backend.app.services.dataset import get_df
+from backend.app.core.observability import log
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -33,7 +35,7 @@ async def lifespan(_: FastAPI):
     try:
         mongo.ensure_indexes()
     except Exception as e:
-        print(f"[startup] MongoDB unavailable: {e}")
+        log.warning(f"[startup] MongoDB unavailable: {e}")
     get_df()  # load crop records once at startup
     yield
 
@@ -51,9 +53,11 @@ app.add_middleware(
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept"],
-    expose_headers=["Content-Disposition", "X-Total-Records", "X-Truncated", "Retry-After"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Request-ID"],
+    expose_headers=["Content-Disposition", "X-Total-Records", "X-Truncated", "Retry-After", "X-Request-ID", "Server-Timing"],
 )
+# Added after CORS so it wraps it: every response, including preflights and errors, gets an ID.
+app.add_middleware(RequestContextMiddleware)
 install_error_handlers(app)
 
 plots_dir = "eda_plots"
@@ -102,5 +106,13 @@ def health_check():
         db_ok = True
     except Exception:
         db_ok = False
+    from backend.app.core.observability import uptime_seconds
+
     checks = {"database": db_ok, "mongo": mongo.ping(), "model_loaded": ml_service.is_ready()}
-    return {"status": "healthy" if all(checks.values()) else "degraded", "service": "YieldSense AI Backend", "checks": checks}
+    return {
+        "status": "healthy" if all(checks.values()) else "degraded",
+        "service": "YieldSense AI Backend",
+        "version": settings.PROJECT_VERSION,
+        "uptime_s": uptime_seconds(),
+        "checks": checks,
+    }

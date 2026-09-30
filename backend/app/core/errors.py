@@ -57,9 +57,22 @@ def install_error_handlers(app: FastAPI) -> None:
         return _envelope(422, "validation_error", message)
 
     @app.exception_handler(Exception)
-    async def unhandled_error(_: Request, exc: Exception):
-        print(f"[API] Unhandled error: {exc!r}")
-        return _envelope(500, "internal_error", "Something went wrong on our side. Please try again.")
+    async def unhandled_error(request: Request, exc: Exception):
+        from backend.app.core.observability import REQUEST_ID_HEADER, log
+
+        request_id = getattr(request.state, "request_id", None)
+        log.error(
+            "unhandled error",
+            exc_info=exc,
+            extra={"fields": {"request_id": request_id, "method": request.method, "path": request.url.path}},
+        )
+        # Error details stay in the logs; the client gets the request ID to quote.
+        return _envelope(
+            500,
+            "internal_error",
+            f"Something went wrong on our side. Please try again. (Reference: {request_id})" if request_id else "Something went wrong on our side. Please try again.",
+            {REQUEST_ID_HEADER: request_id} if request_id else None,
+        )
 
 
 # Documented on every router so OpenAPI shows the envelope for error statuses.

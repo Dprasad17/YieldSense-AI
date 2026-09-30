@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 import pandas as pd
 
 from backend.app.services import dataset
+from backend.app.core.observability import log
 
 
 # Hand-picked coordinates inside the main agricultural zone of some countries. Every other
@@ -65,7 +66,7 @@ def _geocode_country(name: str) -> Optional[dict]:
     try:
         results = _http_get_json(url).get("results") or []
     except Exception as e:
-        print(f"[WeatherService] Geocoding failed for {name!r}: {e}")
+        log.warning(f"[WeatherService] Geocoding failed for {name!r}: {e}")
         return None
     # Country-level entries carry a PCL* GeoNames feature code (PCLI = independent political entity).
     for r in results:
@@ -175,7 +176,7 @@ class WeatherService:
         try:
             res = _http_get_json(url)
         except Exception as e:
-            print(f"[WeatherService] Live API call failed: {e}")
+            log.warning(f"[WeatherService] Live API call failed: {e}")
             raise LiveWeatherUnavailable("Open-Meteo is unreachable right now. Switch to dataset mode or try again.")
 
         current = res.get("current") or {}
@@ -328,7 +329,7 @@ def climate_trend(region: str) -> Dict[str, Any]:
     except LiveWeatherUnavailable as e:
         error = str(e)
     except Exception as e:  # network or parsing: keep the dataset series
-        print(f"[WeatherService] Archive call failed: {e}")
+        log.warning(f"[WeatherService] Archive call failed: {e}")
         error = "The Open-Meteo climate archive is unreachable right now; showing dataset values only."
 
     return {

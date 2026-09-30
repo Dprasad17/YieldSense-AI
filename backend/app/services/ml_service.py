@@ -20,6 +20,7 @@ import pandas as pd
 
 from backend.app.core import agronomy_rules
 from backend.app.core.config import settings
+from backend.app.core.observability import log
 
 MODEL_PATH = os.path.join(settings.MODEL_DIR, "model.pkl")
 CARD_PATH = os.path.join(settings.MODEL_DIR, "model_card.json")
@@ -96,13 +97,13 @@ class MLService:
 
     def _load_artifacts(self) -> None:
         if not os.path.exists(MODEL_PATH):
-            print(f"[MLService] {MODEL_PATH} not found. Run scripts/train_models_v2.py first.")
+            log.error(f"[MLService] {MODEL_PATH} not found. Run scripts/train_models_v2.py first.")
             return
         try:
             self.bundle = joblib.load(MODEL_PATH)
-            print(f"[MLService] Loaded {MODEL_PATH} ({self.bundle['model']}, target {self.bundle['target']})")
+            log.info(f"[MLService] Loaded {MODEL_PATH} ({self.bundle['model']}, target {self.bundle['target']})")
         except Exception as e:  # corrupt or incompatible pickle: serve 503s instead of crashing
-            print(f"[MLService] Error loading {MODEL_PATH}: {e}")
+            log.error(f"[MLService] Error loading {MODEL_PATH}: {e}")
             self.bundle = None
 
     def is_ready(self) -> bool:

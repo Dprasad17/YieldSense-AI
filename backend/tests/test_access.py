@@ -21,9 +21,11 @@ FARMER_OK = [
     "/api/auth/me",
     "/api/risk?region=India",
     "/api/notifications",
+    "/api/analytics/my-farms",
+    "/api/data/provenance",
 ]
 AGRONOMIST_ONLY = ["/api/data/records", "/api/analytics/eda-charts", "/api/predict/models"]
-ADMIN_ONLY = ["/api/admin/users", "/api/admin/audit"]
+ADMIN_ONLY = ["/api/admin/users", "/api/admin/audit", "/api/admin/metrics"]
 
 
 def test_every_api_route_is_protected(client):
@@ -48,9 +50,10 @@ def test_public_stats_is_aggregate_only(client):
     assert set(body) == {"record_count", "crop_count", "region_count", "year_min", "year_max", "model_name", "r2", "rmse", "mae"}
 
 
+@pytest.mark.parametrize("role", ["farmer", "agronomist", "admin"])
 @pytest.mark.parametrize("path", FARMER_OK)
-def test_farmer_allowed(client, auth, path):
-    assert client.get(path, headers=auth("farmer")).status_code == 200, path
+def test_every_role_allowed(client, auth, path, role):
+    assert client.get(path, headers=auth(role)).status_code == 200, (role, path)
 
 
 @pytest.mark.parametrize("path", AGRONOMIST_ONLY)
@@ -65,3 +68,44 @@ def test_admin_gates(client, auth, path):
     assert client.get(path, headers=auth("farmer")).status_code == 403
     assert client.get(path, headers=auth("agronomist")).status_code == 403
     assert client.get(path, headers=auth("admin")).status_code == 200
+
+
+WRITE_GATES = [
+    ("patch", "/api/admin/users/farmer", {"role": "Agronomist"}, {"farmer", "agronomist"}),
+]
+
+
+@pytest.mark.parametrize("method,path,body,denied", WRITE_GATES)
+def test_write_gates(client, auth, method, path, body, denied):
+    for role in denied:
+        assert client.request(method.upper(), path, json=body, headers=auth(role)).status_code == 403, role
+
+
+def test_uploads_reject_privileged_kinds_for_farmers(client, auth):
+    files = {"file": ("r.csv", b"a,b\n1,2\n", "text/csv")}
+    res = client.post("/api/uploads", data={"kind": "crop_records"}, files=files, headers=auth("farmer"))
+    assert res.status_code == 403
+
+
+def test_request_id_and_timing_headers(client):
+    res = client.get("/api/health")
+    assert len(res.headers["X-Request-ID"]) >= 8 and res.headers["Server-Timing"].startswith("app;dur=")
+    res = client.get("/api/health", headers={"X-Request-ID": "trace-abc-123"})
+    assert res.headers["X-Request-ID"] == "trace-abc-123"
+    res = client.get("/api/health", headers={"X-Request-ID": "bad id with spaces"})
+    assert res.headers["X-Request-ID"] != "bad id with spaces"
+    body = res.json()
+    assert body["status"] == "healthy" and body["checks"] == {"database": True, "mongo": True, "model_loaded": True}
+
+
+def test_admin_system_metrics(client, auth):
+    client.post(
+        "/api/predict/what-if",
+        json={"crop_type": "Rice", "region": "India", "rainfall_mm": 1100, "temperature_C": 25, "pesticide_usage_ml": 450, "total_days": 130},
+        headers=auth("farmer"),
+    )
+    m = client.get("/api/admin/metrics", headers=auth("admin")).json()
+    assert m["api"]["requests_total"] > 0 and m["api"]["overall"]["p95_ms"] is not None
+    assert m["inference"]["count"] >= 1 and m["inference"]["p50_ms"] is not None
+    assert m["database"]["crop_records"] == 28242 and m["model"]["name"] == "XGBoost"
+    assert m["api"]["routes"] and all(r["route"].split(" ")[0] in {"GET", "POST", "PATCH", "DELETE"} for r in m["api"]["routes"])

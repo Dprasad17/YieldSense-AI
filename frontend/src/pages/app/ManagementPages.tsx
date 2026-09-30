@@ -19,12 +19,13 @@ import {
   Pagination,
   Select,
   Skeleton,
+  StatCard,
   Switch,
   Tabs,
   type Column,
 } from '../../components/ui';
 import { ErrorState } from '../../components/ui/States';
-import { useAdminUsers, useAuditLog, useFarms, useUpdateUser, useUploads } from '../../hooks/queries';
+import { useAdminUsers, useAuditLog, useFarms, useSystemMetrics, useUpdateUser, useUploads } from '../../hooks/queries';
 import { formatCount } from '../../lib/format';
 import s from './app.module.css';
 
@@ -511,6 +512,11 @@ export function UsersPage() {
             ),
           },
           {
+            value: 'system',
+            label: 'System metrics',
+            content: <SystemMetricsPanel enabled={tab === 'system'} />,
+          },
+          {
             value: 'audit',
             label: 'Audit log',
             content: audit.isPending ? (
@@ -561,6 +567,67 @@ export function UsersPage() {
         onConfirm={apply}
         loading={update.isPending}
       />
+    </div>
+  );
+}
+
+function SystemMetricsPanel({ enabled }: { enabled: boolean }) {
+  const q = useSystemMetrics(enabled);
+  if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
+  if (!q.data) return <Skeleton height={240} />;
+  const m = q.data;
+  const ms = (v: number | null | undefined) => (v == null ? '—' : `${v.toFixed(1)} ms`);
+  const hours = Math.floor(m.uptime_s / 3600);
+  return (
+    <div className={s.stack}>
+      <div className={s.kpis}>
+        <StatCard
+          label="API latency p50 / p95"
+          value={`${ms(m.api.overall.p50_ms)} / ${ms(m.api.overall.p95_ms)}`}
+          subtitle={`${formatCount(m.api.requests_total)} requests since start`}
+        />
+        <StatCard
+          label="Inference p50 / p95"
+          value={`${ms(m.inference.p50_ms)} / ${ms(m.inference.p95_ms)}`}
+          subtitle={`${formatCount(m.inference.count)} single predictions · ${m.model?.name ?? 'model'}`}
+        />
+        <StatCard
+          label="Errors (5xx)"
+          value={formatCount(m.api.status['5xx'] ?? 0)}
+          subtitle={`4xx: ${formatCount(m.api.status['4xx'] ?? 0)}`}
+        />
+        <StatCard
+          label="Uptime"
+          value={`${hours} h ${Math.floor((m.uptime_s % 3600) / 60)} min`}
+          subtitle={`v${m.version} · MongoDB ${m.mongo ? 'up' : 'down'}`}
+        />
+      </div>
+      <Card>
+        <CardHeader title="Busiest routes" subtitle="Rolling window since the API started; refreshes every 15 s" />
+        <DataTable
+          caption="Route latency"
+          compact
+          rows={m.api.routes}
+          rowKey={r => r.route}
+          columns={[
+            { key: 'route', header: 'Route', render: r => <code>{r.route}</code> },
+            { key: 'n', header: 'Requests', align: 'right', render: r => formatCount(r.requests) },
+            { key: 'p50', header: 'p50', align: 'right', render: r => ms(r.p50_ms) },
+            { key: 'p95', header: 'p95', align: 'right', render: r => ms(r.p95_ms) },
+          ]}
+        />
+      </Card>
+      <Card>
+        <CardHeader title="Database" />
+        <dl className={s.dl}>
+          {Object.entries(m.database).map(([k, v]) => (
+            <div key={k} style={{ display: 'contents' }}>
+              <dt>{k.replace('_', ' ')}</dt>
+              <dd>{formatCount(v)}</dd>
+            </div>
+          ))}
+        </dl>
+      </Card>
     </div>
   );
 }

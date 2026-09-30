@@ -11,6 +11,7 @@ from datetime import date, datetime, timezone
 from typing import Any, Literal, Optional
 
 import pandas as pd
+from pymongo.errors import DocumentTooLarge
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from pydantic import BaseModel
 
@@ -215,6 +216,16 @@ async def upload_file(
     content = await file.read(settings.UPLOAD_MAX_BYTES + 1)
     if len(content) > settings.UPLOAD_MAX_BYTES:
         raise AppError(413, f"The file is larger than {settings.UPLOAD_MAX_BYTES // (1024 * 1024)} MB.", code="file_too_large")
+    # Check the content, not just the extension: .xlsx is a ZIP container; CSV must be UTF-8 text.
+    if ext == "xlsx" and not content.startswith(b"PK\x03\x04"):
+        raise AppError(415, "This file isn't a valid Excel (.xlsx) workbook.", code="unsupported_file_type")
+    if ext == "csv":
+        if b"\x00" in content[:8192]:
+            raise AppError(415, "This file looks binary, not a CSV.", code="unsupported_file_type")
+        try:
+            content.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            raise AppError(422, "Save the CSV as UTF-8 and upload it again.", code="unreadable_file")
     try:
         df = pd.read_csv(io.BytesIO(content), dtype=str, keep_default_na=False) if ext == "csv" else pd.read_excel(io.BytesIO(content), dtype=str).fillna("")
     except Exception:
@@ -238,7 +249,10 @@ async def upload_file(
         "mapping": _suggest(list(df.columns), kind),
         "created_at": datetime.now(timezone.utc),
     }
-    mongo.db().uploads.insert_one(doc)
+    try:
+        mongo.db().uploads.insert_one(doc)
+    except DocumentTooLarge:
+        raise AppError(413, "The file has too much data to store in one upload; split it into smaller files.", code="file_too_large")
     return _summary(doc)
 
 

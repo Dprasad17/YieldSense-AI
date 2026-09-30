@@ -117,3 +117,13 @@ def test_profile_edit_and_password_change(client, auth):
 def test_sample_record_for_predictor(client, auth):
     r = client.get("/api/data/sample?crop=Rice", headers=auth("farmer")).json()
     assert r["crop_type"] == "Rice" and r["farm_id"]
+
+
+def test_upload_content_is_validated(client, auth):
+    farm = client.get("/api/farms", headers=auth("farmer")).json()["items"][0]["id"]
+    fake_xlsx = {"file": ("x.xlsx", b"not a zip", "application/octet-stream")}
+    assert client.post("/api/uploads", data={"kind": "farm_records", "farm_id": farm}, files=fake_xlsx, headers=auth("farmer")).status_code == 415
+    binary_csv = {"file": ("x.csv", b"a,b\x00\x01", "text/csv")}
+    assert client.post("/api/uploads", data={"kind": "farm_records", "farm_id": farm}, files=binary_csv, headers=auth("farmer")).status_code == 415
+    latin1 = {"file": ("x.csv", "Season,Crop\n2008,Ma\xefs\n".encode("latin-1"), "text/csv")}
+    assert client.post("/api/uploads", data={"kind": "farm_records", "farm_id": farm}, files=latin1, headers=auth("farmer")).status_code == 422

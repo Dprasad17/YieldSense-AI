@@ -62,6 +62,7 @@ export type MyFarmsResponse = S['MyFarmsResponse'];
 export type MyFarmComparison = S['MyFarmComparison'];
 export type ClimateTrend = S['ClimateTrend'];
 export type OptimalBand = S['OptimalBand'];
+export type SystemMetrics = S['SystemMetrics'];
 export type ActiveModel = S['ActiveModel'];
 
 export type PredictionInput = S['YieldPredictionRequest'];

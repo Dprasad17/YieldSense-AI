@@ -139,7 +139,8 @@ export function ModelPerformancePage() {
             />
             <StatCard
               label="Latency p50 / p95"
-              value={`${formatLatency(m.latency_p50_ms)} / ${formatLatency(m.latency_p95_ms)}`}
+              value={`${formatNumber(m.latency_p50_ms, 1)} / ${formatNumber(m.latency_p95_ms, 1)}`}
+              unit="ms"
               icon={Clock}
               subtitle="Single-row prediction"
             />

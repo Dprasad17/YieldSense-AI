@@ -23,9 +23,17 @@ import {
   Skeleton,
 } from '../../components/ui';
 import { ratingTone } from '../../components/ui/helpers';
-import { useActiveModel, useDatasetSummary, useInsights, usePredict, useRegions, useSoil } from '../../hooks/queries';
+import {
+  useActiveModel,
+  useDatasetSummary,
+  useFarms,
+  useInsights,
+  usePredict,
+  useRegions,
+  useSoil,
+} from '../../hooks/queries';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
-import { formatDeltaPercent, formatYield } from '../../lib/format';
+import { formatDeltaPercent, formatNumber, formatYield } from '../../lib/format';
 import { setReport, takePrefill } from '../../lib/localStore';
 import { normalizeModelName } from '../../lib/selectors';
 import { YIELD_UNITS, type YieldUnit } from '../../lib/units';
@@ -258,6 +266,7 @@ export function PredictorPage() {
   const formRef = useRef<HTMLFormElement>(null);
 
   const farmId = filters.farm ? Number(filters.farm) : undefined;
+  const farm = useFarms({ page: 1, page_size: 100, mine: true }).data?.items.find(f => f.id === farmId);
   const summary = useDatasetSummary().data;
   const lastYear = summary?.year_max ?? 2013;
   const [values, setValues] = useState<FormValues>(() => ({
@@ -687,6 +696,16 @@ export function PredictorPage() {
                     </span>{' '}
                     {unit}
                   </div>
+                  {farm && result.input.farm_id === farm.id && (
+                    <div className={s.small}>
+                      Estimated harvest for {farm.name} ({formatNumber(farm.area_ha, 1)} ha):{' '}
+                      <strong className={s.num}>
+                        {formatNumber((result.result.predicted_yield_kg_ha * farm.area_ha) / 1000, 1)} t
+                      </strong>{' '}
+                      (P10–P90 {formatNumber((result.result.low_kg_ha * farm.area_ha) / 1000, 1)}–
+                      {formatNumber((result.result.high_kg_ha * farm.area_ha) / 1000, 1)} t)
+                    </div>
+                  )}
                   <div className={s.small}>
                     {result.result.model_name}
                     {result.result.model_version ? ` v${result.result.model_version}` : ''} · season{' '}
