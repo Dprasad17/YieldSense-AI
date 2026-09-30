@@ -42,6 +42,8 @@ export interface RequestOptions {
   query?: Query;
   body?: unknown;
   signal?: AbortSignal;
+  /** Raw body (e.g. FormData) sent as-is, without JSON encoding. */
+  form?: FormData;
   /** Skip the global 401 handler (used by the login call, where 401 means "wrong password"). */
   skipAuthRedirect?: boolean;
 }
@@ -59,14 +61,14 @@ async function send(path: string, opts: RequestOptions): Promise<Response> {
   const headers: Record<string, string> = { Accept: 'application/json' };
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
-  if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
+  if (opts.body !== undefined && !opts.form) headers['Content-Type'] = 'application/json';
 
   let res: Response;
   try {
     res = await fetch(buildUrl(path, opts.query), {
       method: opts.method ?? 'GET',
       headers,
-      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+      body: opts.form ?? (opts.body !== undefined ? JSON.stringify(opts.body) : undefined),
       signal: opts.signal,
     });
   } catch (err) {
@@ -94,6 +96,12 @@ async function send(path: string, opts: RequestOptions): Promise<Response> {
 export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   const res = await send(path, opts);
   if (res.status === 204) return undefined as T;
+  return (await res.json()) as T;
+}
+
+/** Multipart upload (FormData). */
+export async function apiForm<T>(path: string, form: FormData): Promise<T> {
+  const res = await send(path, { method: 'POST', form });
   return (await res.json()) as T;
 }
 

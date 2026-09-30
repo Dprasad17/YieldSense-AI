@@ -6,6 +6,9 @@ import {
   Database,
   FileText,
   Gauge,
+  FileUp,
+  MapPinned,
+  Users,
   HelpCircle,
   History,
   Settings,
@@ -94,6 +97,14 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     label: 'Data',
     items: [
+      { path: 'farms', label: 'Farms', icon: MapPinned, permission: 'farms', keywords: 'fields plots seasons' },
+      {
+        path: 'collect',
+        label: 'Data collection',
+        icon: FileUp,
+        permission: 'farms',
+        keywords: 'upload import csv excel soil test',
+      },
       {
         path: 'data',
         label: 'Dataset Explorer',
@@ -114,6 +125,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         permission: 'models',
         keywords: 'r2 rmse mae accuracy',
       },
+      { path: 'users', label: 'Users & roles', icon: Users, permission: 'users', keywords: 'admin accounts audit' },
     ],
   },
 ];

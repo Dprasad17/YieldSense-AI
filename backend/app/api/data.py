@@ -100,3 +100,14 @@ def get_dataset_summary(_user: dict = Depends(require_user)):
         "year_max": hi,
         "missing_years": dataset.missing_years(),
     }
+
+
+@router.get("/sample", response_model=CropRecord)
+def get_sample_record(crop: Optional[str] = Query(None), region: Optional[str] = Query(None), _user: dict = Depends(require_user)):
+    """A random real record (optionally for a crop/region), used to pre-fill the predictor."""
+    df = filter_df(Filters.of(dataset.canonical(region, "region") or region, dataset.canonical(crop, "crop_type") or crop))
+    if df.empty:
+        from backend.app.core.errors import AppError
+
+        raise AppError(404, "No records match these filters.")
+    return records_to_dicts(df.sample(1))[0]

@@ -179,6 +179,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
       logout,
       retryRestore: () => setStatus('restoring'),
+      updateUser: next => {
+        updateSessionUser(next);
+        setUser(next);
+      },
     }),
     [status, user, offlineDemo, login, register, logout],
   );

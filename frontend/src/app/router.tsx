@@ -28,6 +28,10 @@ const screens = {
   history: named(app, 'HistoryPage'),
   settings: named(app, 'SettingsPage'),
   help: named(app, 'HelpPage'),
+  farms: named(() => import('../pages/app/FarmPages'), 'FarmsPage'),
+  farm: named(() => import('../pages/app/FarmPages'), 'FarmDetailPage'),
+  collect: named(() => import('../pages/app/ManagementPages'), 'DataCollectionPage'),
+  users: named(() => import('../pages/app/ManagementPages'), 'UsersPage'),
 };
 
 const AppShell = named(() => import('../components/shell/AppShell'), 'AppShell');
@@ -88,6 +92,10 @@ export const router = createBrowserRouter([
               screen('history', 'history', screens.history),
               screen('settings', 'settings', screens.settings),
               screen('help', 'help', screens.help),
+              screen('farms', 'farms', screens.farms),
+              screen('farms/:id', 'farms', screens.farm),
+              screen('collect', 'farms', screens.collect),
+              screen('users', 'users', screens.users),
               { path: '*', element: <NotFoundPage /> },
             ],
           },

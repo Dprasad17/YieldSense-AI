@@ -3,11 +3,12 @@ import { applyFilters, filtersSearch, readFilters } from './filters';
 
 describe('global filters in the URL', () => {
   it('reads missing params as "all"', () => {
-    expect(readFilters(new URLSearchParams(''))).toEqual({ region: '', crop: '', season: '' });
+    expect(readFilters(new URLSearchParams(''))).toEqual({ region: '', crop: '', season: '', farm: '' });
     expect(readFilters(new URLSearchParams('region=India&crop=Rice'))).toEqual({
       region: 'India',
       crop: 'Rice',
       season: '',
+      farm: '',
     });
   });
 

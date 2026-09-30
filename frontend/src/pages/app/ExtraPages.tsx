@@ -1,4 +1,7 @@
 import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { errorMessage } from '../../api/client';
+import { authApi, profileApi } from '../../api/endpoints';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -497,36 +500,189 @@ export function HistoryPage() {
 // ================================================================ Settings
 
 export function SettingsPage() {
-  const { user, role } = useAuth();
+  const { user, role, updateUser } = useAuth();
   const p = usePreferences();
   const regions = useRegions().data ?? [];
   const crops = useDatasetSummary().data?.crops_supported ?? [];
+  const me = useQuery({ queryKey: ['me'], queryFn: authApi.me });
+  const [profile, setProfile] = useState<{ full_name: string; email: string } | null>(null);
+  const [pw, setPw] = useState({ current: '', next: '', confirm: '' });
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [saving, setSaving] = useState<'profile' | 'password' | 'prefs' | null>(null);
+  const form = profile ?? {
+    full_name: me.data?.user.full_name ?? user?.full_name ?? '',
+    email: me.data?.user.email ?? user?.email ?? '',
+  };
+  const prefs = me.data?.user.notification_prefs;
+
+  const saveProfile = async () => {
+    if (!form.full_name.trim()) return toast.error('Enter your name.');
+    setSaving('profile');
+    try {
+      const res = await profileApi.update({ full_name: form.full_name.trim(), email: form.email.trim() });
+      updateUser({
+        username: res.user.username,
+        role: res.user.role,
+        email: res.user.email,
+        full_name: res.user.full_name,
+      });
+      setProfile(null);
+      me.refetch();
+      toast.success('Profile saved');
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const savePrefs = async (key: keyof NonNullable<typeof prefs>, value: boolean) => {
+    if (!prefs) return;
+    setSaving('prefs');
+    try {
+      await profileApi.update({ notification_prefs: { ...prefs, [key]: value } });
+      await me.refetch();
+      toast.success('Notification preferences saved');
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const changePassword = async () => {
+    setPwError(null);
+    if (pw.next.length < 8) return setPwError('The new password needs at least 8 characters.');
+    if (pw.next !== pw.confirm) return setPwError('The new passwords don’t match.');
+    setSaving('password');
+    try {
+      await profileApi.changePassword(pw.current, pw.next);
+      setPw({ current: '', next: '', confirm: '' });
+      toast.success('Password changed');
+    } catch (err) {
+      setPwError(errorMessage(err));
+    } finally {
+      setSaving(null);
+    }
+  };
+
   return (
     <div className={s.page}>
-      <PageHeader title="Profile & settings" description="Your account details and preferences for this browser." />
+      <PageHeader
+        title="Profile & settings"
+        description="Your account, security, notifications and display preferences."
+      />
       <div className={s.grid}>
-        <div className={s.s5}>
+        <div className={`${s.s5} ${s.stack}`}>
           <Card>
-            <CardHeader title="Account" subtitle="Managed by your administrator" />
-            <div className={s.row} style={{ marginBottom: 'var(--space-4)' }}>
-              <UserCircle2 size={40} color="var(--primary)" aria-hidden="true" />
+            <CardHeader
+              title="Profile"
+              subtitle={`@${user?.username} · ${role}`}
+              actions={<UserCircle2 size={28} color="var(--primary)" aria-hidden="true" />}
+            />
+            <div className={s.stack}>
+              <FormField label="Full name" htmlFor="pf-name">
+                <Input
+                  id="pf-name"
+                  value={form.full_name}
+                  onChange={e => setProfile({ ...form, full_name: e.target.value })}
+                />
+              </FormField>
+              <FormField label="Email" htmlFor="pf-email">
+                <Input
+                  id="pf-email"
+                  type="email"
+                  value={form.email}
+                  onChange={e => setProfile({ ...form, email: e.target.value })}
+                />
+              </FormField>
               <div>
-                <div style={{ fontWeight: 600, fontSize: 'var(--text-lg)' }}>{user?.full_name}</div>
-                <Badge tone="success">{role}</Badge>
+                <Button variant="primary" onClick={saveProfile} loading={saving === 'profile'} disabled={!profile}>
+                  Save profile
+                </Button>
+              </div>
+              <p className={s.small} style={{ margin: 0 }}>
+                Your role is managed by an administrator.
+              </p>
+            </div>
+          </Card>
+          <Card>
+            <CardHeader title="Change password" subtitle="You’ll need your current password" />
+            <div className={s.stack}>
+              {pwError && (
+                <p role="alert" style={{ color: 'var(--danger)', margin: 0 }}>
+                  {pwError}
+                </p>
+              )}
+              <FormField label="Current password" htmlFor="pw-cur">
+                <Input
+                  id="pw-cur"
+                  type="password"
+                  autoComplete="current-password"
+                  value={pw.current}
+                  onChange={e => setPw({ ...pw, current: e.target.value })}
+                />
+              </FormField>
+              <FormField label="New password" htmlFor="pw-new" hint="At least 8 characters">
+                <Input
+                  id="pw-new"
+                  type="password"
+                  autoComplete="new-password"
+                  value={pw.next}
+                  onChange={e => setPw({ ...pw, next: e.target.value })}
+                />
+              </FormField>
+              <FormField label="Confirm new password" htmlFor="pw-confirm">
+                <Input
+                  id="pw-confirm"
+                  type="password"
+                  autoComplete="new-password"
+                  value={pw.confirm}
+                  onChange={e => setPw({ ...pw, confirm: e.target.value })}
+                />
+              </FormField>
+              <div>
+                <Button onClick={changePassword} loading={saving === 'password'} disabled={!pw.current || !pw.next}>
+                  Change password
+                </Button>
               </div>
             </div>
-            <dl className={s.dl}>
-              <dt>Username</dt>
-              <dd>{user?.username}</dd>
-              <dt>Email</dt>
-              <dd>{user?.email}</dd>
-            </dl>
-            <p className={s.small} style={{ marginTop: 'var(--space-4)' }}>
-              To change your details or password, contact your administrator.
-            </p>
           </Card>
         </div>
-        <div className={s.s7}>
+        <div className={`${s.s7} ${s.stack}`}>
+          <Card>
+            <CardHeader title="Notifications" subtitle="Which notifications you receive in the app" />
+            {prefs ? (
+              <div className={s.stack}>
+                <Switch
+                  label="Recommendations (critical and high priority)"
+                  checked={prefs.recommendations}
+                  onCheckedChange={v => savePrefs('recommendations', v)}
+                  disabled={saving === 'prefs'}
+                />
+                <Switch
+                  label="Risk alerts (level changes)"
+                  checked={prefs.alerts}
+                  onCheckedChange={v => savePrefs('alerts', v)}
+                  disabled={saving === 'prefs'}
+                />
+                <Switch
+                  label="Weather"
+                  checked={prefs.weather}
+                  onCheckedChange={v => savePrefs('weather', v)}
+                  disabled={saving === 'prefs'}
+                />
+                <Switch
+                  label="System"
+                  checked={prefs.system}
+                  onCheckedChange={v => savePrefs('system', v)}
+                  disabled={saving === 'prefs'}
+                />
+              </div>
+            ) : (
+              <Skeleton height={120} />
+            )}
+          </Card>
           <Card>
             <CardHeader title="Preferences" subtitle="Saved in this browser" />
             <div className={s.stack} style={{ gap: 'var(--space-5)' }}>

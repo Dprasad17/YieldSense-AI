@@ -13,15 +13,18 @@ export interface GlobalFilters {
   crop: string;
   /** Season label. Empty = all seasons. */
   season: string;
+  /** Selected farm id (as a string). Empty = the reference dataset. */
+  farm: string;
 }
 
-export const FILTER_KEYS = ['region', 'crop', 'season'] as const satisfies readonly (keyof GlobalFilters)[];
+export const FILTER_KEYS = ['farm', 'region', 'crop', 'season'] as const satisfies readonly (keyof GlobalFilters)[];
 
 export function readFilters(params: URLSearchParams): GlobalFilters {
   return {
     region: params.get('region') ?? '',
     crop: params.get('crop') ?? '',
     season: params.get('season') ?? '',
+    farm: params.get('farm') ?? '',
   };
 }
 

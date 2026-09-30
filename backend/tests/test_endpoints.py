@@ -59,7 +59,7 @@ def test_predict_saves_history_with_interval(client, auth):
     assert client.get(f"/api/predictions/{p['id']}", headers={"Authorization": f"Bearer {t2}"}).status_code == 404
     assert client.get(f"/api/predictions/{p['id']}", headers=auth("agronomist")).status_code == 200
 
-    farm = client.get("/api/farms/FARM00001", headers=auth("farmer")).json()
+    farm = client.get("/api/data/records/FARM00001", headers=auth("farmer")).json()
     assert any(x["id"] == p["id"] for x in farm["predictions"])
 
 

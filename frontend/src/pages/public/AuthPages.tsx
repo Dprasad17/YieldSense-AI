@@ -17,7 +17,9 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { ApiError } from '../../api/client';
+import { ALL_NAV_ITEMS } from '../../app/navigation';
 import { useAuth } from '../../auth/context';
+import { hasPermission } from '../../auth/permissions';
 import { DEMO_ACCOUNTS, type DemoAccount } from '../../auth/demoAccounts';
 import { loginErrorMessage } from '../../auth/errors';
 import { passwordStrength } from '../../lib/password';
@@ -29,8 +31,14 @@ const ROLE_ICON = { Farmer: Tractor, Agronomist: FlaskConical, Admin: ShieldChec
 
 function useRedirectTarget(): string {
   const location = useLocation();
+  const { user } = useAuth();
   const from = (location.state as { from?: string } | null)?.from;
-  return from && from.startsWith('/app') ? from : '/app/dashboard';
+  if (!from?.startsWith('/app/')) return '/app/dashboard';
+  // Don't send someone back to a screen their role can't open (e.g. after switching accounts).
+  const segment = from.slice(5).split(/[/?#]/)[0];
+  const item = ALL_NAV_ITEMS.find(i => i.path === segment);
+  if (item && user && !hasPermission(user.role, item.permission)) return '/app/dashboard';
+  return from;
 }
 
 // ---------------------------------------------------------------- Layout
@@ -95,7 +103,6 @@ function AuthLayout({ children, title }: { children: ReactNode; title: string })
 
 export function SignInPage() {
   const { status, login } = useAuth();
-  const navigate = useNavigate();
   const target = useRedirectTarget();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -113,8 +120,8 @@ export function SignInPage() {
     setPending(key);
     setError(null);
     try {
+      // Once signed in, the component re-renders and redirects to a target the user's role can open.
       await login(u, p, remember);
-      navigate(target, { replace: true });
     } catch (err) {
       setError(err instanceof ApiError && err.status === 429 ? `${err.detail}` : loginErrorMessage(err));
     } finally {

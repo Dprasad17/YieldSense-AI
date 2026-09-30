@@ -25,7 +25,7 @@ import clsx from 'clsx';
 import { ALL_NAV_ITEMS, FOOTER_ITEMS, NAV_GROUPS } from '../../app/navigation';
 import { ProductTour } from './ProductTour';
 import { useAuth, useCan } from '../../auth/context';
-import { useDatasetSummary, useRegions } from '../../hooks/queries';
+import { useDatasetSummary, useFarms, useRegions } from '../../hooks/queries';
 import { YIELD_UNITS, type YieldUnit } from '../../lib/units';
 import { filtersSearch, useGlobalFilters } from '../../store/filters';
 import { usePreferences, type ThemePreference } from '../../store/preferences';
@@ -150,6 +150,7 @@ function ContextSwitcher() {
   const { filters, setFilters } = useGlobalFilters();
   const { unit, setUnit } = usePreferences();
   const regions = useRegions().data ?? [];
+  const farms = useFarms({ page: 1, page_size: 100, mine: true }).data?.items ?? [];
   const crops = useDatasetSummary().data?.crops_supported;
   const sortedCrops = useMemo(() => [...(crops ?? [])].sort((a, b) => a.localeCompare(b)), [crops]);
   return (
@@ -160,12 +161,25 @@ function ContextSwitcher() {
           <span className="sr-only">Context: </span>
           <SlidersHorizontal size={15} aria-hidden="true" />
           <span className={s.contextText}>
-            {filters.region || 'All regions'} <span className={s.contextSep}>·</span> {filters.crop || 'All crops'}
+            {farms.find(f => String(f.id) === filters.farm)?.name ?? (filters.region || 'All regions')}{' '}
+            <span className={s.contextSep}>·</span> {filters.crop || 'All crops'}
           </span>
         </button>
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <FormField label="Farm" htmlFor="ctx-farm" hint="Scopes recommendations, risk, soil and predictions to a farm">
+          <Select
+            id="ctx-farm"
+            value={filters.farm}
+            onChange={e => {
+              const f = farms.find(x => String(x.id) === e.target.value);
+              setFilters(f ? { farm: String(f.id), region: f.region, crop: f.crops[0] ?? '' } : { farm: '' });
+            }}
+            options={farms.map(f => ({ value: String(f.id), label: `${f.name} · ${f.region}` }))}
+            placeholder="Reference dataset (no farm)"
+          />
+        </FormField>
         <FormField label="Region" htmlFor="ctx-region">
           <Select
             id="ctx-region"
@@ -200,8 +214,8 @@ function ContextSwitcher() {
         <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
           Applies to every screen that supports these filters. The selection is kept in the URL, so views can be shared.
         </p>
-        {(filters.region || filters.crop) && (
-          <Button size="sm" variant="ghost" onClick={() => setFilters({ region: '', crop: '' })}>
+        {(filters.region || filters.crop || filters.farm) && (
+          <Button size="sm" variant="ghost" onClick={() => setFilters({ farm: '', region: '', crop: '' })}>
             Clear filters
           </Button>
         )}

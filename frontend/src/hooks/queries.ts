@@ -10,6 +10,8 @@ import {
   recommendationsApi,
   reportsApi,
   riskApi,
+  soilTestsApi,
+  uploadsApi,
   soilApi,
   weatherApi,
 } from '../api/endpoints';
@@ -17,8 +19,8 @@ import type { ContextQuery, PredictionInput, RecommendationAction } from '../api
 import { useCan } from '../auth/context';
 
 /** Turns the global filters (empty = all) into API query params. */
-export function contextQuery(f: { region?: string; crop?: string }): ContextQuery {
-  return { region: f.region || undefined, crop: f.crop || undefined };
+export function contextQuery(f: { region?: string; crop?: string; farm?: string }): ContextQuery {
+  return { region: f.region || undefined, crop: f.crop || undefined, farm_id: f.farm ? Number(f.farm) : undefined };
 }
 
 export const queryKeys = {
@@ -145,10 +147,10 @@ export function useWeather(region: string, live: boolean) {
   });
 }
 
-export function useSoil(crop: string, region?: string) {
+export function useSoil(crop: string, region?: string, farmId?: number) {
   return useQuery({
-    queryKey: queryKeys.soil(crop, region),
-    queryFn: () => soilApi.assessment(crop, region || undefined),
+    queryKey: [...queryKeys.soil(crop, region), farmId ?? 0],
+    queryFn: () => soilApi.assessment(crop, region || undefined, farmId),
     placeholderData: keepPreviousData,
   });
 }
@@ -157,12 +159,38 @@ export function useRisk(q: ContextQuery) {
   return useQuery({ queryKey: queryKeys.risk(q), queryFn: () => riskApi.get(q) });
 }
 
-export function useFarms(p: ContextQuery & { page: number; page_size: number; search?: string; sort?: string }) {
+export function useFarms(p: { page: number; page_size: number; search?: string; region?: string; mine?: boolean }) {
   return useQuery({ queryKey: queryKeys.farms(p), queryFn: () => farmsApi.list(p), placeholderData: keepPreviousData });
 }
 
-export function useFarm(id: string) {
-  return useQuery({ queryKey: queryKeys.farm(id), queryFn: () => farmsApi.get(id), enabled: Boolean(id) });
+export function useFarm(id: number | null, crop?: string) {
+  return useQuery({
+    queryKey: [...queryKeys.farm(String(id)), crop ?? ''],
+    queryFn: () => farmsApi.get(id as number, crop),
+    enabled: id != null,
+  });
+}
+
+/** Invalidate farm lists and details after a change. */
+export function useFarmsInvalidate() {
+  const qc = useQueryClient();
+  return () => qc.invalidateQueries({ queryKey: ['farms'] });
+}
+
+export function useSoilTests(farmId: number | null) {
+  return useQuery({
+    queryKey: ['soil-tests', farmId],
+    queryFn: () => soilTestsApi.list(farmId as number),
+    enabled: farmId != null,
+  });
+}
+
+export function useUploads(page = 1) {
+  return useQuery({
+    queryKey: ['uploads', page],
+    queryFn: () => uploadsApi.list({ page, page_size: 20 }),
+    placeholderData: keepPreviousData,
+  });
 }
 
 export function useNotifications(

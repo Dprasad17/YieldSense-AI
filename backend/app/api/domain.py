@@ -14,7 +14,7 @@ from backend.app.services.dataset import Filters, filter_df, get_df
 from backend.app.services.users import ROLES, load_users, public_user, upsert_user
 from backend.app.services.weather_service import LiveWeatherUnavailable, weather_service
 
-farms_router = APIRouter(prefix="/api/farms", tags=["Farms"], responses=ERROR_RESPONSES)
+records_router = APIRouter(prefix="/api/data/records", tags=["Dataset Operations"], responses=ERROR_RESPONSES)
 risk_router = APIRouter(prefix="/api/risk", tags=["Risk"], responses=ERROR_RESPONSES)
 notifications_router = APIRouter(prefix="/api/notifications", tags=["Notifications"], responses=ERROR_RESPONSES)
 soil_router = APIRouter(prefix="/api/soil", tags=["Soil Analytics"], responses=ERROR_RESPONSES)
@@ -25,16 +25,7 @@ admin_router = APIRouter(prefix="/api/admin", tags=["Admin"], responses=ERROR_RE
 # ------------------------------------------------------------------ farms
 
 
-class FarmSummary(BaseModel):
-    farm_id: str
-    region: str
-    crop_type: str
-    year: Optional[int]
-    yield_kg_ha: float
-    ndvi: float
-
-
-class FarmDetail(BaseModel):
+class RecordDetail(BaseModel):
     farm_id: str
     note: str
     records: list[CropRecord]
@@ -45,43 +36,13 @@ class FarmDetail(BaseModel):
     predictions: list[PredictionRecord]
 
 
-@farms_router.get("", response_model=Page[FarmSummary])
-def list_farms(
-    f: Filters = Depends(context_filters),
-    search: Optional[str] = Query(None, max_length=40),
-    sort: Literal["farm_id", "yield_desc", "yield_asc"] = Query("farm_id"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
-    _user: dict = Depends(require_user),
-):
-    df = filter_df(f)
-    if search:
-        df = df[df["farm_id"].str.contains(search.strip(), case=False, regex=False)]
-    if sort == "farm_id":
-        df = df.sort_values("farm_id")
-    else:
-        df = df.sort_values("yield_kg_per_hectare", ascending=sort == "yield_asc")
-    start = (page - 1) * page_size
-    items = [
-        {
-            "farm_id": r.farm_id,
-            "region": r.region,
-            "crop_type": r.crop_type,
-            "year": int(r.year) if r.year == r.year else None,
-            "yield_kg_ha": round(float(r.yield_kg_per_hectare), 2),
-            "ndvi": float(r.NDVI_index),
-        }
-        for r in df.iloc[start : start + page_size].itertuples()
-    ]
-    return {"items": items, "total": int(len(df)), "page": page, "page_size": page_size}
-
-
-@farms_router.get("/{farm_id}", response_model=FarmDetail)
-def get_farm(farm_id: str, user: dict = Depends(require_user)):
+@records_router.get("/{farm_id}", response_model=RecordDetail)
+def get_record(farm_id: str, user: dict = Depends(require_user)):
+    """One dataset record with its peers and the predictions linked to it."""
     df = get_df()
     rows = df[df["farm_id"].str.upper() == farm_id.strip().upper()]
     if rows.empty:
-        raise AppError(404, f"Farm {farm_id} not found.")
+        raise AppError(404, f"Record {farm_id} not found.")
     row = rows.iloc[0]
     crop_yields = df.loc[df["crop_type"] == row["crop_type"], "yield_kg_per_hectare"]
     peers = df[(df["crop_type"] == row["crop_type"]) & (df["region"] == row["region"])]["yield_kg_per_hectare"]
@@ -89,7 +50,7 @@ def get_farm(farm_id: str, user: dict = Depends(require_user)):
     preds = store.list_predictions(owner, 1, 50, record_code=str(row["farm_id"]))["items"]
     return {
         "farm_id": row["farm_id"],
-        "note": "Each farm ID in the dataset is a single region × crop × year record.",
+        "note": "Each record ID in the dataset is a single region × crop × year observation.",
         "records": records_to_dicts(rows),
         "avg_yield_kg_ha": round(float(rows["yield_kg_per_hectare"].mean()), 2),
         "region_crop_mean_kg_ha": round(float(peers.mean()), 2) if len(peers) else None,
@@ -146,7 +107,11 @@ class RiskAssessment(BaseModel):
 
 
 @risk_router.get("", response_model=RiskAssessment)
-def get_risk(f: Filters = Depends(context_filters), user: dict = Depends(require_user)):
+def get_risk(f: Filters = Depends(context_filters), farm_id: Optional[int] = Query(None, description="Scope to one of your farms"), user: dict = Depends(require_user)):
+    if farm_id is not None:
+        from backend.app.api.management import farm_filters
+
+        f = farm_filters(farm_id, user, f.crop)
     result = insights.risk_assessment(f)
     notifications.sync_risk(user["username"], f, result["risks"])
     return result
@@ -237,7 +202,12 @@ class SoilAssessment(BaseModel):
 
 @soil_router.get("/assessment", response_model=SoilAssessment)
 def get_soil_assessment(f: Filters = Depends(context_filters), crop_type: Optional[str] = Query(None),
+                        farm_id: Optional[int] = Query(None, description="Scope to one of your farms"),
                         _user: dict = Depends(require_user)):
+    if farm_id is not None:
+        from backend.app.api.management import farm_filters
+
+        f = farm_filters(farm_id, _user, f.crop or crop_type)
     if crop_type and not f.crop:
         f = context_filters(region=f.region, crop=crop_type, year_from=f.year_from, year_to=f.year_to)
     if not f.crop:
@@ -278,6 +248,23 @@ class WeatherResponse(BaseModel):
     current: Optional[WeatherCurrent]
     forecast: list[WeatherForecastDay]
     fetched_at: Optional[str]
+
+
+class RegionCoordinates(BaseModel):
+    region: str
+    latitude: float
+    longitude: float
+    label: str
+
+
+@weather_router.get("/coordinates", response_model=RegionCoordinates)
+def get_region_coordinates(region: str = Query(..., min_length=2, max_length=80), _user: dict = Depends(require_user)):
+    """Map position for a dataset region (hand-picked agricultural zone or Open-Meteo country centroid)."""
+    try:
+        c = weather_service._coordinates(region)
+    except LiveWeatherUnavailable as e:
+        raise AppError(404, str(e))
+    return {"region": region, "latitude": c["lat"], "longitude": c["lon"], "label": c["name"]}
 
 
 @weather_router.get("/analysis", response_model=WeatherResponse)

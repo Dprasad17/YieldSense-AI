@@ -19,6 +19,8 @@ export interface AuthState {
     full_name?: string;
   }) => Promise<void>;
   logout: () => void;
+  /** Replace the signed-in user after a profile edit. */
+  updateUser: (user: SessionUser) => void;
   retryRestore: () => void;
 }
 

@@ -16,6 +16,9 @@ FARMER_OK = [
     "/api/weather/analysis?region=India",
     "/api/soil/assessment?crop=Rice",
     "/api/farms",
+    "/api/uploads",
+    "/api/data/sample",
+    "/api/auth/me",
     "/api/risk?region=India",
     "/api/notifications",
 ]
@@ -26,15 +29,16 @@ ADMIN_ONLY = ["/api/admin/users", "/api/admin/audit"]
 def test_every_api_route_is_protected(client):
     from backend.app.main import app
 
-    for route in app.routes:
-        path = getattr(route, "path", "")
-        methods = getattr(route, "methods", set()) or set()
+    checked = 0
+    for path, ops in app.openapi()["paths"].items():
         if not path.startswith("/api") or path in PUBLIC:
             continue
         concrete = path.replace("{", "").replace("}", "")
-        for method in methods - {"HEAD", "OPTIONS"}:
-            res = client.request(method, concrete, json={})
-            assert res.status_code == 401, f"{method} {path} returned {res.status_code} without a token"
+        for method in ops:
+            res = client.request(method.upper(), concrete, json={})
+            assert res.status_code == 401, f"{method.upper()} {path} returned {res.status_code} without a token"
+            checked += 1
+    assert checked > 40
 
 
 def test_public_stats_is_aggregate_only(client):

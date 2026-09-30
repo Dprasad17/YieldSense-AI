@@ -5,7 +5,7 @@ type S = components['schemas'];
 
 export type Role = 'Farmer' | 'Agronomist' | 'Admin';
 
-export type SessionUser = S['SessionUser'];
+export type SessionUser = Omit<S['MeUser'], 'notification_prefs'>;
 export type TokenResponse = S['TokenResponse'];
 export type MeResponse = S['MeResponse'];
 export type ErrorEnvelope = S['ErrorEnvelope'];
@@ -48,8 +48,20 @@ export type Task = S['Task'];
 export type WeatherResponse = S['WeatherResponse'];
 export type SoilResponse = S['SoilAssessment'];
 export type RiskAssessment = S['RiskAssessment'];
-export type FarmsPage = S['Page_FarmSummary_'];
+export type Farm = S['FarmOut'];
+export type FarmsPage = S['Page_FarmOut_'];
 export type FarmDetail = S['FarmDetail'];
+export type FarmInput = S['FarmIn'];
+export type FarmRecord = S['FarmRecordOut'];
+export type FarmRecordInput = S['FarmRecordIn'];
+export type RecordDetail = S['RecordDetail'];
+export type SoilTest = S['SoilTestOut'];
+export type SoilTestInput = S['SoilTestIn'];
+export type Upload = S['UploadSummary'];
+export type UploadsPage = S['Page_UploadSummary_'];
+export type UploadKind = S['UploadSummary']['kind'];
+export type MeUser = S['MeUser'];
+export type NotificationPrefs = S['NotificationPrefs'];
 export type NotificationPage = S['NotificationPage'];
 export type Notification = S['Notification'];
 export type AdminUser = S['AdminUser'];
@@ -61,6 +73,7 @@ export type PublicStats = S['PublicStats'];
 export type ContextQuery = {
   region?: string;
   crop?: string;
+  farm_id?: number;
   year_from?: number;
   year_to?: number;
 };

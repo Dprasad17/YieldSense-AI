@@ -10,14 +10,16 @@ from backend.app.api.auth import router as auth_router
 from backend.app.api.data import router as data_router
 from backend.app.api.domain import (
     admin_router,
-    farms_router,
+    records_router,
     notifications_router,
     risk_router,
     soil_router,
     weather_router,
 )
 from backend.app.api.predictions import history_router, router as predictions_router
+from backend.app.api.management import farms_router, soil_tests_router
 from backend.app.api.public import router as public_router
+from backend.app.api.uploads import router as uploads_router
 from backend.app.api.recommendations import router as recommendations_router
 from backend.app.api.reports import router as reports_router
 from backend.app.core.config import settings
@@ -48,7 +50,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=False,
-    allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Accept"],
     expose_headers=["Content-Disposition", "X-Total-Records", "X-Truncated", "Retry-After"],
 )
@@ -69,10 +71,13 @@ for r in (
     weather_router,
     soil_router,
     reports_router,
-    farms_router,
+    records_router,
     risk_router,
     notifications_router,
     admin_router,
+    farms_router,
+    soil_tests_router,
+    uploads_router,
 ):
     app.include_router(r)
 

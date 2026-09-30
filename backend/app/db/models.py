@@ -229,3 +229,23 @@ class AuditLog(Base):
     target: Mapped[str] = mapped_column(String(120), nullable=False)
     detail: Mapped[dict[str, Any]] = mapped_column(JsonType, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow, index=True)
+
+
+class WeatherObservation(Base):
+    """Weather rows imported through Data Collection (station or regional observations)."""
+
+    __tablename__ = "weather_observations"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    region: Mapped[str] = mapped_column(String(80), nullable=False)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
+    month: Mapped[Optional[int]] = mapped_column(Integer)
+    rainfall_mm: Mapped[Optional[float]] = mapped_column(Float)
+    temperature_c: Mapped[Optional[float]] = mapped_column(Float)
+    humidity_percent: Mapped[Optional[float]] = mapped_column(Float)
+    sunlight_hours: Mapped[Optional[float]] = mapped_column(Float)
+    upload_id: Mapped[Optional[str]] = mapped_column(String(32), index=True)
+    created_by: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow)
+
+    __table_args__ = (Index("ix_weather_obs_region_year", "region", "year"),)

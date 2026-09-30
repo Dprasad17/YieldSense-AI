@@ -91,7 +91,7 @@ function PhGauge({ value, band }: { value: number; band: [number, number] | null
 export function SoilPage() {
   const { filters } = useGlobalFilters();
   const crop = filters.crop || DEFAULT_CROP;
-  const q = useSoil(crop, filters.region);
+  const q = useSoil(crop, filters.region, filters.farm ? Number(filters.farm) : undefined);
   const m = q.data?.soil_metrics as Record<string, number | string> | undefined;
   const g = q.data?.global_soil_averages as Record<string, number> | undefined;
 

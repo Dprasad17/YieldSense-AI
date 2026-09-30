@@ -183,7 +183,11 @@ def get_active_model_summary(_user: dict = Depends(require_user)):
 
 
 @router.get("/recommendations-hub", response_model=RecommendationsHub)
-def get_recommendations_hub(f: Filters = Depends(context_filters), user: dict = Depends(require_user)):
+def get_recommendations_hub(f: Filters = Depends(context_filters), farm_id: Optional[int] = Query(None, description="Scope to one of your farms"), user: dict = Depends(require_user)):
+    if farm_id is not None:
+        from backend.app.api.management import farm_filters
+
+        f = farm_filters(farm_id, user, f.crop)
     """Rule-based recommendations for the selected region and crop. Thresholds from core/agronomy_rules;
     impacts are Random Forest estimates; only the rationale text is written by the LLM (with a fallback)."""
     hub = insights.recommendations(f)

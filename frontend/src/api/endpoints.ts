@@ -1,4 +1,4 @@
-import { apiBlob, apiRequest } from './client';
+import { apiBlob, apiForm, apiRequest } from './client';
 import type {
   ActionResponse,
   ActiveModel,
@@ -12,7 +12,19 @@ import type {
   EdaMetrics,
   FarmComparison,
   FarmDetail,
+  FarmInput,
+  FarmRecord,
+  FarmRecordInput,
+  Farm,
   FarmsPage,
+  NotificationPrefs,
+  RecordDetail,
+  SoilTest,
+  SoilTestInput,
+  Upload,
+  UploadKind,
+  UploadsPage,
+  CropRecord,
   MeResponse,
   ModelMetricsResponse,
   Notification,
@@ -91,8 +103,8 @@ export const weatherApi = {
 };
 
 export const soilApi = {
-  assessment: (crop: string, region?: string) =>
-    apiRequest<SoilResponse>('/api/soil/assessment', { query: { crop, region } }),
+  assessment: (crop: string, region?: string, farmId?: number) =>
+    apiRequest<SoilResponse>('/api/soil/assessment', { query: { crop, region, farm_id: farmId } }),
 };
 
 export const riskApi = {
@@ -100,9 +112,48 @@ export const riskApi = {
 };
 
 export const farmsApi = {
-  list: (q: Q & { page: number; page_size: number; search?: string; sort?: string }) =>
+  list: (q: { page: number; page_size: number; search?: string; region?: string; mine?: boolean }) =>
     apiRequest<FarmsPage>('/api/farms', { query: q }),
-  get: (id: string) => apiRequest<FarmDetail>(`/api/farms/${encodeURIComponent(id)}`),
+  get: (id: number, crop?: string) => apiRequest<FarmDetail>(`/api/farms/${id}`, { query: { crop } }),
+  create: (body: FarmInput) => apiRequest<Farm>('/api/farms', { method: 'POST', body }),
+  update: (id: number, body: Partial<FarmInput>) => apiRequest<Farm>(`/api/farms/${id}`, { method: 'PATCH', body }),
+  remove: (id: number) => apiRequest<void>(`/api/farms/${id}`, { method: 'DELETE' }),
+  addRecord: (id: number, body: FarmRecordInput) =>
+    apiRequest<FarmRecord>(`/api/farms/${id}/records`, { method: 'POST', body }),
+  updateRecord: (id: number, rid: number, body: FarmRecordInput) =>
+    apiRequest<FarmRecord>(`/api/farms/${id}/records/${rid}`, { method: 'PATCH', body }),
+  removeRecord: (id: number, rid: number) => apiRequest<void>(`/api/farms/${id}/records/${rid}`, { method: 'DELETE' }),
+};
+
+export const recordsApi = {
+  get: (code: string) => apiRequest<RecordDetail>(`/api/data/records/${encodeURIComponent(code)}`),
+  sample: (q: { crop?: string; region?: string }) => apiRequest<CropRecord>('/api/data/sample', { query: q }),
+};
+
+export const soilTestsApi = {
+  list: (farmId: number) => apiRequest<SoilTest[]>('/api/soil-tests', { query: { farm_id: farmId } }),
+  create: (body: SoilTestInput) => apiRequest<SoilTest>('/api/soil-tests', { method: 'POST', body }),
+};
+
+export const uploadsApi = {
+  upload: (kind: UploadKind, file: File, farmId?: number) => {
+    const form = new FormData();
+    form.append('kind', kind);
+    if (farmId != null) form.append('farm_id', String(farmId));
+    form.append('file', file);
+    return apiForm<Upload>('/api/uploads', form);
+  },
+  validate: (id: string, mapping: Record<string, string | null>) =>
+    apiRequest<Upload>(`/api/uploads/${id}/validate`, { method: 'POST', body: { mapping } }),
+  import: (id: string) => apiRequest<Upload>(`/api/uploads/${id}/import`, { method: 'POST' }),
+  list: (q: { page?: number; page_size?: number } = {}) => apiRequest<UploadsPage>('/api/uploads', { query: q }),
+};
+
+export const profileApi = {
+  update: (body: { full_name?: string; email?: string; notification_prefs?: NotificationPrefs }) =>
+    apiRequest<MeResponse>('/api/auth/me', { method: 'PATCH', body }),
+  changePassword: (current_password: string, new_password: string) =>
+    apiRequest<void>('/api/auth/change-password', { method: 'POST', body: { current_password, new_password } }),
 };
 
 export const notificationsApi = {
