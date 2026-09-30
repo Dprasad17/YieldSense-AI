@@ -35,15 +35,6 @@ import { useGlobalFilters } from '../../store/filters';
 import { usePreferences } from '../../store/preferences';
 import s from './app.module.css';
 
-// Fixed example values from the original dashboard; the API has no per-region yield endpoint yet.
-const SAMPLE_REGIONS = [
-  { label: 'North India', value: 4450 },
-  { label: 'Central USA', value: 4380 },
-  { label: 'South India', value: 4320 },
-  { label: 'South USA', value: 4210 },
-  { label: 'East Africa', value: 4190 },
-];
-
 function greeting(d = new Date()) {
   const h = d.getHours();
   return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
@@ -277,19 +268,23 @@ export function DashboardPage() {
         <div className={s.s6}>
           <Card>
             <CardHeader
-              title="Regional yield ranking"
-              subtitle="Five example regions, sorted by yield"
-              actions={
-                <SampleDataPill reason="Fixed example regions. No existing endpoint returns yield per region." />
-              }
+              title="Yield by crop"
+              subtitle={`${ranking.length || '—'} crops ranked by mean yield · all records`}
+              info="From the EDA metrics. The marker is the global mean across every record."
             />
-            <BarList
-              label="Example regional yield ranking"
-              items={SAMPLE_REGIONS}
-              format={v => formatYieldWithUnit(v, unit)}
-              benchmark={SAMPLE_REGIONS.reduce((acc, r) => acc + r.value, 0) / SAMPLE_REGIONS.length}
-              benchmarkLabel="Average of these regions"
-            />
+            {edaQ.isError ? (
+              <ErrorState error={edaQ.error} onRetry={() => edaQ.refetch()} />
+            ) : ranking.length ? (
+              <BarList
+                label="Crops ranked by mean yield"
+                items={ranking.map(r => ({ label: r.crop, value: r.avgYield }))}
+                format={v => formatYieldWithUnit(v, unit)}
+                benchmark={stats?.mean}
+                benchmarkLabel="Global mean"
+              />
+            ) : (
+              <Skeleton height={260} />
+            )}
           </Card>
         </div>
 
