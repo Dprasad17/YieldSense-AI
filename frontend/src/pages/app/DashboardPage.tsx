@@ -28,7 +28,14 @@ import {
 import { ErrorState, SampleDataPill } from '../../components/ui/States';
 import { useAuth, useCan } from '../../auth/context';
 import { useDatasetSummary, useEdaMetrics, useRecommendationsHub } from '../../hooks/queries';
-import { formatCount, formatIndex, formatRainfall, formatYield, formatYieldWithUnit } from '../../lib/format';
+import {
+  formatCount,
+  formatIndex,
+  formatPercent,
+  formatRainfall,
+  formatYield,
+  formatYieldWithUnit,
+} from '../../lib/format';
 import { listRecent } from '../../lib/localStore';
 import { selectCropRanking, selectSummaryKpis, selectYieldStats } from '../../lib/selectors';
 import { useGlobalFilters } from '../../store/filters';
@@ -64,6 +71,11 @@ export function DashboardPage() {
   const kpis = selectSummaryKpis(summaryQ.data);
   const stats = selectYieldStats(edaQ.data);
   const ranking = useMemo(() => selectCropRanking(edaQ.data?.crop_breakdown), [edaQ.data]);
+  const coverage = useMemo(
+    () => [...ranking].sort((x, y) => y.count - x.count || x.crop.localeCompare(y.crop)),
+    [ranking],
+  );
+  const totalRecords = coverage.reduce((acc, c) => acc + c.count, 0);
   const maxCrop = ranking[0]?.avgYield ?? 1;
   const first =
     user?.full_name.split(/\s+/).find(p => /^[A-Za-z]/.test(p) && !p.endsWith('.')) ?? user?.full_name ?? '';
@@ -181,25 +193,28 @@ export function DashboardPage() {
           ) : (
             <Card>
               <CardHeader
-                title="Average yield by crop"
-                subtitle="Mean yield per crop across all records"
-                info="Root crops (potato, cassava, yams) produce far more mass per hectare than grains, so compare crops of the same type."
+                title="Data coverage by crop"
+                subtitle={`Records per crop · ${formatCount(totalRecords)} records in total`}
+                info="How many dataset records each crop has. Crops with fewer records give less reliable averages and predictions."
               />
-              {ranking.length ? (
+              {coverage.length ? (
                 <BarList
-                  label="Mean yield by crop"
-                  items={ranking.map(r => ({ label: r.crop, value: r.avgYield }))}
-                  format={v => formatYieldWithUnit(v, unit)}
-                  benchmark={stats?.mean}
-                  benchmarkLabel="Global mean"
+                  label="Records per crop"
+                  items={coverage.map(c => ({ label: c.crop, value: c.count }))}
+                  format={v => `${formatCount(v)} · ${formatPercent((v / totalRecords) * 100)}`}
+                  color="var(--data-water)"
+                  benchmark={totalRecords / coverage.length}
+                  benchmarkLabel="Even share per crop"
                 />
               ) : (
                 <Skeleton height={300} />
               )}
-              {ranking.length > 1 && (
+              {coverage.length > 1 && (
                 <InsightCallout>
-                  {ranking[0].crop} yields {Math.round(ranking[0].avgYield / ranking[ranking.length - 1].avgYield)}×
-                  more per hectare than {ranking[ranking.length - 1].crop}; compare crops within the same type.
+                  {coverage[0].crop} has the most records ({formatCount(coverage[0].count)}) and{' '}
+                  {coverage[coverage.length - 1].crop} the fewest ({formatCount(coverage[coverage.length - 1].count)}),{' '}
+                  {Math.round(coverage[0].count / coverage[coverage.length - 1].count)}× less data, so treat{' '}
+                  {coverage[coverage.length - 1].crop} figures with more caution.
                 </InsightCallout>
               )}
             </Card>
