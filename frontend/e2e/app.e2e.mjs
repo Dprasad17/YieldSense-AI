@@ -253,6 +253,10 @@ await check('phase C: create farm, add season, delete farm', async () => {
   await clickText('[role=dialog] button', 'Create farm');
   await waitText('Farm created');
   await waitText('E2E Test Farm');
+  await waitFor(
+    () => evaluate(`[...document.querySelectorAll('button')].some(b => b.innerText.includes('Add season'))`),
+    'Add season button',
+  );
   await clickText('button', 'Add season');
   await waitText('What was grown');
   await setInput('#fr-yield', '4200');
@@ -549,6 +553,16 @@ await check('agronomist: EDA 4 real charts, no orphan', async () => {
   const n = await evaluate(`document.querySelectorAll('svg.recharts-surface').length`);
   if (n < 4) throw new Error('charts ' + n);
   await noText('Sample data');
+});
+await check('agronomist: EDA for a single country shows "No fit" instead of crashing', async () => {
+  await go('/app/eda?region=India&crop=Rice');
+  await waitText('Rainfall vs yield');
+  await waitText('No fit');
+  await waitText('single long-term value per country');
+  await noText('Something went wrong');
+  await go('/app/eda?region=Albania&crop=Cassava');
+  await waitText('No records for this context');
+  await noText('Something went wrong');
 });
 await check('agronomist: model performance from the model card', async () => {
   await go('/app/models');

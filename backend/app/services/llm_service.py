@@ -6,6 +6,20 @@ from typing import Dict, Any, List, Optional
 from backend.app.core.observability import log
 
 # Groq sits behind Cloudflare, which rejects Python's default urllib User-Agent (HTTP 403, error 1010).
+# Appended to the facts for the recommendation rationale. The evidence is observational (shares of records
+# and a model estimate), so the text must not turn it into a statement about what drives yield.
+RATIONALE_RULES = (
+    "Write 2-3 plain sentences for a farmer. State only what the evidence shows: the measured value, the band, "
+    "and the share of records outside the band, in those words (for example: '58% of records are outside the band'). "
+    "The share describes where records sit, not what happened to their yield: never say those records have lower, "
+    "reduced or lost yield. Describe the model estimate as the model's estimate, not as a guaranteed result. "
+    "Do not state or imply a reason or mechanism for yield. Use only the numbers given; "
+    "do not invent measurements, dates or products."
+)
+
+# Part of the rationale cache key: bump it when the prompt changes so old cached text is not served.
+RATIONALE_PROMPT_VERSION = 2
+
 USER_AGENT = "YieldSenseAI/2.1 (+https://github.com/springboardmentor12233a-tech)"
 
 class LLMService:
@@ -213,7 +227,7 @@ Return a JSON object with exactly these keys:
 
             from backend.app.db import mongo
 
-            key = hashlib.sha256(json.dumps([self.groq_model, rec["title"], rec["affected_area"], rec["evidence"], rec["impact_kg_ha"]], sort_keys=True, default=str).encode()).hexdigest()
+            key = hashlib.sha256(json.dumps([RATIONALE_PROMPT_VERSION, self.groq_model, rec["title"], rec["affected_area"], rec["evidence"], rec["impact_kg_ha"]], sort_keys=True, default=str).encode()).hexdigest()
             cached = mongo.cache_get("llm_cache", key)
             if cached:
                 return cached, f"Groq · {self.groq_model}"
@@ -225,26 +239,28 @@ Return a JSON object with exactly these keys:
                 log.warning(f"[LLMService] Groq rationale failed: {e}. Using rule-based text.")
         return self._fallback_rationale(rec), "YieldSense rule engine (fallback)"
 
-    def _groq_rationale(self, rec: Dict[str, Any]) -> str:
+    @staticmethod
+    def _rationale_facts(rec: Dict[str, Any]) -> str:
+        """The facts given to the LLM, worded as observations: what was measured, the band, the share outside it."""
         evidence = "; ".join(
-            f"{e['label']}: observed {e['observed']}{e['unit']}, optimal {e['optimal_low']}–{e['optimal_high']}{e['unit']}, "
-            f"{round(e['share_affected'] * 100)}% of records affected"
+            f"{e['label']}: median {e['observed']}{e['unit']}; band of the top-yielding records {e['optimal_low']}–{e['optimal_high']}{e['unit']}; "
+            f"{round(e['share_affected'] * 100)}% of records are outside that band"
             for e in rec["evidence"]
         )
-        prompt = (
-            f"Recommendation: {rec['title']} ({rec['affected_area']}). Evidence: {evidence}. "
-            + (
-                f"Model-estimated effect of fixing it: {rec['impact_kg_ha']:+.0f} kg/ha. "
-                if rec.get("impact_kg_ha") is not None
-                else "The yield effect is not estimated (this column is not a model input); do not quote one. "
-            )
-            + "In 2-3 plain sentences for a farmer, explain why this matters. Use only the numbers given; "
-            "do not invent measurements, dates or products."
+        impact = rec.get("impact_kg_ha")
+        model_line = (
+            f"Model estimate: predicted yield on the affected records changes by {impact:+.0f} kg/ha when the value is moved into the band. "
+            if impact is not None
+            else "Model estimate: none (this column is not a model input). "
         )
+        return f"Recommendation: {rec['title']} ({rec['affected_area']}). Evidence: {evidence}. {model_line}"
+
+    def _groq_rationale(self, rec: Dict[str, Any]) -> str:
+        prompt = self._rationale_facts(rec) + RATIONALE_RULES
         body = {
             "model": self.groq_model,
             "messages": [
-                {"role": "system", "content": "You are an agronomist who explains recommendations briefly and factually."},
+                {"role": "system", "content": "You are an agronomist who explains recommendations briefly and factually, stating only what the evidence shows."},
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.2,
@@ -267,6 +283,7 @@ Return a JSON object with exactly these keys:
 
     @staticmethod
     def _fallback_rationale(rec: Dict[str, Any]) -> str:
+        """Deterministic rationale: observations and the model's estimate only, no claim about what drives yield."""
         parts = []
         for e in rec["evidence"]:
             parts.append(
@@ -274,11 +291,13 @@ Return a JSON object with exactly these keys:
                 f"between {e['optimal_low']} and {e['optimal_high']}{e['unit']} "
                 f"({round(e['share_affected'] * 100)}% of records are outside that band)."
             )
-        impact = rec["impact_kg_ha"]
-        if impact > 0:
-            parts.append(f"Bringing it into range raises the model's yield estimate by about {impact:,.0f} kg/ha on affected records.")
+        impact = rec.get("impact_kg_ha")
+        if impact is None:
+            parts.append("The yield model does not use this column, so no yield effect is estimated.")
+        elif impact > 0:
+            parts.append(f"With the value inside the band, the model's yield estimate for the affected records is about {impact:,.0f} kg/ha higher.")
         else:
-            parts.append("The yield model shows no measurable gain from changing it, so treat this as a watch item.")
+            parts.append("The model's yield estimate is not higher with the value inside the band, so treat this as a watch item.")
         return " ".join(parts)
 
 

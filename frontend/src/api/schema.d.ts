@@ -1314,6 +1314,8 @@ export interface components {
             /** Rainfall Vs Yield */
             rainfall_vs_yield: components["schemas"]["ScatterPoint"][];
             rainfall_regression: components["schemas"]["Regression"];
+            /** Rainfall Distinct Values */
+            rainfall_distinct_values: number;
             /** Ph Bins */
             ph_bins: components["schemas"]["BinnedMean"][];
             /** Ph Optimal Low */
@@ -2168,16 +2170,19 @@ export interface components {
              */
             full_name: string;
         };
-        /** Regression */
+        /**
+         * Regression
+         * @description Least-squares fit. All fields are null when x has a single value (no relationship can be fitted).
+         */
         Regression: {
             /** Slope */
-            slope: number;
+            slope: number | null;
             /** Intercept */
-            intercept: number;
+            intercept: number | null;
             /** R */
-            r: number;
+            r: number | null;
             /** R2 */
-            r2: number;
+            r2: number | null;
         };
         /** ReportExportRequest */
         ReportExportRequest: {

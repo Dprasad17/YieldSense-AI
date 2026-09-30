@@ -253,3 +253,22 @@ def test_incomplete_llm_insight_falls_back(client, auth, monkeypatch):
     assert res.status_code == 200 and res.json()["llm_provider"] == "YieldSense rule engine (fallback)"
     monkeypatch.setattr(llm_service, "_call_groq_api", lambda payload, result: {"ai_insights": "ok", "risk_alerts": [], "recommendations": ["a"], "llm_provider": "Groq · test"})
     assert client.post("/api/predict/insights", json=PREDICT_BODY, headers=auth("farmer")).json()["llm_provider"] == "Groq · test"
+
+
+def test_eda_charts_single_country_has_no_rainfall_fit(client, auth):
+    """Rainfall is constant per country, so a single-country context must return a null fit, not NaN or a 500."""
+    one = client.get("/api/analytics/eda-charts?region=India&crop=Rice", headers=auth("agronomist"))
+    assert one.status_code == 200
+    body = one.json()
+    assert body["rainfall_distinct_values"] == 1
+    assert body["rainfall_regression"] == {"slope": None, "intercept": None, "r": None, "r2": None}
+    many = client.get("/api/analytics/eda-charts?crop=Rice", headers=auth("agronomist")).json()
+    assert many["rainfall_distinct_values"] > 1 and -1 <= many["rainfall_regression"]["r"] <= 1
+    assert many["rainfall_regression"]["r2"] == round(many["rainfall_regression"]["r"] ** 2, 4)
+
+
+def test_eda_charts_empty_context_is_an_empty_result(client, auth):
+    res = client.get("/api/analytics/eda-charts?region=Albania&crop=Cassava", headers=auth("agronomist"))
+    assert res.status_code == 200
+    body = res.json()
+    assert body["record_count"] == 0 and body["yield_histogram"] == [] and body["rainfall_regression"]["r"] is None

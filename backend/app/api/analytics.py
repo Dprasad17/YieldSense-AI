@@ -115,10 +115,12 @@ class ScatterPoint(BaseModel):
 
 
 class Regression(BaseModel):
-    slope: float
-    intercept: float
-    r: float
-    r2: float
+    """Least-squares fit. All fields are null when x has a single value (no relationship can be fitted)."""
+
+    slope: Optional[float]
+    intercept: Optional[float]
+    r: Optional[float]
+    r2: Optional[float]
 
 
 class BinnedMean(BaseModel):
@@ -136,6 +138,7 @@ class EdaCharts(BaseModel):
     yield_median_kg_ha: float
     rainfall_vs_yield: list[ScatterPoint]
     rainfall_regression: Regression
+    rainfall_distinct_values: int
     ph_bins: list[BinnedMean]
     ph_optimal_low: Optional[float]
     ph_optimal_high: Optional[float]
@@ -156,12 +159,23 @@ def get_eda_charts(
 
     df = dataset.filter_df(f)
     if df.empty:
-        raise AppError(404, "No records match these filters.")
+        # An empty context is a valid answer (e.g. a crop a country doesn't grow), not an error.
+        return {
+            "scope": f.describe(), "record_count": 0, "yield_histogram": [], "yield_mean_kg_ha": 0.0, "yield_median_kg_ha": 0.0,
+            "rainfall_vs_yield": [], "rainfall_regression": {"slope": None, "intercept": None, "r": None, "r2": None},
+            "rainfall_distinct_values": 0, "ph_bins": [], "ph_optimal_low": None, "ph_optimal_high": None,
+        }
     y = df["yield_kg_per_hectare"].to_numpy(dtype=float)
     counts, edges = np.histogram(y, bins=bins)
     rain = df["rainfall_mm"].to_numpy(dtype=float)
-    slope, intercept = np.polyfit(rain, y, 1)
-    r = float(np.corrcoef(rain, y)[0, 1]) if len(df) > 2 else 0.0
+    # Rainfall is one long-term value per country, so a single-country context has nothing to fit.
+    rain_values = int(np.unique(rain).size)
+    if rain_values >= 2 and len(df) >= 3 and float(np.std(y)) > 0:
+        slope, intercept = (float(v) for v in np.polyfit(rain, y, 1))
+        r = round(float(np.corrcoef(rain, y)[0, 1]), 4)
+        regression = {"slope": slope, "intercept": intercept, "r": r, "r2": round(r * r, 4)}
+    else:
+        regression = {"slope": None, "intercept": None, "r": None, "r2": None}
     pts = df.sample(min(sample, len(df)), random_state=42)
     ph_edges = np.round(np.arange(np.floor(df["soil_pH"].min() * 4) / 4, df["soil_pH"].max() + 0.25, 0.25), 2)
     ph_groups = df.groupby(pd.cut(df["soil_pH"], ph_edges, include_lowest=True), observed=True)["yield_kg_per_hectare"]
@@ -176,7 +190,8 @@ def get_eda_charts(
         "yield_mean_kg_ha": round(float(y.mean()), 2),
         "yield_median_kg_ha": round(float(np.median(y)), 2),
         "rainfall_vs_yield": [{"x": float(a), "y": float(b)} for a, b in zip(pts["rainfall_mm"], pts["yield_kg_per_hectare"])],
-        "rainfall_regression": {"slope": float(slope), "intercept": float(intercept), "r": round(r, 4), "r2": round(r * r, 4)},
+        "rainfall_regression": regression,
+        "rainfall_distinct_values": rain_values,
         "ph_bins": [
             {"start": float(iv.left), "end": float(iv.right), "mean_yield_kg_ha": round(float(g.mean()), 2), "count": len(g)}
             for iv, g in ((cast(pd.Interval, k), v) for k, v in ph_groups)

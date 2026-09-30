@@ -77,7 +77,7 @@ The reference dataset has 28,242 rows from the Kaggle "Crop Yield Prediction" da
 | DB indexes and pagination | ✅ | Composite and partial indexes (migration 0003); every list endpoint uses the `{items,total,page,page_size}` envelope |
 | Lighthouse ≥ 90 | ✅ | `/`, `/login`, `/app/dashboard`, desktop and mobile: performance 97–100, accessibility 100, best practices 100, SEO 100 |
 | Responsive 360–1920 px, both themes | ✅ | The browser test checks for no horizontal overflow at 360 px on 15 screens, and renders the light theme |
-| Tests | ✅ | pytest 118, vitest 41, browser test with 37 checks for all 3 roles and 0 console errors |
+| Tests | ✅ | pytest 129, vitest 41, browser test with 38 checks for all 3 roles and 0 console errors |
 | README (setup, architecture, screenshots) | ✅ | `README.md`, `docs/screenshots/`, `docs/system_architecture.md`, `docs/ui_layout.md`, `docs/YieldSense.postman_collection.json` (60 requests) |
 
 ## Performance metrics (spec section 8)
