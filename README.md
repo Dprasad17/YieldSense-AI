@@ -422,6 +422,8 @@ docs/               Specification, architecture, schema, checklist, Postman coll
 | [Milestone 1–3 checklist](docs/milestone-1-3-checklist.md) | Every requirement with its status, evidence, measured metrics, limitations and deviations from the specification |
 | [Milestone 4 checklist](docs/milestone-4-checklist.md) | Testing, deployment and documentation status, and what has to be set up |
 | [Deployment guide](docs/deployment.md) | Docker, AWS/Azure VM, HTTPS, CI/CD, backups, rollback and troubleshooting |
+| [Final presentation](docs/presentation/YieldSense_AI_Final_Presentation.pptx) | 15 slides with speaker notes |
+| [Demo script](docs/demo-script.md) | A tested 8-minute path through the platform for all three roles |
 | [System architecture](docs/system_architecture.md) | Components, data flow and services |
 | [Database schema](docs/database-schema.md) | Entity-relationship diagram and MongoDB collections |
 | [UI layout](docs/ui_layout.md) | Application shell, screens and design system |
