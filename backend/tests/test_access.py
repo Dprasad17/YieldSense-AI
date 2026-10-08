@@ -129,3 +129,11 @@ def test_effectiveness_and_processing_metrics(client, auth):
     p = m["processing"]
     assert p["available"] and p["validations_measured"] >= 1 and p["imports_measured"] >= 1
     assert p["validation_ms_per_row_median"] > 0 and p["import_rows_per_sec_median"] > 0
+
+
+def test_hosted_postgres_urls_are_normalized_for_psycopg():
+    from backend.app.core.config import normalize_database_url
+
+    assert normalize_database_url("postgres://u:p@h/db") == "postgresql+psycopg://u:p@h/db"
+    assert normalize_database_url("postgresql://u:p@h/db?sslmode=require") == "postgresql+psycopg://u:p@h/db?sslmode=require"
+    assert normalize_database_url("postgresql+psycopg://u:p@h/db") == "postgresql+psycopg://u:p@h/db"

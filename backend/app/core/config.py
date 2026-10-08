@@ -36,6 +36,15 @@ def _secret_key() -> str:
     return secrets.token_urlsafe(48)
 
 
+def normalize_database_url(url: str) -> str:
+    """Hosted PostgreSQL providers (Neon, Supabase, Render) hand out postgres:// or postgresql:// URLs;
+    SQLAlchemy needs the psycopg 3 driver named explicitly."""
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
 class Settings:
     PROJECT_NAME: str = "YieldSense AI Platform"
     PROJECT_VERSION: str = "2.0.0"
@@ -50,8 +59,10 @@ class Settings:
     CORS_ORIGINS: list[str] = _csv_env("CORS_ORIGINS", "http://localhost:5173")
 
     # PostgreSQL (SQLAlchemy URL) and MongoDB
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+psycopg://yieldsense:yieldsense@127.0.0.1:5432/yieldsense")
+    DATABASE_URL: str = normalize_database_url(os.getenv("DATABASE_URL", "postgresql+psycopg://yieldsense:yieldsense@127.0.0.1:5432/yieldsense"))
     MONGO_URL: str = os.getenv("MONGO_URL", "mongodb://127.0.0.1:27017")
+    # Remote clusters (MongoDB Atlas) need longer than a local server for DNS + TLS on first contact.
+    MONGO_TIMEOUT_MS: int = int(os.getenv("MONGO_TIMEOUT_MS", "8000"))
     MONGO_DB: str = os.getenv("MONGO_DB", "yieldsense")
 
     # Reference dataset CSV (used by the seed script) and model artifacts

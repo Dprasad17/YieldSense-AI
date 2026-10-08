@@ -11,7 +11,7 @@ from backend.app.core.observability import log
 
 @lru_cache(maxsize=1)
 def client() -> MongoClient:
-    return MongoClient(settings.MONGO_URL, serverSelectionTimeoutMS=3000, tz_aware=True)
+    return MongoClient(settings.MONGO_URL, serverSelectionTimeoutMS=settings.MONGO_TIMEOUT_MS, tz_aware=True)
 
 
 def db() -> Database:
