@@ -11,7 +11,7 @@ This repository covers all four milestones of the project specification: project
 | | |
 | --- | --- |
 | **Status** | Milestones 1–3 complete ([checklist](docs/milestone-1-3-checklist.md)). Milestone 4 (Docker, cloud deployment, CI/CD, model validation) implemented; cloud deployment waits on account setup ([checklist](docs/milestone-4-checklist.md)) |
-| **Served model** | XGBoost v2.1.0 · R² 0.9528 · RMSE 2,065 kg/ha on unseen years (2009–2013) |
+| **Served model** | XGBoost v3.0.0 · MAE 884 kg/ha · MAPE 13.6% · R² 0.936 on unseen years (2018–2023) · P10–P90 coverage 81.9% |
 | **Stack** | FastAPI · PostgreSQL · MongoDB · React 19 · TypeScript · Vite |
 | **Quality** | 130 backend tests · 41 frontend unit tests · 38 browser checks across all three roles (also against the Docker stack) · model validation gate · Lighthouse 99–100 |
 | **Deployment** | Docker Compose stack, GitHub Actions CI/CD, AWS or Azure VM with optional HTTPS ([guide](docs/deployment.md)) |
@@ -42,11 +42,14 @@ This repository covers all four milestones of the project specification: project
 
 ## Features
 
+> **New in v3.0:** data to 2023 with real yearly rainfall, a more accurate model with prediction explanations, an AI assistant, satellite crop health, market revenue, leaf-photo disease check, installable app, Indian languages, email/SMS digests, Google sign-in, rate limiting and model monitoring. Details: **[docs/next-level-features.md](docs/next-level-features.md)**.
+
 ### Prediction
 
-- **Yield Predictor.** Predicts yield per hectare with a P10–P90 range. The form separates **Model inputs** (crop, region, year, rainfall, temperature, pesticides), which drive the estimate, from optional **Field conditions** (soil, irrigation, fertilizer, disease), which only drive risk flags and advice.
+- **Yield Predictor.** Predicts yield per hectare with a P10–P90 range. The form separates **Model inputs** (crop, region, year, rainfall, temperature, pesticides, plus the country's last-season and 3-season yields, looked up automatically), which drive the estimate, from optional **Field conditions** (soil, irrigation, fertilizer, disease), which only drive risk flags and advice.
 - **Harvest estimate.** With a farm selected, the predicted yield is multiplied by the farm's area to give an expected harvest in tonnes, with its range.
-- **What-if scenarios.** Change temperature or pesticide use and see how the estimate moves, without saving to history.
+- **Why this prediction.** Exact per-input contributions (TreeSHAP) for every prediction.
+- **What-if scenarios.** Change rainfall, temperature or pesticide use and see how the estimate moves, without saving to history.
 - **Prediction history.** Every prediction is saved on the server. Filter by crop, region or farm, compare two side by side, re-run one with the current model, or delete it.
 - **AI insight.** A short explanation written by an LLM (Groq) when available, otherwise by a rule engine. The source is always labelled.
 
@@ -66,8 +69,16 @@ This repository covers all four milestones of the project specification: project
 ### Recommendations and risk
 
 - **Recommendations.** A rule engine compares the selected context with the conditions of top-yielding records. Each recommendation shows its evidence, a model-estimated impact where one can be estimated, a deadline and a plain-language rationale. Create a task, snooze, dismiss or mark it done; the state is saved per user.
-- **Risk assessment.** A likelihood × impact matrix, a yearly timeline, yield anomalies (more than 3σ from the crop mean) and mitigation advice. Risks that cannot vary by year in this dataset are labelled as structural.
+- **Risk assessment.** A likelihood × impact matrix, a yearly timeline, yield anomalies (more than 3σ from the crop mean) and mitigation advice. Drought, flood and heat use each year’s country weather.
 - **Notifications.** A bell with an unread count and a notifications page for high-priority alerts.
+
+### AI, satellite and market (v3.0)
+
+- **Ask YieldSense.** A chat assistant (Groq LLM) that answers from your own farms, predictions, risks and tasks, in any language.
+- **Satellite crop health.** NASA MODIS NDVI for each farm over the last 12 months, compared with the year before.
+- **Market & revenue.** Expected gross revenue per hectare for each crop: next-season model yield × FAOSTAT producer price.
+- **Leaf check.** Photograph a leaf and get a first check for 38 diseases of 14 plants (MobileNetV2, ONNX) with treatment guidance.
+- **For farmers in the field.** Installable app with an offline shell, menus in Hindi, Kannada, Telugu and Tamil, weekly digests by email or SMS/WhatsApp, and Google sign-in.
 
 ### Analytics and reporting
 
@@ -112,7 +123,7 @@ flowchart LR
   PG[("PostgreSQL<br/>users · farms · crop_records ·<br/>predictions · tasks · notifications · audit")]
   MG[("MongoDB<br/>uploads · soil_tests · caches<br/>(weather, SoilGrids, LLM)")]
   M["models/v2<br/>model.pkl · model_card.json"]
-  OM["Open-Meteo<br/>forecast + ERA5 archive"]
+  OM["Open-Meteo / MET Norway<br/>forecast + ERA5 archive"]
   SG["ISRIC SoilGrids"]
   GQ["Groq LLM (optional)"]
   UI -- "JWT Bearer" --> MW --> R --> S
@@ -145,14 +156,14 @@ More detail: [docs/system_architecture.md](docs/system_architecture.md) · [docs
 | Backend | Python 3.12, FastAPI, Pydantic 2, SQLAlchemy 2, Alembic, PyJWT, bcrypt |
 | Databases | PostgreSQL 16+ (psycopg 3), MongoDB 7+ (PyMongo) |
 | Machine learning | scikit-learn, XGBoost (served); LightGBM and TensorFlow/Keras (training and comparison only) |
-| External data | Open-Meteo (forecast and ERA5 archive), ISRIC SoilGrids 2.0, Groq (optional LLM) |
+| External data | FAOSTAT, CRU TS (World Bank CCKP), Open-Meteo + MET Norway, NASA MODIS (ORNL DAAC), ISRIC SoilGrids 2.0, Groq (optional LLM) |
 | Tooling | pytest, Vitest, oxlint, Prettier, openapi-typescript, Lighthouse, a Chrome DevTools Protocol browser test |
 
 ---
 
 ## Data and provenance
 
-The reference dataset has **28,242 rows**: one per country, crop and year, covering 101 countries, 10 crops and 1990–2013. It comes from the Kaggle "Crop Yield Prediction" dataset, which is built from FAOSTAT and World Bank data.
+The reference dataset (v3, `scripts/build_dataset_v3.py`) has **19,834 rows**: one per country, crop and year, covering 101 countries, 10 crops and **1990–2023**. Yields and pesticides come from FAOSTAT; rainfall and temperature are CRU TS 4.08 country averages **for each year** (World Bank Climate Change Knowledge Portal). The v2 dataset (Kaggle "Crop Yield Prediction", 28,242 rows to 2013) had a single long-term rainfall value per country.
 
 | Provenance | Columns | Used by the model |
 | --- | --- | --- |
@@ -162,7 +173,7 @@ The reference dataset has **28,242 rows**: one per country, crop and year, cover
 
 Two facts about the real columns matter when reading results:
 
-- **Rainfall is one long-term value per country.** It does not change from year to year, so the model's rainfall effect is a difference between countries, not a weather effect. The app therefore gives no yield impact for rainfall and labels drought and flood as structural risks.
+- **Rainfall and temperature are country averages for each year.** They vary year to year (since v3), so drought and flood are yearly risks; they are still country-wide values, not field weather.
 - **Yields are national averages.** A prediction for a farm is the national expectation for that crop and year, not a field-level forecast.
 
 The provenance of every column is served by `GET /api/data/provenance` and shown as **R / S / D** badges in the Dataset Explorer, on Model performance and in the soil tables.
@@ -177,18 +188,20 @@ The provenance of every column is served by `GET /api/data/provenance` and shown
 
 | Split | What it tests |
 | --- | --- |
-| **Temporal** (primary) | Train on 1990–2008, test on 2009–2013: forecasting years the model has not seen |
+| **Temporal** (primary) | Train on 1990–2017, test on 2018–2023: forecasting years the model has not seen |
 | Random 80/20 | Interpolation within the data |
 | Unseen regions | 20% of countries held out entirely |
 
-**Selection rule.** The served model has the lowest RMSE on the temporal split; models within 1% are treated as tied and the one with the lower p95 latency is chosen. The Keras MLP is evaluated but not served, so that the API does not need TensorFlow.
+**Selection rule (v3).** The served model has the lowest MAE on the temporal split among models the API runtime can serve (Linear, Ridge, Random Forest, XGBoost) with p95 latency ≤ 20 ms; ties within 1% go to the lower RMSE. MAE is used because RMSE is dominated by a few very high-yield root crops. LightGBM and the Keras MLP are evaluated but not served.
 
-**Served model: XGBoost v2.1.0, six inputs** (crop, region, year, rainfall, temperature, pesticides).
+**Served model: XGBoost v3.0.0 (log1p target), eight inputs**: crop, region, year, rainfall, temperature, pesticides, and the country's previous-season and 3-season mean yield (known before the season starts).
 
-| Temporal split (2009–2013) | R² | RMSE (kg/ha) | MAE (kg/ha) | MAPE | Latency p50 / p95 |
+| Version (its own temporal test) | R² | RMSE (kg/ha) | MAE (kg/ha) | MAPE | P10–P90 coverage |
 | --- | --- | --- | --- | --- | --- |
-| XGBoost v2.1.0 (served) | 0.9528 | 2,065 | 1,099 | 20.3% | 5.6 / 7.0 ms |
-| XGBoost v2.0.0 (previous) | 0.9514 | 2,096 | 1,125 | 21.5% | 6.2 / 7.8 ms |
+| XGBoost v3.0.0 (served), 2018–2023 | 0.936 | 2,587 | 884 | 13.6% | 81.9% |
+| XGBoost v2.1.0 (previous), 2009–2013 | 0.953 | 2,065 | 1,099 | 20.3% | 74.5% |
+
+The typical error fell by 20% (MAE) and 33% (MAPE) and the interval now meets its 80% target. RMSE is higher because the v3 test is harder (six years ahead, higher recent yields).
 
 **What was removed, and why**
 
@@ -196,7 +209,7 @@ The provenance of every column is served by `GET /api/data/provenance` and shown
 - **Crop duration (`total_days`)** was a fixed number per crop plus random noise, so it only repeated the crop. Removing it in v2.1 slightly improved every metric.
 - The other synthetic columns showed no signal in a permutation-importance test.
 
-**Prediction interval.** The P10–P90 range uses split-conformal residuals. Calibrated on 2009–2010 and checked on 2011–2013, it contains 74.5% of actual yields against a target of 80%, with a mean width of 2,523 kg/ha. The range is therefore slightly too narrow, and the app reports this.
+**Prediction interval.** The P10–P90 range uses split-conformal residuals. Calibrated on 2018–2019 and checked on 2020–2023, it contains 81.9% of actual yields against a target of 80% (mean width 3,173 kg/ha).
 
 **Weather-feature ablation** (temporal split): removing temperature raises RMSE by 13 kg/ha; removing rainfall raises it by 131 kg/ha. Temperature contributes little, and rainfall acts as a country-level signal.
 
@@ -241,7 +254,7 @@ python -m uvicorn backend.app.main:app --port 8000
 - Interactive API documentation: http://localhost:8000/docs
 - Health check: http://localhost:8000/api/health
 
-`scripts/seed.py` loads the 28,242 reference rows, creates the demo users and three demo farms, creates the MongoDB indexes, and pre-loads SoilGrids data for the demo farms so the demo does not depend on that service's response time.
+`scripts/seed.py` loads the 19,834 reference rows (and replaces them automatically when the dataset file changes), creates the demo users and three demo farms, creates the MongoDB indexes, and pre-loads SoilGrids data for the demo farms so the demo does not depend on that service's response time.
 
 ### 3. Frontend
 
@@ -356,7 +369,7 @@ The complete reference is the Swagger UI at `/docs`. A Postman collection is pro
 | Command | What it checks | Latest result |
 | --- | --- | --- |
 | `python -m pytest backend/tests -q` | API behaviour, access for every route and role, model and provenance, uploads, soil, LLM wording, observability, admin bootstrap | 130 passed |
-| `python scripts/validate_model.py` | Model validation gate (refit on 1990–2008, score 2009–2013) | Passed: R² 0.9545, RMSE 2,028 kg/ha, coverage 0.745, p95 16 ms |
+| `python scripts/validate_model.py` | Model validation gate (refit on 1990–2017, score 2018–2023) | Passed: R² 0.9415, RMSE 2,481, MAE 857 kg/ha, coverage 0.819, p95 8 ms |
 | `python scripts/load_test.py --base <url>` | 10 concurrent users for 20 s against the local API | 66 req/s, p95 249 ms, 0 errors |
 | `cd frontend; npx tsc -b --noEmit` | Type checking | Clean |
 | `npx oxlint src` · `npx prettier --check src` | Lint and formatting | Clean |
@@ -425,6 +438,7 @@ docs/               Specification, architecture, schema, checklist, Postman coll
 | [Milestone 4 checklist](docs/milestone-4-checklist.md) | Testing, deployment and documentation status, and what has to be set up |
 | [Deployment guide](docs/deployment.md) | Docker, AWS/Azure VM, HTTPS, CI/CD, backups, rollback and troubleshooting |
 | [Free deployment guide](docs/deployment-free.md) | Render + Neon + MongoDB Atlas, step by step, no credit card |
+| [Next-level features](docs/next-level-features.md) | v3.0: data to 2023, explanations, assistant, satellite, market, leaf check, PWA, languages, digests, Google sign-in, monitoring |
 | [Final presentation](docs/presentation/YieldSense_AI_Final_Presentation.pptx) | 15 slides with speaker notes |
 | [Demo script](docs/demo-script.md) | A tested 8-minute path through the platform for all three roles |
 | [System architecture](docs/system_architecture.md) | Components, data flow and services |

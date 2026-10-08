@@ -33,8 +33,10 @@ const LEVEL_TONE: Record<Risk['level'], Tone> = {
   High: 'danger',
   Critical: 'danger',
 };
-// Drought and flood are left out: rainfall is one long-term value per country, so they don't vary by year.
+// Since dataset v3 rainfall varies by year, so drought and flood are on the timeline with heat.
 const SERIES: { key: Risk['type']; label: string; color: string }[] = [
+  { key: 'drought', label: 'Drought', color: 'warning' },
+  { key: 'flood', label: 'Flood', color: 'data-water' },
   { key: 'heat', label: 'Heat', color: 'danger' },
   { key: 'pest_disease', label: 'Pest & disease', color: 'data-vegetation' },
   { key: 'soil', label: 'Soil pH', color: 'data-soil' },
@@ -241,7 +243,7 @@ export function RiskPage() {
             <div className={s.s12}>
               <ChartCard
                 title="Risk timeline"
-                subtitle="Share of records breaching each threshold, by year. Drought and flood are climate-zone risks (rainfall is constant per country), so they have no yearly line"
+                subtitle="Share of records breaching each threshold, by year (rainfall and temperature are each year's CRU TS country values)"
                 summary={
                   timeline.length
                     ? `Risk shares from ${timeline[0].x} to ${timeline[timeline.length - 1].x}.`

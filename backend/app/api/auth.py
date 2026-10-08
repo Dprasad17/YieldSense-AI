@@ -55,6 +55,10 @@ class NotificationPrefs(BaseModel):
     alerts: bool = True
     weather: bool = True
     system: bool = True
+    # Weekly digest by email / SMS (needs a configured channel on the server and, for SMS, a phone number).
+    email_digest: bool = False
+    sms_digest: bool = False
+    phone: Optional[str] = Field(None, pattern=r"^(whatsapp:)?\+[1-9][0-9]{6,14}$", description="E.164, e.g. +919876543210")
 
 
 class MeUser(SessionUser):
@@ -127,6 +131,79 @@ def login(body: LoginRequest, request: Request):
         upsert_user(user)
 
     login_limiter.reset(ip, username)
+    return _token_response(user)
+
+
+class GoogleSignIn(BaseModel):
+    credential: str = Field(min_length=20, max_length=4096, description="Google Identity Services ID token")
+
+
+class AuthProviders(BaseModel):
+    google_client_id: Optional[str]
+
+
+@router.get("/providers", response_model=AuthProviders)
+def auth_providers():
+    """Sign-in options the frontend should offer (Google appears only when GOOGLE_CLIENT_ID is set)."""
+    return {"google_client_id": settings.GOOGLE_CLIENT_ID or None}
+
+
+def verify_google_token(credential: str) -> dict:
+    """Validates a Google ID token with Google's tokeninfo endpoint: signature (by Google), audience,
+    issuer, expiry and a verified email."""
+    import json
+    import time
+    import urllib.parse
+    import urllib.request
+
+    url = "https://oauth2.googleapis.com/tokeninfo?" + urllib.parse.urlencode({"id_token": credential})
+    try:
+        with urllib.request.urlopen(url, timeout=10) as r:
+            info = json.loads(r.read().decode("utf-8"))
+    except Exception:
+        raise AppError(401, "Google sign-in failed. Try again.", code="google_invalid")
+    if info.get("aud") != settings.GOOGLE_CLIENT_ID or info.get("iss") not in ("accounts.google.com", "https://accounts.google.com"):
+        raise AppError(401, "This Google sign-in wasn't issued for YieldSense.", code="google_invalid")
+    if int(info.get("exp", 0)) < time.time() or str(info.get("email_verified")).lower() != "true":
+        raise AppError(401, "Google sign-in expired or the email isn't verified.", code="google_invalid")
+    return info
+
+
+@router.post("/google", response_model=TokenResponse)
+def google_sign_in(body: GoogleSignIn):
+    """Signs in with Google (OAuth 2.0 / OpenID Connect). An existing account with the same email is used;
+    otherwise a Farmer account is created. Admin and Agronomist roles are still granted by an admin."""
+    import re
+    import secrets
+
+    from backend.app.services.users import find_by_email
+
+    if not settings.GOOGLE_CLIENT_ID:
+        raise AppError(404, "Google sign-in isn't enabled on this server.", code="google_disabled")
+    info = verify_google_token(body.credential)
+    email = str(info["email"]).lower()
+    user = find_by_email(email)
+    if user is None:
+        base = re.sub(r"[^a-z0-9_.-]", "", email.split("@")[0].lower())[:24] or "farmer"
+        username = base if len(base) >= 3 else base + "user"
+        n = 1
+        while get_user(username):
+            n += 1
+            username = f"{base}{n}"
+        user = {
+            "username": username,
+            "email": email,
+            "hashed_password": hash_password(secrets.token_urlsafe(32)),  # password sign-in stays off until they set one
+            "hash_scheme": "bcrypt",
+            "role": "Farmer",
+            "full_name": str(info.get("name") or username)[:80],
+            "active": True,
+        }
+        upsert_user(user)
+        user = get_user(username)
+    assert user is not None
+    if not user.get("active", True):
+        raise AppError(403, "This account has been deactivated. Contact an administrator.", code="account_inactive")
     return _token_response(user)
 
 

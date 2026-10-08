@@ -65,7 +65,7 @@ def seasonal_trends(f: Filters) -> dict:
             "method": (
                 f"Mean {ml_service.name} prediction for {last_year + 1} over {len(basis):,} records, using their "
                 f"{last_year} rainfall, temperature and pesticide values. Band: mean of each record's P10–P90 interval "
-                "(split-conformal residuals from the 2009–2013 out-of-time test). Tree models do not extrapolate trends "
+                "(split-conformal residuals, checked on held-out years 2020–2023). Tree models do not extrapolate trends "
                 "past the last training year."
             ),
         }
@@ -123,16 +123,16 @@ def farm_comparison(f: Filters, limit: int, sort: str) -> dict:
 
 # ------------------------------------------------------------------ risk
 
-# Rainfall in the dataset is one long-term average per country (constant across years), so drought and
-# flood describe a country's climate zone (structural risk), not a particular year's weather.
-STRUCTURAL_RISKS = {"drought", "flood"}
-STRUCTURAL_NOTE = "Climate-zone (structural) risk: rainfall is a long-term country average, constant across years, so this doesn't change from year to year."
-# Model features whose kg/ha effect we don't report: rainfall is a cross-country association, not a yearly weather effect.
-NOT_ESTIMATED_FEATURES = {"rainfall_mm": "Not estimated: rainfall is a long-term country average (constant across years), so the model's rainfall effect is a cross-country association, not a yearly weather effect."}
+# Since dataset v3, rainfall is the country's actual rainfall in each year (CRU TS 4.08), so drought and
+# flood are yearly weather risks like heat. Kept as empty sets so the response shape stays the same.
+STRUCTURAL_RISKS: set[str] = set()
+STRUCTURAL_NOTE = None
+# Model features whose kg/ha effect we don't report.
+NOT_ESTIMATED_FEATURES: dict[str, str] = {}
 
 RISK_TYPES = {
-    "drought": ("Drought (climate zone)", "Long-term rainfall below the crop's P10", "irrigation"),
-    "flood": ("Flood / waterlogging (climate zone)", "Long-term rainfall above the crop's P90", "irrigation"),
+    "drought": ("Drought", "Year's rainfall below the crop's P10", "irrigation"),
+    "flood": ("Flood / waterlogging", "Year's rainfall above the crop's P90", "irrigation"),
     "heat": ("Heat stress", "Temperature above the crop's P90", "crop_planning"),
     "pest_disease": ("Pest & disease", "Moderate or severe disease recorded", "disease_pest"),
     "soil": ("Soil pH", "pH outside the crop's optimal band", "fertilizer"),
@@ -220,7 +220,7 @@ def risk_assessment(f: Filters) -> dict:
         "method": (
             "Likelihood = share of records breaching the crop threshold (1–5). Impact = median yield loss of "
             "breaching vs other records of the same crop (1–5). Level from likelihood × impact. Drought and flood use "
-            "long-term rainfall (constant per country), so they are climate-zone risks and are left out of the yearly timeline."
+            "each year's country rainfall (CRU TS 4.08), so they appear on the yearly timeline with heat."
         ),
     }
 

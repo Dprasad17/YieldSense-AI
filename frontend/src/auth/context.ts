@@ -11,6 +11,8 @@ export interface AuthState {
   /** True when signed in with a demo account while the backend is unreachable (DEV builds only). */
   offlineDemo: boolean;
   login: (username: string, password: string, remember?: boolean) => Promise<void>;
+  /** Google Identity Services ID token → YieldSense session. */
+  loginWithGoogle: (credential: string) => Promise<void>;
   register: (input: {
     username: string;
     email: string;

@@ -280,7 +280,7 @@ export function ProductivityReportPage() {
         )}
 
         <footer className={`${s.small} ${x.reportFooter}`}>
-          Data: country-level FAOSTAT yields, rainfall and temperature (1990–2013); soil, humidity, sunlight,
+          Data: country-level FAOSTAT yields, rainfall and temperature (1990–2023, CRU TS); soil, humidity, sunlight,
           irrigation, fertilizer and disease columns are synthetic. Forecasts are model estimates and should be used
           alongside local expertise.
         </footer>

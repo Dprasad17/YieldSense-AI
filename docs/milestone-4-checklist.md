@@ -8,7 +8,7 @@ Legend: ✅ Done and verified · 🟡 Implemented, waiting for a run in the targ
 
 | Requirement | Status | Evidence |
 | --- | --- | --- |
-| Validate prediction models and forecasting accuracy | ✅ | `scripts/validate_model.py`: refits the served pipeline on 1990–2008 and scores 2009–2013 (R² 0.9545, RMSE 2,028, MAE 1,080 kg/ha), held-out P10–P90 coverage 0.745, feature integrity, sanity, latency p95 16 ms. Runs in CI on every push and fails the build below the thresholds |
+| Validate prediction models and forecasting accuracy | ✅ | `scripts/validate_model.py` (v3.0): refits the served pipeline on 1990–2017 and scores 2018–2023 (R² 0.9415, RMSE 2,481, MAE 857 kg/ha), held-out P10–P90 coverage 0.819 (nominal 0.80), feature integrity, sanity, latency p95 8 ms. Runs in CI on every push and fails the build below the thresholds. Model v3.0 cut MAE by 20% and MAPE by 33% against v2.1 (see `docs/next-level-features.md`) |
 | Optimize system performance and dashboard responsiveness | ✅ | Lighthouse 99–100 on `/`, `/login`, `/app/dashboard` (also when served by the Nginx container); `scripts/load_test.py` against the Docker stack: 72 req/s, p95 507 ms, 0 errors with 20 concurrent users. 2 API workers (configurable), Nginx gzip, long-term caching of hashed assets, API image halved by using CPU-only XGBoost |
 | Deploy with Docker | ✅ | `backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml` (PostgreSQL, MongoDB, API, web, optional HTTPS). Built and run on Docker Desktop: all four services healthy, browser test 38/38 with 0 console errors, load test 72 req/s at 20 users (p95 507 ms, 0 errors), Lighthouse 99–100. API image 831 MB with CPU-only XGBoost (identical predictions), web image 77 MB |
 | Deploy to a cloud environment (free route) | ✅ | Live at **https://yieldsense-ai-hilr.onrender.com**: Render free web service (`render.yaml`) + Neon PostgreSQL + MongoDB Atlas, no card. Verified on the live site: health `healthy` (database, mongo, model), browser test 38/38 with 0 console errors, load test 182 requests in 30 s with 0 errors (p50 0.6 s, p95 2.0 s on 0.1 CPU). Live weather falls back to MET Norway because Open-Meteo rate-limits Render's shared IPs (HTTP 429). Hugging Face Docker Spaces needed PRO, so it was not used |
@@ -28,6 +28,18 @@ Legend: ✅ Done and verified · 🟡 Implemented, waiting for a run in the targ
 | Backups and restore | ✅ | `deploy/backup.sh` (PostgreSQL + MongoDB, 14-day retention). Restore rehearsed in the local containers: dumps (816 KB and 152 KB) restored into scratch databases with identical counts for every table (28,242 crop records, users, farms, farm records, predictions) and every MongoDB collection |
 | HTTPS | ⏳ | Caddy with automatic certificates (`--profile tls`); needs a domain |
 | Rollback | 🟡 | Images tagged per commit; re-deploy an earlier tag |
+
+## Beyond the specification (v3.0)
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Dataset to 2023 with yearly rainfall (FAOSTAT + CRU TS) | ✅ | `scripts/build_dataset_v3.py`, 19,834 rows |
+| More accurate model with yield history, explanations | ✅ | MAE 884, MAPE 13.6%, coverage 81.9%; TreeSHAP per prediction |
+| AI assistant, satellite NDVI, market revenue, leaf check | ✅ | `backend/tests/test_intelligence.py`; live checks against Groq and NASA MODIS |
+| Installable app, 4 Indian languages, digests, Google sign-in | ✅ | Browser test 39/39; digests and Google need their keys |
+| Rate limiting, Sentry, model registry, drift, scheduled retraining and uptime | ✅ | `retrain.yml`, `schedules.yml`, Model performance page |
+
+Full list: `docs/next-level-features.md`.
 
 ## What you need to set up
 

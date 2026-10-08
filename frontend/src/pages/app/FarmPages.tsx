@@ -8,6 +8,7 @@ import type { Farm, FarmInput, FarmRecord, FarmRecordInput, SoilTestInput } from
 import { useAuth, useCan } from '../../auth/context';
 import { FarmMap } from '../../components/FarmMap';
 import { FarmSoilPanel } from '../../components/FarmSoilPanel';
+import { FarmNdviPanel } from '../../components/FarmNdviPanel';
 import {
   Badge,
   Button,
@@ -919,6 +920,10 @@ export function FarmDetailPage() {
 
         <div className={s.s12}>
           <FarmSoilPanel farmId={f.id} farmName={f.name} />
+        </div>
+
+        <div className={s.s12}>
+          <FarmNdviPanel farmId={f.id} />
         </div>
 
         <div className={s.s12}>

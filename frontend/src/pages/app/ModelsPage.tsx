@@ -19,6 +19,7 @@ import { ErrorState } from '../../components/ui/States';
 import { useModelCard, useProvenance } from '../../hooks/queries';
 import { formatCount, formatIndex, formatLatency, formatNumber, formatPercent } from '../../lib/format';
 import s from './app.module.css';
+import { ModelMonitoringCard } from '../../components/ModelMonitoring';
 import x from './extras.module.css';
 
 const SPLITS: { value: SplitKey; label: string }[] = [
@@ -62,10 +63,12 @@ export function ModelPerformancePage() {
               <Badge tone="success">Served</Badge>
             </>
           )}
-          {r.model.includes('Keras') && (
+          {(r.model.includes('Keras') || r.model.includes('LightGBM')) && (
             <>
               {' '}
-              <Badge title="Evaluated only; serving it would add TensorFlow to the API runtime.">Not served</Badge>
+              <Badge title="Evaluated only; serving it would add TensorFlow or LightGBM to the API runtime.">
+                Not served
+              </Badge>
             </>
           )}
         </span>
@@ -117,6 +120,8 @@ export function ModelPerformancePage() {
           ) : undefined
         }
       />
+
+      <ModelMonitoringCard />
       <div className={s.kpis}>
         {m ? (
           <>
@@ -125,7 +130,7 @@ export function ModelPerformancePage() {
               value={formatNumber(m.r2, 4)}
               icon={Gauge}
               accent="var(--data-model)"
-              subtitle={`${sel.model} (${sel.target}) · 2009–2013`}
+              subtitle={`${sel.model} (${sel.target}) · 2018–2023`}
               info="Share of yield variation explained on years the model never saw."
             />
             <StatCard
@@ -140,7 +145,7 @@ export function ModelPerformancePage() {
               icon={Target}
               subtitle={
                 heldout
-                  ? `Nominal 80% · mean width ${formatCount(heldout.mean_width_kg_ha)} kg/ha · 2011–2013`
+                  ? `Nominal 80% · mean width ${formatCount(heldout.mean_width_kg_ha)} kg/ha · 2020–2023`
                   : 'Nominal 80% · random calibration'
               }
               info={heldout?.method ?? 'Calibrated on a random slice of the training years.'}
@@ -266,7 +271,7 @@ export function ModelPerformancePage() {
                 <dt>Held-out coverage</dt>
                 <dd>
                   {heldout
-                    ? `${formatPercent(heldout.coverage * 100)} of ${formatCount(heldout.evaluation_rows)} yields (2011–2013) fall inside a band calibrated on ${formatCount(heldout.calibration_rows)} rows from 2009–2010. Mean width ${formatCount(heldout.mean_width_kg_ha)} kg/ha, median ${formatCount(heldout.median_width_kg_ha)} kg/ha. Nominal 80%.`
+                    ? `${formatPercent(heldout.coverage * 100)} of ${formatCount(heldout.evaluation_rows)} yields (2020–2023) fall inside a band calibrated on ${formatCount(heldout.calibration_rows)} rows from 2018–2019. Mean width ${formatCount(heldout.mean_width_kg_ha)} kg/ha, median ${formatCount(heldout.median_width_kg_ha)} kg/ha. Nominal 80%.`
                     : 'Not measured.'}
                 </dd>
                 <dt>Coverage column</dt>
@@ -454,7 +459,7 @@ export function ModelPerformancePage() {
             <CardHeader title="How to read these metrics" />
             <ul className={s.list}>
               <li>
-                <strong>Temporal</strong> is the primary split: train on 1990–2008, test on 2009–2013, like forecasting
+                <strong>Temporal</strong> is the primary split: train on 1990–2017, test on 2018–2023, like forecasting
                 a future season.
               </li>
               <li>

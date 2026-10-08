@@ -46,7 +46,7 @@ export function EdaPage() {
   const reg = c?.rainfall_regression;
   const fit = reg && reg.r != null && reg.r2 != null ? { r: reg.r, r2: reg.r2 } : null;
   const rainfallFlat =
-    'Rainfall is a single long-term value per country, so within this selection there is no rainfall–yield relationship to fit. Choose all regions to compare countries.';
+    'This selection has a single rainfall value, so there is no rainfall–yield relationship to fit. Widen the selection.';
 
   if (eda.isError) return <ErrorState error={eda.error} onRetry={() => eda.refetch()} />;
 
@@ -183,7 +183,7 @@ export function EdaPage() {
                 !c
                   ? undefined
                   : fit
-                    ? `Across these records, rainfall accounts for ${(fit.r2 * 100).toFixed(1)}% of yield variance (r = ${fit.r.toFixed(2)}, R² = ${fit.r2.toFixed(2)}). Rainfall is one value per country, so this is a cross-country association.`
+                    ? `Across these records, rainfall accounts for ${(fit.r2 * 100).toFixed(1)}% of yield variance (r = ${fit.r.toFixed(2)}, R² = ${fit.r2.toFixed(2)}). Rainfall is the country's value for each year (CRU TS).`
                     : rainfallFlat
               }
               actions={

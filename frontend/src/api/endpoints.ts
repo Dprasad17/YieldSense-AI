@@ -50,6 +50,16 @@ import type {
   Task,
   TokenResponse,
   WeatherResponse,
+  AskOut,
+  AssistantStatus,
+  AuthProviders,
+  ChatMessage,
+  CropEconomics,
+  DigestChannels,
+  DigestResult,
+  FarmNdvi,
+  LeafResult,
+  ModelMonitoring,
 } from './types';
 
 type Q = ContextQuery;
@@ -64,6 +74,9 @@ export const authApi = {
   register: (input: { username: string; email: string; password: string; role: string; full_name?: string }) =>
     apiRequest<TokenResponse>('/api/auth/register', { method: 'POST', body: input, skipAuthRedirect: true }),
   me: () => apiRequest<MeResponse>('/api/auth/me', { skipAuthRedirect: true }),
+  providers: () => apiRequest<AuthProviders>('/api/auth/providers', { skipAuthRedirect: true }),
+  google: (credential: string) =>
+    apiRequest<TokenResponse>('/api/auth/google', { method: 'POST', body: { credential }, skipAuthRedirect: true }),
 };
 
 export const publicApi = {
@@ -129,6 +142,7 @@ export const farmsApi = {
     apiRequest<FarmsPage>('/api/farms', { query: q }),
   get: (id: number, crop?: string) => apiRequest<FarmDetail>(`/api/farms/${id}`, { query: { crop } }),
   soil: (id: number) => apiRequest<FarmSoil>(`/api/farms/${id}/soil`),
+  ndvi: (id: number) => apiRequest<FarmNdvi>(`/api/farms/${id}/ndvi`),
   create: (body: FarmInput) => apiRequest<Farm>('/api/farms', { method: 'POST', body }),
   update: (id: number, body: Partial<FarmInput>) => apiRequest<Farm>(`/api/farms/${id}`, { method: 'PATCH', body }),
   remove: (id: number) => apiRequest<void>(`/api/farms/${id}`, { method: 'DELETE' }),
@@ -185,6 +199,8 @@ export const adminApi = {
     apiRequest<AdminUser>(`/api/admin/users/${encodeURIComponent(username)}`, { method: 'PATCH', body: patch }),
   audit: (q: { page?: number; page_size?: number } = {}) => apiRequest<AuditPage>('/api/admin/audit', { query: q }),
   metrics: () => apiRequest<SystemMetrics>('/api/admin/metrics'),
+  modelMonitoring: () => apiRequest<ModelMonitoring>('/api/admin/model-monitoring'),
+  sendDigests: () => apiRequest<DigestResult>('/api/admin/digests/send', { method: 'POST' }),
 };
 
 export const reportsApi = {
@@ -195,4 +211,30 @@ export const reportsApi = {
     year_from?: number;
     year_to?: number;
   }) => apiBlob('/api/reports/export', { method: 'POST', body }),
+};
+
+export const assistantApi = {
+  status: () => apiRequest<AssistantStatus>('/api/assistant/status'),
+  history: () => apiRequest<ChatMessage[]>('/api/assistant/history'),
+  clear: () => apiRequest<void>('/api/assistant/history', { method: 'DELETE' }),
+  ask: (message: string, page?: string) =>
+    apiRequest<AskOut>('/api/assistant/ask', { method: 'POST', body: { message, page } }),
+};
+
+export const marketApi = {
+  cropEconomics: (q: { region?: string; farm_id?: number }) =>
+    apiRequest<CropEconomics>('/api/market/crop-economics', { query: q }),
+};
+
+export const diseaseApi = {
+  classify: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiForm<LeafResult>('/api/disease/classify', form);
+  },
+};
+
+export const digestApi = {
+  channels: () => apiRequest<DigestChannels>('/api/notifications/digest/channels'),
+  sendMe: () => apiRequest<DigestResult>('/api/notifications/digest/send-me', { method: 'POST' }),
 };

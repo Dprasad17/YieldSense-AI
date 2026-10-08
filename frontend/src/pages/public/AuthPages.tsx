@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { ApiError } from '../../api/client';
+import { authApi } from '../../api/endpoints';
 import { ALL_NAV_ITEMS } from '../../app/navigation';
 import { useAuth } from '../../auth/context';
 import { hasPermission } from '../../auth/permissions';
@@ -66,8 +68,8 @@ function AuthLayout({ children, title }: { children: ReactNode; title: string })
             </p>
             <ul className={s.proof}>
               <li>
-                <CheckCircle2 size={18} aria-hidden="true" /> Trained on 28,242 records across 101 countries and 10
-                crops
+                <CheckCircle2 size={18} aria-hidden="true" /> Trained on 19,834 records (1990–2023) across 101 countries
+                and 10 crops
               </li>
               <li>
                 <CheckCircle2 size={18} aria-hidden="true" /> Live weather from Open-Meteo for any region
@@ -80,7 +82,7 @@ function AuthLayout({ children, title }: { children: ReactNode; title: string })
           </div>
           <div className={s.miniPreview} aria-hidden="true">
             {[
-              ['Farm records', '28,242'],
+              ['Farm records', '19,834'],
               ['Countries', '101'],
               ['Crops', '10'],
             ].map(([label, value]) => (
@@ -212,6 +214,7 @@ export function SignInPage() {
           Sign in
         </Button>
       </form>
+      <GoogleSignIn onError={setError} />
 
       <div className={s.divider}>or explore with a demo account</div>
       <div className={s.demoGrid}>
@@ -496,5 +499,63 @@ export function SessionExpiredPage() {
         Sign in again
       </Button>
     </AuthLayout>
+  );
+}
+
+// ---------------------------------------------------------------- Google sign-in (OAuth 2.0 / OpenID Connect)
+
+interface GoogleId {
+  accounts: {
+    id: {
+      initialize: (o: { client_id: string; callback: (r: { credential: string }) => void }) => void;
+      renderButton: (el: HTMLElement, o: Record<string, unknown>) => void;
+    };
+  };
+}
+
+/** Shown only when the server has GOOGLE_CLIENT_ID set. Loads Google's script on demand. */
+function GoogleSignIn({ onError }: { onError: (msg: string | null) => void }) {
+  const { loginWithGoogle } = useAuth();
+  const providers = useQuery({
+    queryKey: ['auth', 'providers'],
+    queryFn: authApi.providers,
+    staleTime: Infinity,
+    retry: false,
+  });
+  const clientId = providers.data?.google_client_id;
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!clientId || !box.current) return;
+    const el = box.current;
+    const render = () => {
+      const g = (window as unknown as { google?: GoogleId }).google;
+      if (!g) return;
+      g.accounts.id.initialize({
+        client_id: clientId,
+        callback: r => {
+          onError(null);
+          loginWithGoogle(r.credential).catch(err => onError(loginErrorMessage(err)));
+        },
+      });
+      g.accounts.id.renderButton(el, { theme: 'outline', size: 'large', width: 320, text: 'continue_with' });
+    };
+    const existing = document.querySelector<HTMLScriptElement>('script[data-gsi]');
+    if (existing) {
+      render();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.dataset.gsi = '1';
+    script.onload = render;
+    document.head.appendChild(script);
+  }, [clientId, loginWithGoogle, onError]);
+  if (!clientId) return null;
+  return (
+    <div style={{ display: 'grid', justifyItems: 'center', gap: 'var(--space-2)', marginTop: 'var(--space-4)' }}>
+      <span style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>or</span>
+      <div ref={box} aria-label="Sign in with Google" />
+    </div>
   );
 }

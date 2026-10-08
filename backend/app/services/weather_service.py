@@ -448,6 +448,6 @@ def climate_trend(region: str) -> Dict[str, Any]:
         "dataset": dataset_years,
         "temperature_trend_C_per_decade": _slope_per_decade([a["year"] for a in archive], [a["temperature_C"] for a in archive]) if archive else None,
         "precipitation_trend_mm_per_decade": _slope_per_decade([a["year"] for a in archive], [a["precipitation_mm"] for a in archive]) if archive else None,
-        "note": "The dataset's rainfall is a long-term country average (constant across years); its temperature varies by year.",
+        "note": "The dataset's rainfall and temperature are CRU TS 4.08 country averages for each year; ERA5 here is a single reference point inside the country.",
         "error": error,
     }

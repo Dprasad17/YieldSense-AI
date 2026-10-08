@@ -21,10 +21,10 @@ import s from './public.module.css';
 
 // Static, verifiable facts about the dataset. No API calls on this page.
 const FACTS = [
-  ['28,242', 'crop records'],
+  ['19,834', 'crop records'],
   ['101', 'countries'],
   ['10', 'crops'],
-  ['1990–2013', 'years covered'],
+  ['1990–2023', 'years covered'],
 ];
 
 const FEATURES = [
@@ -88,11 +88,11 @@ const AUDIENCE = [
 const FAQ = [
   [
     'Where does the data come from?',
-    'Crop yields come from FAOSTAT (published on Kaggle) for 101 countries and 10 crops between 1990 and 2013. Live weather comes from the Open-Meteo API.',
+    'Crop yields come from FAOSTAT (published on Kaggle) for 101 countries and 10 crops between 1990 and 2023, with each year’s rainfall and temperature from CRU TS. Live weather comes from Open-Meteo, with MET Norway as a fallback.',
   ],
   [
     'How accurate are the predictions?',
-    'Each prediction shows the model it came from. Agronomists and administrators can see the full model comparison, including R², RMSE and MAE on a temporal split: trained on 1990–2008 and tested on 2009–2013, years the model never saw.',
+    'Each prediction shows the model it came from. Agronomists and administrators can see the full model comparison, including R², RMSE and MAE on a temporal split: trained on 1990–2017 and tested on 2018–2023, years the model never saw.',
   ],
   [
     'Do I need to install anything?',
@@ -185,7 +185,7 @@ function Preview() {
       <div className={s.browserBody}>
         <div className={s.previewKpis}>
           {[
-            ['Farm records', '28,242'],
+            ['Farm records', '19,834'],
             ['Countries', '101'],
             ['Crops', '10'],
           ].map(([l, v]) => (

@@ -12,15 +12,15 @@ PREDICT_BODY = {
 def test_records_pagination_envelope(client, auth):
     body = client.get("/api/data/records?page=2&page_size=15&crop=Potato", headers=auth("agronomist")).json()
     assert set(body) == {"items", "total", "page", "page_size"}
-    assert body["total"] == 4276 and body["page"] == 2 and len(body["items"]) == 15
+    assert body["total"] == 3163 and body["page"] == 2 and len(body["items"]) == 15
     assert all(r["crop_type"] == "Potato" for r in body["items"])
     assert "soil_moisture_%" in body["items"][0]
 
 
 def test_summary_exposes_real_counts(client, auth):
     s = client.get("/api/data/summary", headers=auth("farmer")).json()
-    assert s["total_farms"] == 28242 and len(s["crops_supported"]) == 10 and len(s["regions"]) == 101
-    assert (s["year_min"], s["year_max"]) == (1990, 2013) and s["missing_years"] == [2003]
+    assert s["total_farms"] == 19834 and len(s["crops_supported"]) == 10 and len(s["regions"]) == 101
+    assert (s["year_min"], s["year_max"]) == (1990, 2023) and s["missing_years"] == []
 
 
 def test_region_ranking_sorted(client, auth):
@@ -33,7 +33,7 @@ def test_seasonal_trends_yearly_with_band(client, auth):
     body = client.get("/api/analytics/seasonal-trends?region=India&crop=Rice", headers=auth("farmer")).json()
     assert body["granularity"] == "year" and body["series"][0]["year"] == 1990
     fc = body["forecast"]
-    assert fc["year"] == 2014 and fc["p10_kg_ha"] <= fc["mean_kg_ha"] <= fc["p90_kg_ha"]
+    assert fc["year"] == 2024 and fc["p10_kg_ha"] <= fc["mean_kg_ha"] <= fc["p90_kg_ha"]
     assert client.get("/api/analytics/seasonal-trends?crop=Nope", headers=auth("farmer")).status_code == 404
 
 
@@ -48,7 +48,7 @@ def test_predict_saves_history_with_interval(client, auth):
     res = client.post("/api/predict", json=PREDICT_BODY, headers=auth("farmer"))
     assert res.status_code == 200
     p = res.json()
-    assert p["low_kg_ha"] <= p["predicted_yield_kg_ha"] <= p["high_kg_ha"] and p["model_name"] == "XGBoost" and p["model_version"] == "2.1.0"
+    assert p["low_kg_ha"] <= p["predicted_yield_kg_ha"] <= p["high_kg_ha"] and p["model_name"] == "XGBoost" and p["model_version"] == "3.0.0"
 
     mine = client.get("/api/predictions", headers=auth("farmer")).json()
     assert any(i["id"] == p["id"] for i in mine["items"])
@@ -200,19 +200,33 @@ def test_predict_rejects_ndvi_and_field_conditions_are_optional(client, auth):
     assert res.status_code == 422
     minimal = {k: PREDICT_BODY[k] for k in ("crop_type", "region", "rainfall_mm", "temperature_C", "pesticide_usage_ml")}
     p = client.post("/api/predict", json=minimal, headers=auth("farmer")).json()
-    assert p["year"] == 2013 and p["low_kg_ha"] <= p["predicted_yield_kg_ha"] <= p["high_kg_ha"]
+    # The season defaults to the one after the last dataset year; yield history comes from the crop records.
+    assert p["year"] == 2024 and p["low_kg_ha"] <= p["predicted_yield_kg_ha"] <= p["high_kg_ha"]
+    hist = p["explanation"]["history"]
+    assert hist["yield_lag1"] and hist["yield_mean3"]
 
 
 def test_prediction_matches_served_bundle(client, auth):
     import joblib
     import pandas as pd
 
+    import numpy as np
+
     bundle = joblib.load("models/v2/model.pkl")
-    body = {**PREDICT_BODY, "year": 2010}
-    expected = float(bundle["pipeline"].predict(pd.DataFrame([{f: body[f] for f in bundle["features"]}]))[0])
+    # Explicit yield history, so the expected value doesn't depend on the lookup.
+    body = {**PREDICT_BODY, "year": 2010, "yield_lag1": 3500.0, "yield_mean3": 3400.0}
+    raw = float(bundle["pipeline"].predict(pd.DataFrame([{f: body[f] for f in bundle["features"]}]))[0])
+    expected = float(np.expm1(raw)) if bundle["target"] == "log1p" else raw
     p = client.post("/api/predict", json=body, headers=auth("farmer")).json()
     assert abs(p["predicted_yield_kg_ha"] - round(max(expected, 0), 2)) < 0.01
-    assert abs(p["high_kg_ha"] - p["predicted_yield_kg_ha"] - bundle["residual_q90"]) < 0.02
+    high = float(np.expm1(raw + bundle["residual_q90"])) if bundle["target"] == "log1p" else expected + bundle["residual_q90"]
+    assert abs(p["high_kg_ha"] - round(high, 2)) < 0.02
+    # The explanation adds up: base and contributions reproduce the model output.
+    ex = p["explanation"]
+    assert {c["feature"] for c in ex["contributions"]} == set(bundle["features"])
+    if ex["unit"] == "percent":
+        total = np.log1p(ex["base_kg_ha"]) + sum(np.log1p(c["contribution_pct"] / 100) for c in ex["contributions"])
+        assert abs(np.expm1(total) - expected) / expected < 0.01
 
 
 def test_model_card_and_provenance(client, auth):
@@ -233,7 +247,7 @@ def test_model_card_and_provenance(client, auth):
 def test_recommendation_impact_only_for_model_features(client, auth):
     hub = client.get("/api/predict/recommendations-hub", headers=auth("farmer")).json()
     for r in hub["recommendations"]:
-        modelled = r["rule"] == "heat_stress"  # rainfall is constant per country: not estimated
+        modelled = r["rule"] in ("heat_stress", "rainfall_deficit")  # rules on model inputs (rainfall varies by year since v3)
         assert (r["impact_kg_ha"] is not None) == modelled, r["rule"]
         assert r["rule"] != "low_vigour"
 
@@ -241,7 +255,7 @@ def test_recommendation_impact_only_for_model_features(client, auth):
 def test_forecast_uses_year_feature(client, auth):
     t = client.get("/api/analytics/seasonal-trends?crop=Wheat", headers=auth("farmer")).json()
     f = t["forecast"]
-    assert f["year"] == 2014 and f["p10_kg_ha"] <= f["mean_kg_ha"] <= f["p90_kg_ha"] and "XGBoost" in f["method"]
+    assert f["year"] == 2024 and f["p10_kg_ha"] <= f["mean_kg_ha"] <= f["p90_kg_ha"] and "XGBoost" in f["method"]
 
 
 def test_climate_trend_and_soil_bands(client, auth, monkeypatch):
@@ -284,13 +298,13 @@ def test_incomplete_llm_insight_falls_back(client, auth, monkeypatch):
     assert client.post("/api/predict/insights", json=PREDICT_BODY, headers=auth("farmer")).json()["llm_provider"] == "Groq · test"
 
 
-def test_eda_charts_single_country_has_no_rainfall_fit(client, auth):
-    """Rainfall is constant per country, so a single-country context must return a null fit, not NaN or a 500."""
+def test_eda_charts_single_country_has_yearly_rainfall_fit(client, auth):
+    """Since dataset v3 rainfall varies by year (CRU TS), so one country has a real rainfall–yield fit."""
     one = client.get("/api/analytics/eda-charts?region=India&crop=Rice", headers=auth("agronomist"))
     assert one.status_code == 200
     body = one.json()
-    assert body["rainfall_distinct_values"] == 1
-    assert body["rainfall_regression"] == {"slope": None, "intercept": None, "r": None, "r2": None}
+    assert body["rainfall_distinct_values"] == 34
+    assert -1 <= body["rainfall_regression"]["r"] <= 1
     many = client.get("/api/analytics/eda-charts?crop=Rice", headers=auth("agronomist")).json()
     assert many["rainfall_distinct_values"] > 1 and -1 <= many["rainfall_regression"]["r"] <= 1
     assert many["rainfall_regression"]["r2"] == round(many["rainfall_regression"]["r"] ** 2, 4)

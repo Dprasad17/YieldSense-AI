@@ -48,6 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const endSession = useCallback(() => {
     clearSession();
     queryClient.clear();
+    // The service worker keeps API responses for offline use; drop them so the next user can't see them.
+    if (typeof caches !== 'undefined') void caches.delete('ys-api').catch(() => undefined);
     setUser(null);
     setOfflineDemo(false);
     setStatus('anonymous');
@@ -155,6 +157,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [startSession],
   );
 
+  const loginWithGoogle = useCallback(
+    async (credential: string) => {
+      const res = await authApi.google(credential);
+      startSession(res.access_token, userFromToken(res), false, true);
+    },
+    [startSession],
+  );
+
   const register = useCallback<AuthState['register']>(
     async input => {
       const res = await authApi.register(input);
@@ -176,6 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: user ? normalizeRole(user.role) : null,
       offlineDemo,
       login,
+      loginWithGoogle,
       register,
       logout,
       retryRestore: () => setStatus('restoring'),
@@ -184,7 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(next);
       },
     }),
-    [status, user, offlineDemo, login, register, logout],
+    [status, user, offlineDemo, login, loginWithGoogle, register, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

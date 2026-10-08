@@ -1,0 +1,1833 @@
+{
+ "source": "FAOSTAT Producer Prices (PP), USD/tonne, annual value; latest year available per country and crop",
+ "prices": {
+  "Albania": {
+   "Maize": {
+    "usd_per_tonne": 387.7,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 339.0,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 594.1,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 857.7,
+    "year": 2024
+   }
+  },
+  "Algeria": {
+   "Potato": {
+    "usd_per_tonne": 406.0,
+    "year": 2021
+   },
+   "Wheat": {
+    "usd_per_tonne": 333.2,
+    "year": 2021
+   }
+  },
+  "Argentina": {
+   "Cassava": {
+    "usd_per_tonne": 522.1,
+    "year": 2017
+   },
+   "Potato": {
+    "usd_per_tonne": 475.7,
+    "year": 2017
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 508.5,
+    "year": 2017
+   }
+  },
+  "Armenia": {
+   "Potato": {
+    "usd_per_tonne": 321.2,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 260.9,
+    "year": 2024
+   }
+  },
+  "Australia": {
+   "Potato": {
+    "usd_per_tonne": 476.1,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 207.9,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 514.9,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 206.7,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 257.8,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 249.0,
+    "year": 2024
+   }
+  },
+  "Austria": {
+   "Wheat": {
+    "usd_per_tonne": 190.4,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 451.1,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 375.4,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 217.4,
+    "year": 2024
+   }
+  },
+  "Azerbaijan": {
+   "Potato": {
+    "usd_per_tonne": 423.5,
+    "year": 2023
+   },
+   "Maize": {
+    "usd_per_tonne": 241.2,
+    "year": 2023
+   },
+   "Wheat": {
+    "usd_per_tonne": 217.6,
+    "year": 2023
+   },
+   "Rice": {
+    "usd_per_tonne": 1894.1,
+    "year": 2023
+   }
+  },
+  "Bahrain": {
+   "Sweet Potato": {
+    "usd_per_tonne": 1728.7,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 1063.8,
+    "year": 2024
+   }
+  },
+  "Bangladesh": {
+   "Potato": {
+    "usd_per_tonne": 256.9,
+    "year": 2021
+   },
+   "Rice": {
+    "usd_per_tonne": 288.8,
+    "year": 2021
+   },
+   "Soybean": {
+    "usd_per_tonne": 730.2,
+    "year": 2021
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 215.9,
+    "year": 2021
+   },
+   "Wheat": {
+    "usd_per_tonne": 302.1,
+    "year": 2021
+   },
+   "Maize": {
+    "usd_per_tonne": 219.2,
+    "year": 2021
+   }
+  },
+  "Belarus": {
+   "Wheat": {
+    "usd_per_tonne": 139.6,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 106.8,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 182.9,
+    "year": 2024
+   }
+  },
+  "Belgium": {
+   "Wheat": {
+    "usd_per_tonne": 196.1,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 302.6,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 192.0,
+    "year": 2024
+   }
+  },
+  "Brazil": {
+   "Potato": {
+    "usd_per_tonne": 534.5,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 216.8,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 368.5,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 334.2,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 176.4,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 122.8,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 388.1,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 142.2,
+    "year": 2024
+   }
+  },
+  "Bulgaria": {
+   "Wheat": {
+    "usd_per_tonne": 200.3,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 553.1,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 197.2,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 211.1,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 585.7,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 367.5,
+    "year": 2024
+   }
+  },
+  "Burkina Faso": {
+   "Sorghum": {
+    "usd_per_tonne": 413.6,
+    "year": 2022
+   },
+   "Maize": {
+    "usd_per_tonne": 371.9,
+    "year": 2022
+   }
+  },
+  "Burundi": {
+   "Sweet Potato": {
+    "usd_per_tonne": 142.0,
+    "year": 2019
+   },
+   "Cassava": {
+    "usd_per_tonne": 221.1,
+    "year": 2019
+   },
+   "Maize": {
+    "usd_per_tonne": 438.9,
+    "year": 2019
+   },
+   "Potato": {
+    "usd_per_tonne": 351.1,
+    "year": 2019
+   },
+   "Rice": {
+    "usd_per_tonne": 371.1,
+    "year": 2019
+   },
+   "Sorghum": {
+    "usd_per_tonne": 615.5,
+    "year": 2019
+   }
+  },
+  "Canada": {
+   "Wheat": {
+    "usd_per_tonne": 227.8,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 389.5,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 316.4,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 167.1,
+    "year": 2024
+   }
+  },
+  "Chile": {
+   "Wheat": {
+    "usd_per_tonne": 241.6,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 447.2,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 293.0,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 238.5,
+    "year": 2024
+   }
+  },
+  "Colombia": {
+   "Sorghum": {
+    "usd_per_tonne": 300.2,
+    "year": 2015
+   },
+   "Plantains": {
+    "usd_per_tonne": 435.3,
+    "year": 2015
+   },
+   "Soybean": {
+    "usd_per_tonne": 313.0,
+    "year": 2019
+   },
+   "Rice": {
+    "usd_per_tonne": 434.0,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 555.5,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 494.1,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 472.7,
+    "year": 2024
+   },
+   "Yams": {
+    "usd_per_tonne": 1138.0,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 702.2,
+    "year": 2024
+   }
+  },
+  "Croatia": {
+   "Maize": {
+    "usd_per_tonne": 180.3,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 466.0,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 376.1,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 185.1,
+    "year": 2024
+   }
+  },
+  "Denmark": {
+   "Potato": {
+    "usd_per_tonne": 535.5,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 229.7,
+    "year": 2024
+   }
+  },
+  "Dominican Republic": {
+   "Plantains": {
+    "usd_per_tonne": 213.2,
+    "year": 2018
+   },
+   "Maize": {
+    "usd_per_tonne": 536.1,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 407.7,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 462.7,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 453.1,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 805.1,
+    "year": 2024
+   },
+   "Yams": {
+    "usd_per_tonne": 1014.8,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 426.9,
+    "year": 2024
+   }
+  },
+  "Ecuador": {
+   "Plantains": {
+    "usd_per_tonne": 113.7,
+    "year": 2022
+   },
+   "Maize": {
+    "usd_per_tonne": 351.9,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 460.5,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 351.0,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 548.1,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 711.1,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 347.2,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 566.9,
+    "year": 2024
+   }
+  },
+  "Egypt": {
+   "Potato": {
+    "usd_per_tonne": 266.4,
+    "year": 2023
+   },
+   "Maize": {
+    "usd_per_tonne": 470.2,
+    "year": 2023
+   },
+   "Wheat": {
+    "usd_per_tonne": 326.5,
+    "year": 2023
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 195.3,
+    "year": 2023
+   },
+   "Soybean": {
+    "usd_per_tonne": 870.4,
+    "year": 2023
+   },
+   "Sorghum": {
+    "usd_per_tonne": 94.8,
+    "year": 2023
+   },
+   "Rice": {
+    "usd_per_tonne": 612.6,
+    "year": 2023
+   }
+  },
+  "El Salvador": {
+   "Plantains": {
+    "usd_per_tonne": 333.3,
+    "year": 2015
+   },
+   "Potato": {
+    "usd_per_tonne": 418.0,
+    "year": 2017
+   },
+   "Cassava": {
+    "usd_per_tonne": 339.5,
+    "year": 2022
+   },
+   "Sorghum": {
+    "usd_per_tonne": 645.4,
+    "year": 2022
+   },
+   "Rice": {
+    "usd_per_tonne": 416.7,
+    "year": 2022
+   },
+   "Maize": {
+    "usd_per_tonne": 570.4,
+    "year": 2022
+   }
+  },
+  "Estonia": {
+   "Potato": {
+    "usd_per_tonne": 299.7,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 209.8,
+    "year": 2024
+   }
+  },
+  "Finland": {
+   "Potato": {
+    "usd_per_tonne": 246.7,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 246.7,
+    "year": 2024
+   }
+  },
+  "France": {
+   "Rice": {
+    "usd_per_tonne": 414.4,
+    "year": 2020
+   },
+   "Soybean": {
+    "usd_per_tonne": 562.4,
+    "year": 2023
+   },
+   "Potato": {
+    "usd_per_tonne": 936.0,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 209.2,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 215.1,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 231.3,
+    "year": 2024
+   }
+  },
+  "Germany": {
+   "Maize": {
+    "usd_per_tonne": 203.6,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 205.1,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 455.6,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 341.8,
+    "year": 2024
+   }
+  },
+  "Ghana": {
+   "Sweet Potato": {
+    "usd_per_tonne": 371.7,
+    "year": 2018
+   },
+   "Maize": {
+    "usd_per_tonne": 454.0,
+    "year": 2022
+   },
+   "Yams": {
+    "usd_per_tonne": 480.9,
+    "year": 2022
+   },
+   "Sorghum": {
+    "usd_per_tonne": 464.4,
+    "year": 2022
+   },
+   "Rice": {
+    "usd_per_tonne": 448.6,
+    "year": 2022
+   },
+   "Cassava": {
+    "usd_per_tonne": 229.4,
+    "year": 2022
+   }
+  },
+  "Greece": {
+   "Potato": {
+    "usd_per_tonne": 776.0,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 283.4,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 274.4,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 349.6,
+    "year": 2024
+   }
+  },
+  "Guinea": {
+   "Yams": {
+    "usd_per_tonne": 1218.3,
+    "year": 2022
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 53.3,
+    "year": 2022
+   },
+   "Sorghum": {
+    "usd_per_tonne": 595.9,
+    "year": 2022
+   },
+   "Rice": {
+    "usd_per_tonne": 1251.3,
+    "year": 2022
+   },
+   "Potato": {
+    "usd_per_tonne": 1296.8,
+    "year": 2022
+   },
+   "Maize": {
+    "usd_per_tonne": 638.8,
+    "year": 2022
+   },
+   "Cassava": {
+    "usd_per_tonne": 227.1,
+    "year": 2022
+   }
+  },
+  "Guyana": {
+   "Plantains": {
+    "usd_per_tonne": 381.3,
+    "year": 2015
+   },
+   "Cassava": {
+    "usd_per_tonne": 911.3,
+    "year": 2021
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 907.4,
+    "year": 2021
+   },
+   "Yams": {
+    "usd_per_tonne": 2308.4,
+    "year": 2021
+   }
+  },
+  "Honduras": {
+   "Maize": {
+    "usd_per_tonne": 445.2,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 1419.2,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 471.6,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 840.1,
+    "year": 2024
+   }
+  },
+  "Hungary": {
+   "Rice": {
+    "usd_per_tonne": 269.7,
+    "year": 2015
+   },
+   "Maize": {
+    "usd_per_tonne": 189.4,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 176.0,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 465.4,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 196.4,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 475.3,
+    "year": 2024
+   }
+  },
+  "Indonesia": {
+   "Potato": {
+    "usd_per_tonne": 1058.9,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 372.7,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 304.3,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 774.5,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 401.0,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 403.7,
+    "year": 2024
+   }
+  },
+  "Iraq": {
+   "Maize": {
+    "usd_per_tonne": 311.5,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 529.2,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 692.3,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 461.5,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 373.8,
+    "year": 2024
+   }
+  },
+  "Ireland": {
+   "Wheat": {
+    "usd_per_tonne": 227.2,
+    "year": 2023
+   }
+  },
+  "Italy": {
+   "Maize": {
+    "usd_per_tonne": 248.5,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 334.3,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 552.8,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 782.5,
+    "year": 2024
+   }
+  },
+  "Jamaica": {
+   "Rice": {
+    "usd_per_tonne": 1018.3,
+    "year": 2016
+   },
+   "Plantains": {
+    "usd_per_tonne": 926.8,
+    "year": 2022
+   },
+   "Maize": {
+    "usd_per_tonne": 8802.5,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 703.2,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 1834.6,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 2019.6,
+    "year": 2024
+   },
+   "Yams": {
+    "usd_per_tonne": 3103.6,
+    "year": 2024
+   }
+  },
+  "Japan": {
+   "Potato": {
+    "usd_per_tonne": 918.3,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 1697.9,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 837.5,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 1693.5,
+    "year": 2024
+   },
+   "Yams": {
+    "usd_per_tonne": 1865.7,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 287.5,
+    "year": 2024
+   }
+  },
+  "Kazakhstan": {
+   "Soybean": {
+    "usd_per_tonne": 517.8,
+    "year": 2023
+   },
+   "Wheat": {
+    "usd_per_tonne": 182.1,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 315.4,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 234.8,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 135.6,
+    "year": 2024
+   }
+  },
+  "Kenya": {
+   "Yams": {
+    "usd_per_tonne": 615.6,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 424.5,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 235.0,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 491.9,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 591.5,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 460.0,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 238.2,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 465.9,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 204.2,
+    "year": 2024
+   }
+  },
+  "Latvia": {
+   "Wheat": {
+    "usd_per_tonne": 215.6,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 248.6,
+    "year": 2024
+   }
+  },
+  "Lebanon": {
+   "Maize": {
+    "usd_per_tonne": 242.8,
+    "year": 2019
+   },
+   "Potato": {
+    "usd_per_tonne": 516.1,
+    "year": 2019
+   },
+   "Wheat": {
+    "usd_per_tonne": 391.4,
+    "year": 2019
+   }
+  },
+  "Lesotho": {
+   "Potato": {
+    "usd_per_tonne": 462.6,
+    "year": 2022
+   },
+   "Wheat": {
+    "usd_per_tonne": 345.0,
+    "year": 2023
+   },
+   "Sorghum": {
+    "usd_per_tonne": 492.6,
+    "year": 2023
+   },
+   "Maize": {
+    "usd_per_tonne": 6883.1,
+    "year": 2023
+   }
+  },
+  "Lithuania": {
+   "Wheat": {
+    "usd_per_tonne": 220.8,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 381.3,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 188.2,
+    "year": 2024
+   }
+  },
+  "Madagascar": {
+   "Rice": {
+    "usd_per_tonne": 325.5,
+    "year": 2023
+   }
+  },
+  "Malawi": {
+   "Sweet Potato": {
+    "usd_per_tonne": 313.8,
+    "year": 2017
+   },
+   "Maize": {
+    "usd_per_tonne": 177.2,
+    "year": 2017
+   },
+   "Potato": {
+    "usd_per_tonne": 504.6,
+    "year": 2017
+   },
+   "Rice": {
+    "usd_per_tonne": 904.3,
+    "year": 2017
+   },
+   "Sorghum": {
+    "usd_per_tonne": 533.6,
+    "year": 2017
+   },
+   "Soybean": {
+    "usd_per_tonne": 539.6,
+    "year": 2017
+   },
+   "Cassava": {
+    "usd_per_tonne": 339.2,
+    "year": 2017
+   }
+  },
+  "Malaysia": {
+   "Maize": {
+    "usd_per_tonne": 166.4,
+    "year": 2015
+   },
+   "Yams": {
+    "usd_per_tonne": 1306.5,
+    "year": 2022
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 522.6,
+    "year": 2022
+   },
+   "Rice": {
+    "usd_per_tonne": 272.7,
+    "year": 2022
+   },
+   "Cassava": {
+    "usd_per_tonne": 272.7,
+    "year": 2022
+   }
+  },
+  "Mali": {
+   "Yams": {
+    "usd_per_tonne": 807.8,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 350.4,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 333.8,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 374.2,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 1074.0,
+    "year": 2024
+   },
+   "Plantains": {
+    "usd_per_tonne": 905.8,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 270.1,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 439.4,
+    "year": 2024
+   }
+  },
+  "Mauritius": {
+   "Cassava": {
+    "usd_per_tonne": 706.6,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 986.4,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 828.6,
+    "year": 2024
+   }
+  },
+  "Mexico": {
+   "Plantains": {
+    "usd_per_tonne": 165.2,
+    "year": 2015
+   },
+   "Maize": {
+    "usd_per_tonne": 310.6,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 218.9,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 232.2,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 323.9,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 521.1,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 440.8,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 416.5,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 348.5,
+    "year": 2024
+   }
+  },
+  "Morocco": {
+   "Sorghum": {
+    "usd_per_tonne": 400.1,
+    "year": 2020
+   },
+   "Maize": {
+    "usd_per_tonne": 677.9,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 387.9,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 436.3,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 382.2,
+    "year": 2024
+   }
+  },
+  "Mozambique": {
+   "Wheat": {
+    "usd_per_tonne": 861.2,
+    "year": 2022
+   },
+   "Potato": {
+    "usd_per_tonne": 892.2,
+    "year": 2023
+   },
+   "Maize": {
+    "usd_per_tonne": 407.0,
+    "year": 2023
+   },
+   "Cassava": {
+    "usd_per_tonne": 516.5,
+    "year": 2023
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 516.5,
+    "year": 2023
+   },
+   "Rice": {
+    "usd_per_tonne": 907.9,
+    "year": 2023
+   }
+  },
+  "Namibia": {
+   "Maize": {
+    "usd_per_tonne": 405.9,
+    "year": 2022
+   },
+   "Wheat": {
+    "usd_per_tonne": 493.9,
+    "year": 2022
+   }
+  },
+  "Nepal": {
+   "Wheat": {
+    "usd_per_tonne": 353.1,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 804.8,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 307.3,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 306.1,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 339.7,
+    "year": 2024
+   }
+  },
+  "Netherlands": {
+   "Wheat": {
+    "usd_per_tonne": 236.0,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 292.7,
+    "year": 2024
+   }
+  },
+  "New Zealand": {
+   "Soybean": {
+    "usd_per_tonne": 219.3,
+    "year": 2022
+   },
+   "Wheat": {
+    "usd_per_tonne": 308.7,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 322.0,
+    "year": 2024
+   }
+  },
+  "Nicaragua": {
+   "Cassava": {
+    "usd_per_tonne": 234.3,
+    "year": 2022
+   },
+   "Soybean": {
+    "usd_per_tonne": 762.1,
+    "year": 2023
+   },
+   "Sorghum": {
+    "usd_per_tonne": 746.7,
+    "year": 2023
+   },
+   "Rice": {
+    "usd_per_tonne": 500.1,
+    "year": 2023
+   },
+   "Potato": {
+    "usd_per_tonne": 906.8,
+    "year": 2023
+   },
+   "Maize": {
+    "usd_per_tonne": 491.7,
+    "year": 2023
+   }
+  },
+  "Niger": {
+   "Rice": {
+    "usd_per_tonne": 602.8,
+    "year": 2022
+   },
+   "Potato": {
+    "usd_per_tonne": 577.1,
+    "year": 2022
+   },
+   "Maize": {
+    "usd_per_tonne": 331.9,
+    "year": 2022
+   },
+   "Cassava": {
+    "usd_per_tonne": 174.7,
+    "year": 2022
+   },
+   "Wheat": {
+    "usd_per_tonne": 301.4,
+    "year": 2022
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 243.7,
+    "year": 2022
+   },
+   "Sorghum": {
+    "usd_per_tonne": 176.3,
+    "year": 2022
+   }
+  },
+  "Norway": {
+   "Wheat": {
+    "usd_per_tonne": 413.8,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 463.1,
+    "year": 2024
+   }
+  },
+  "Pakistan": {
+   "Rice": {
+    "usd_per_tonne": 1022.4,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 202.7,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 348.8,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 320.3,
+    "year": 2024
+   }
+  },
+  "Peru": {
+   "Cassava": {
+    "usd_per_tonne": 205.4,
+    "year": 2020
+   },
+   "Potato": {
+    "usd_per_tonne": 356.7,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 770.7,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 407.3,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 673.5,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 274.2,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 654.9,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 292.8,
+    "year": 2024
+   }
+  },
+  "Poland": {
+   "Maize": {
+    "usd_per_tonne": 167.1,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 207.5,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 218.0,
+    "year": 2024
+   }
+  },
+  "Portugal": {
+   "Maize": {
+    "usd_per_tonne": 238.5,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 457.7,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 615.0,
+    "year": 2024
+   },
+   "Yams": {
+    "usd_per_tonne": 1813.8,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 248.9,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 809.6,
+    "year": 2024
+   }
+  },
+  "Qatar": {
+   "Wheat": {
+    "usd_per_tonne": 535.7,
+    "year": 2023
+   },
+   "Potato": {
+    "usd_per_tonne": 879.1,
+    "year": 2023
+   },
+   "Maize": {
+    "usd_per_tonne": 604.4,
+    "year": 2023
+   }
+  },
+  "Romania": {
+   "Wheat": {
+    "usd_per_tonne": 195.7,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 430.6,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 554.5,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 187.0,
+    "year": 2024
+   }
+  },
+  "Rwanda": {
+   "Plantains": {
+    "usd_per_tonne": 230.0,
+    "year": 2015
+   },
+   "Yams": {
+    "usd_per_tonne": 525.6,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 727.6,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 274.2,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 784.7,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 579.3,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 848.7,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 455.6,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 346.0,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 346.6,
+    "year": 2024
+   }
+  },
+  "Saudi Arabia": {
+   "Maize": {
+    "usd_per_tonne": 1210.7,
+    "year": 2020
+   },
+   "Wheat": {
+    "usd_per_tonne": 659.1,
+    "year": 2023
+   },
+   "Potato": {
+    "usd_per_tonne": 782.6,
+    "year": 2023
+   }
+  },
+  "Senegal": {
+   "Sweet Potato": {
+    "usd_per_tonne": 336.2,
+    "year": 2023
+   },
+   "Rice": {
+    "usd_per_tonne": 267.1,
+    "year": 2023
+   },
+   "Potato": {
+    "usd_per_tonne": 707.1,
+    "year": 2023
+   },
+   "Cassava": {
+    "usd_per_tonne": 254.1,
+    "year": 2023
+   },
+   "Sorghum": {
+    "usd_per_tonne": 514.5,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 412.3,
+    "year": 2024
+   }
+  },
+  "Slovenia": {
+   "Wheat": {
+    "usd_per_tonne": 201.3,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 426.5,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 539.0,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 179.4,
+    "year": 2024
+   }
+  },
+  "South Africa": {
+   "Wheat": {
+    "usd_per_tonne": 292.5,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 362.8,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 464.6,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 212.2,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 372.3,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 223.0,
+    "year": 2024
+   }
+  },
+  "Spain": {
+   "Wheat": {
+    "usd_per_tonne": 243.0,
+    "year": 2024
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 622.5,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 601.4,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 246.7,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 547.8,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 522.5,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 244.9,
+    "year": 2024
+   }
+  },
+  "Sri Lanka": {
+   "Plantains": {
+    "usd_per_tonne": 267.0,
+    "year": 2015
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 374.6,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 920.0,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 382.0,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 887.9,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 452.7,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 365.5,
+    "year": 2024
+   }
+  },
+  "Suriname": {
+   "Rice": {
+    "usd_per_tonne": 261.0,
+    "year": 2021
+   },
+   "Soybean": {
+    "usd_per_tonne": 2564.9,
+    "year": 2021
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 937.6,
+    "year": 2021
+   },
+   "Cassava": {
+    "usd_per_tonne": 712.8,
+    "year": 2021
+   },
+   "Maize": {
+    "usd_per_tonne": 1100.4,
+    "year": 2021
+   },
+   "Plantains": {
+    "usd_per_tonne": 553.2,
+    "year": 2021
+   }
+  },
+  "Sweden": {
+   "Wheat": {
+    "usd_per_tonne": 199.1,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 556.4,
+    "year": 2024
+   }
+  },
+  "Switzerland": {
+   "Wheat": {
+    "usd_per_tonne": 632.6,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 1135.8,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 694.0,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 351.0,
+    "year": 2024
+   }
+  },
+  "Tajikistan": {
+   "Maize": {
+    "usd_per_tonne": 210.1,
+    "year": 2019
+   },
+   "Rice": {
+    "usd_per_tonne": 438.7,
+    "year": 2019
+   },
+   "Wheat": {
+    "usd_per_tonne": 197.7,
+    "year": 2019
+   },
+   "Potato": {
+    "usd_per_tonne": 115.0,
+    "year": 2019
+   }
+  },
+  "Thailand": {
+   "Sorghum": {
+    "usd_per_tonne": 202.6,
+    "year": 2020
+   },
+   "Maize": {
+    "usd_per_tonne": 236.1,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 82.6,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 334.4,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 374.9,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 481.7,
+    "year": 2024
+   }
+  },
+  "Tunisia": {
+   "Wheat": {
+    "usd_per_tonne": 382.5,
+    "year": 2022
+   },
+   "Potato": {
+    "usd_per_tonne": 230.7,
+    "year": 2022
+   }
+  },
+  "Turkey": {
+   "Maize": {
+    "usd_per_tonne": 228.0,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 280.7,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 752.6,
+    "year": 2024
+   },
+   "Soybean": {
+    "usd_per_tonne": 495.3,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 279.7,
+    "year": 2024
+   }
+  },
+  "Ukraine": {
+   "Rice": {
+    "usd_per_tonne": 701.9,
+    "year": 2023
+   },
+   "Potato": {
+    "usd_per_tonne": 153.6,
+    "year": 2023
+   },
+   "Maize": {
+    "usd_per_tonne": 160.5,
+    "year": 2023
+   },
+   "Wheat": {
+    "usd_per_tonne": 146.1,
+    "year": 2023
+   },
+   "Soybean": {
+    "usd_per_tonne": 400.6,
+    "year": 2023
+   }
+  },
+  "United Kingdom": {
+   "Potato": {
+    "usd_per_tonne": 528.6,
+    "year": 2024
+   },
+   "Wheat": {
+    "usd_per_tonne": 243.8,
+    "year": 2024
+   }
+  },
+  "Uruguay": {
+   "Wheat": {
+    "usd_per_tonne": 313.4,
+    "year": 2022
+   },
+   "Sweet Potato": {
+    "usd_per_tonne": 728.7,
+    "year": 2022
+   },
+   "Soybean": {
+    "usd_per_tonne": 564.3,
+    "year": 2022
+   },
+   "Sorghum": {
+    "usd_per_tonne": 255.0,
+    "year": 2022
+   },
+   "Rice": {
+    "usd_per_tonne": 235.0,
+    "year": 2022
+   },
+   "Potato": {
+    "usd_per_tonne": 539.2,
+    "year": 2022
+   },
+   "Maize": {
+    "usd_per_tonne": 287.6,
+    "year": 2022
+   }
+  },
+  "Zambia": {
+   "Sweet Potato": {
+    "usd_per_tonne": 321.1,
+    "year": 2024
+   },
+   "Maize": {
+    "usd_per_tonne": 392.4,
+    "year": 2024
+   },
+   "Cassava": {
+    "usd_per_tonne": 253.3,
+    "year": 2024
+   },
+   "Sorghum": {
+    "usd_per_tonne": 317.3,
+    "year": 2024
+   },
+   "Rice": {
+    "usd_per_tonne": 1360.7,
+    "year": 2024
+   },
+   "Potato": {
+    "usd_per_tonne": 683.8,
+    "year": 2024
+   }
+  },
+  "Zimbabwe": {
+   "Sweet Potato": {
+    "usd_per_tonne": 330.0,
+    "year": 2017
+   },
+   "Potato": {
+    "usd_per_tonne": 625.0,
+    "year": 2017
+   },
+   "Wheat": {
+    "usd_per_tonne": 67167.0,
+    "year": 2022
+   },
+   "Soybean": {
+    "usd_per_tonne": 680.8,
+    "year": 2023
+   },
+   "Sorghum": {
+    "usd_per_tonne": 452.1,
+    "year": 2023
+   },
+   "Rice": {
+    "usd_per_tonne": 876.9,
+    "year": 2023
+   },
+   "Maize": {
+    "usd_per_tonne": 354.9,
+    "year": 2023
+   }
+  }
+ },
+ "crop_median": {
+  "Cassava": 339.2,
+  "Maize": 311.1,
+  "Plantains": 333.3,
+  "Potato": 475.7,
+  "Rice": 442.9,
+  "Sorghum": 333.8,
+  "Soybean": 539.6,
+  "Sweet Potato": 374.6,
+  "Wheat": 274.4,
+  "Yams": 1178.2
+ }
+}

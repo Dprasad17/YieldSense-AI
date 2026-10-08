@@ -1,0 +1,39 @@
+# Scheduled jobs against the live deployment (scheduled workflows run on the default branch only).
+# - Uptime: every 30 minutes, fails (and GitHub emails you) when /api/health isn't healthy.
+# - Weekly digest: Monday 06:00 UTC, sends the email/SMS digest to users who opted in.
+# Needs the repository variable PUBLIC_URL and, for digests, the secret CRON_TOKEN (same value as the server's).
+name: Scheduled checks
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+    - cron: "0 6 * * 1"
+
+jobs:
+  uptime:
+    if: vars.PUBLIC_URL != '' && (github.event_name == 'workflow_dispatch' || github.event.schedule == '*/30 * * * *')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Health check (allows ~2 min for a sleeping free instance to wake)
+        run: |
+          for i in $(seq 1 12); do
+            body=$(curl -fsS --max-time 20 "${{ vars.PUBLIC_URL }}/api/health" || true)
+            echo "$body" | grep -q '"status":"healthy"' && { echo "$body"; exit 0; }
+            sleep 10
+          done
+          echo "Unhealthy: $body"; exit 1
+
+  digest:
+    if: vars.PUBLIC_URL != '' && (github.event_name == 'workflow_dispatch' || github.event.schedule == '0 6 * * 1')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Send weekly digests
+        env:
+          CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
+        run: |
+          if [ -z "$CRON_TOKEN" ]; then echo "CRON_TOKEN secret not set; skipping"; exit 0; fi
+          curl -fsS --max-time 30 "${{ vars.PUBLIC_URL }}/api/health" > /dev/null || sleep 60
+          curl -fsS --max-time 300 -X POST -H "X-Cron-Token: $CRON_TOKEN" "${{ vars.PUBLIC_URL }}/api/admin/digests/send"

@@ -65,6 +65,9 @@ def invalidate() -> None:
     """Drop every cached aggregate after records change (imports)."""
     get_df.cache_clear()
     region_ranking.cache_clear()
+    from backend.app.services import history_features
+
+    history_features.invalidate()
     yearly_yield.cache_clear()
     from backend.app.core import agronomy_rules
     from backend.app.services import insights

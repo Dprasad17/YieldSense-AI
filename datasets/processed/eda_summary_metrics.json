@@ -1,149 +1,149 @@
 {
-  "total_records": 28242,
+  "total_records": 19834,
   "overall_stats": {
     "yield_kg_per_hectare": {
-      "mean": 7705.33,
-      "std": 8495.66,
+      "mean": 7747.84,
+      "std": 8835.86,
       "min": 5.0,
-      "25%": 1991.93,
-      "median": 3829.5,
-      "75%": 10467.67,
-      "max": 50141.2
+      "25%": 1854.97,
+      "median": 4306.8,
+      "75%": 10321.95,
+      "max": 102819.8
     },
     "rainfall_mm": {
-      "mean": 1149.06,
-      "std": 709.81,
-      "min": 51.0,
-      "25%": 593.0,
-      "median": 1083.0,
-      "75%": 1668.0,
-      "max": 3240.0
+      "mean": 1116.54,
+      "std": 717.4,
+      "min": 10.9,
+      "25%": 583.55,
+      "median": 1009.7,
+      "75%": 1594.67,
+      "max": 3552.9
     },
     "soil_pH": {
-      "mean": 6.48,
-      "std": 0.41,
+      "mean": 6.32,
+      "std": 0.5,
       "min": 5.0,
-      "25%": 6.2,
-      "median": 6.48,
-      "75%": 6.76,
-      "max": 8.18
+      "25%": 5.96,
+      "median": 6.33,
+      "75%": 6.69,
+      "max": 8.01
     },
     "temperature_C": {
-      "mean": 20.54,
-      "std": 6.31,
-      "min": 1.3,
-      "25%": 16.7,
-      "median": 21.51,
-      "75%": 26.0,
-      "max": 30.65
+      "mean": 19.99,
+      "std": 7.12,
+      "min": -5.37,
+      "25%": 13.86,
+      "median": 22.44,
+      "75%": 25.38,
+      "max": 30.04
     },
     "soil_moisture_%": {
-      "mean": 41.4,
-      "std": 11.32,
+      "mean": 40.99,
+      "std": 11.43,
       "min": 15.0,
-      "25%": 33.18,
-      "median": 39.93,
-      "75%": 48.29,
-      "max": 83.02
+      "25%": 32.66,
+      "median": 39.68,
+      "75%": 48.15,
+      "max": 84.3
     },
     "NDVI_index": {
-      "mean": 0.62,
+      "mean": 0.63,
       "std": 0.16,
-      "min": 0.23,
+      "min": 0.22,
       "25%": 0.49,
-      "median": 0.62,
+      "median": 0.63,
       "75%": 0.76,
       "max": 0.98
     },
     "sunlight_hours": {
-      "mean": 7.35,
+      "mean": 7.38,
       "std": 1.07,
       "min": 4.0,
-      "25%": 6.66,
-      "median": 7.4,
-      "75%": 8.1,
-      "max": 11.37
+      "25%": 6.68,
+      "median": 7.42,
+      "75%": 8.13,
+      "max": 11.4
     },
     "total_days": {
-      "mean": 142.48,
-      "std": 47.89,
-      "min": 110.0,
-      "25%": 119.0,
-      "median": 126.0,
-      "75%": 135.0,
+      "mean": 143.72,
+      "std": 53.16,
+      "min": 100.0,
+      "25%": 116.0,
+      "median": 124.0,
+      "75%": 137.0,
       "max": 310.0
     }
   },
   "crop_breakdown": {
     "Cassava": {
-      "count": 2045,
-      "avg_yield": 15047.95,
-      "std_yield": 8973.85,
-      "min_yield": 1177.8,
-      "max_yield": 38581.8
+      "count": 1416,
+      "avg_yield": 12014.64,
+      "std_yield": 7894.91,
+      "min_yield": 998.6,
+      "max_yield": 48921.2
     },
     "Maize": {
-      "count": 4121,
-      "avg_yield": 3631.01,
-      "std_yield": 2745.64,
+      "count": 3037,
+      "avg_yield": 4039.61,
+      "std_yield": 3290.2,
       "min_yield": 84.9,
-      "max_yield": 20755.6
+      "max_yield": 20979.2
     },
     "Plantains": {
-      "count": 556,
-      "avg_yield": 10604.13,
-      "std_yield": 7212.8,
-      "min_yield": 2135.0,
-      "max_yield": 41850.5
+      "count": 691,
+      "avg_yield": 12645.34,
+      "std_yield": 8562.02,
+      "min_yield": 782.2,
+      "max_yield": 44856.9
     },
     "Potato": {
-      "count": 4276,
-      "avg_yield": 19980.15,
-      "std_yield": 9338.22,
-      "min_yield": 840.6,
-      "max_yield": 50141.2
+      "count": 3163,
+      "avg_yield": 19663.64,
+      "std_yield": 10498.31,
+      "min_yield": 411.7,
+      "max_yield": 54000.3
     },
     "Rice": {
-      "count": 3388,
-      "avg_yield": 4073.04,
-      "std_yield": 1916.97,
-      "min_yield": 203.4,
-      "max_yield": 10389.5
+      "count": 2253,
+      "avg_yield": 3932.08,
+      "std_yield": 2084.93,
+      "min_yield": 141.7,
+      "max_yield": 12948.2
     },
     "Sorghum": {
-      "count": 3039,
-      "avg_yield": 1863.58,
-      "std_yield": 1511.8,
+      "count": 2178,
+      "avg_yield": 1895.98,
+      "std_yield": 1785.82,
       "min_yield": 57.8,
-      "max_yield": 20600.0
+      "max_yield": 25521.4
     },
     "Soybean": {
-      "count": 3223,
-      "avg_yield": 1673.11,
-      "std_yield": 760.32,
+      "count": 1894,
+      "avg_yield": 1710.25,
+      "std_yield": 836.32,
       "min_yield": 5.0,
-      "max_yield": 4160.9
+      "max_yield": 4420.6
     },
     "Sweet Potato": {
-      "count": 2890,
-      "avg_yield": 11905.78,
-      "std_yield": 6984.76,
+      "count": 1750,
+      "avg_yield": 11548.55,
+      "std_yield": 9414.07,
       "min_yield": 879.9,
-      "max_yield": 40000.0
+      "max_yield": 102819.8
     },
     "Wheat": {
-      "count": 3857,
-      "avg_yield": 3011.63,
-      "std_yield": 1838.79,
-      "min_yield": 170.6,
-      "max_yield": 9938.7
+      "count": 2727,
+      "avg_yield": 3247.56,
+      "std_yield": 2141.77,
+      "min_yield": 131.4,
+      "max_yield": 10667.7
     },
     "Yams": {
-      "count": 847,
-      "avg_yield": 11414.03,
-      "std_yield": 5421.18,
+      "count": 725,
+      "avg_yield": 11257.75,
+      "std_yield": 7761.62,
       "min_yield": 1147.5,
-      "max_yield": 25000.0
+      "max_yield": 77146.8
     }
   },
   "top_crop_by_yield": "Potato"

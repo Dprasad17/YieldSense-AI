@@ -168,7 +168,7 @@ def get_eda_charts(
     y = df["yield_kg_per_hectare"].to_numpy(dtype=float)
     counts, edges = np.histogram(y, bins=bins)
     rain = df["rainfall_mm"].to_numpy(dtype=float)
-    # Rainfall is one long-term value per country, so a single-country context has nothing to fit.
+    # A context with a single rainfall value (e.g. one country and one year) has nothing to fit.
     rain_values = int(np.unique(rain).size)
     if rain_values >= 2 and len(df) >= 3 and float(np.std(y)) > 0:
         slope, intercept = (float(v) for v in np.polyfit(rain, y, 1))
@@ -223,7 +223,7 @@ def get_region_ranking(
 
 @router.get("/seasonal-trends", response_model=SeasonalTrends)
 def get_seasonal_trends(f: Filters = Depends(context_filters), _user: dict = Depends(require_user)):
-    """Yearly yield (sowing years 1990–2013) plus a model-based expectation with a P10–P90 band.
+    """Yearly yield (sowing years 1990–2023) plus a model-based expectation with a P10–P90 band.
     All sowing dates in the dataset fall on 15 January, so month/season grouping is not possible."""
     if dataset.filter_df(f).empty:
         raise AppError(404, "No records match these filters.")

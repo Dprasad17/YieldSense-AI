@@ -5,7 +5,7 @@ Leakage-free yield model training (Milestone 2).
   Synthetic columns are tested with permutation importance and kept only if they carry real signal.
   NDVI is excluded: it was generated from the yield's own rank (target leakage).
 - Targets: raw yield and log1p(yield).
-- Splits: random 80/20, temporal (train <= 2008, test 2009-2013, the primary split),
+- Splits: random 80/20, temporal (train <= 2017, test 2018-2023, the primary split),
   and unseen regions (20% of regions held out).
 - Models: Linear, Ridge, Random Forest, XGBoost, LightGBM, Keras MLP.
 - Metrics: MAE, RMSE, R2, MAPE, single-row latency p50/p95, P10-P90 interval coverage
@@ -17,16 +17,20 @@ Run from the repo root:  python scripts/train_models_v2.py
 import json
 import os
 import sys
+
 import time
 from datetime import datetime, timezone
 
-import joblib
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+import joblib  # noqa: E402
 import numpy as np
 import pandas as pd
 from lightgbm import LGBMRegressor
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.impute import SimpleImputer
 from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -41,31 +45,36 @@ OUT_DIR = os.path.join("models", "v2")
 OLD_METRICS = os.path.join("models", "model_performance_metrics.json")
 
 REAL_CAT = ["crop_type", "region"]
-REAL_NUM = ["year", "rainfall_mm", "temperature_C", "pesticide_usage_ml"]
+# Since v3.0 the model also sees the country's yield history for the crop (known before the season starts).
+REAL_NUM = ["year", "rainfall_mm", "temperature_C", "pesticide_usage_ml", "yield_lag1", "yield_mean3"]
 SYNTH_CAT = ["irrigation_type", "fertilizer_type", "crop_disease_status"]
 SYNTH_NUM = ["soil_pH", "soil_moisture_%", "humidity_%", "sunlight_hours", "total_days"]
 # Synthetic columns that only re-encode another input: preprocess_real_dataset.py sets total_days to a
 # fixed per-crop base (e.g. Wheat 140, Cassava 270) plus uniform noise of ±10 days, so it is a crop proxy,
 # not a measured growing period. Excluded regardless of permutation importance.
 PROXY_COLUMNS = {"total_days": "Synthetic crop proxy: a fixed per-crop base duration plus ±10 random days (scripts/preprocess_real_dataset.py). It re-encodes crop_type and was not measured."}
-VERSION = "2.1.0"
+VERSION = "3.0.0"
 PREVIOUS_CARD = os.path.join("models", "v2", "model_card.json")
 TARGET = "yield_kg_per_hectare"
-TEMPORAL_CUTOFF = 2008
+TEMPORAL_CUTOFF = 2017
+CALIBRATION_END = 2019  # held-out interval check: calibrate on 2018-2019, evaluate on 2020-2023
 
 
 def load() -> pd.DataFrame:
+    from backend.app.services.history_features import add_lag_features
+
     df = pd.read_csv(DATA)
     df["year"] = pd.to_datetime(df["sowing_date"]).dt.year
     df["crop_disease_status"] = df["crop_disease_status"].fillna("None")
-    return df
+    return add_lag_features(df)
 
 
 def preprocessor(cat, num) -> ColumnTransformer:
     return ColumnTransformer(
         [
             ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=False), cat),
-            ("num", StandardScaler(), num),
+            # Yield history is missing for a country's first season of a crop: median-impute and flag it.
+            ("num", Pipeline([("impute", SimpleImputer(strategy="median", add_indicator=True)), ("scale", StandardScaler())]), num),
         ]
     )
 
@@ -179,9 +188,9 @@ def evaluate(df, cat, num, name, factory, target, tr, te):
 
 
 def heldout_interval(df, cat, num, name, factory, target):
-    """Train on <= 2008, calibrate the P10-P90 residuals on 2009-2010, evaluate on 2011-2013 (never used to calibrate)."""
+    """Train on <= 2017, calibrate the P10-P90 residuals on 2018-2019, evaluate on 2020-2023 (never used to calibrate)."""
     years = df["year"].to_numpy()
-    tr, cal, ev = (np.where(m)[0] for m in (years <= TEMPORAL_CUTOFF, (years > TEMPORAL_CUTOFF) & (years <= 2010), years > 2010))
+    tr, cal, ev = (np.where(m)[0] for m in (years <= TEMPORAL_CUTOFF, (years > TEMPORAL_CUTOFF) & (years <= CALIBRATION_END), years > CALIBRATION_END))
     X, y = df[cat + num], df[TARGET].to_numpy()
     pipe = Pipeline([("prep", preprocessor(cat, num)), ("model", factory())])
     pipe.fit(X.iloc[tr], fwd(y[tr], target))
@@ -190,7 +199,7 @@ def heldout_interval(df, cat, num, name, factory, target):
     lo, hi = np.maximum(inv(p + q10, target), 0), np.maximum(inv(p + q90, target), 0)
     yt = y[ev]
     return {
-        "method": "Train on 1990-2008, calibrate P10/P90 residuals on 2009-2010, evaluate on 2011-2013",
+        "method": "Train on 1990-2017, calibrate P10/P90 residuals on 2018-2019, evaluate on 2020-2023",
         "calibration_rows": int(len(cal)),
         "evaluation_rows": int(len(ev)),
         "coverage": round(float(np.mean((yt >= lo) & (yt <= hi))), 4),
@@ -254,13 +263,15 @@ def main():
                 results.append(m)
                 print(f"      {key:14s} {name:18s} {target:5s} R2={m['r2']:.3f} RMSE={m['rmse']:,.0f} cov={m['interval_coverage']:.2f} ({time.time() - t0:.0f}s)")
 
-    # Selection: lowest temporal RMSE among models that can be served without TensorFlow at runtime.
-    # Models within 1% of the lowest temporal RMSE are treated as tied; the lower p95 latency wins
-    # (smaller, faster artifact for serving).
-    temporal = [r for r in results if r["split"] == "temporal" and r["model"] != "Keras MLP"]
-    floor = min(r["rmse"] for r in temporal)
-    tied = [r for r in temporal if r["rmse"] <= floor * 1.01]
-    best = min(tied, key=lambda r: (r["latency_p95_ms"], r["rmse"]))
+    # Selection (v3.0): lowest temporal MAE among models the API runtime can serve (scikit-learn and XGBoost;
+    # LightGBM and TensorFlow are training-only) with single-row p95 latency ≤ 20 ms. MAE rather than RMSE
+    # because RMSE is dominated by the few very high-yield root crops (potato, cassava: 20–40 t/ha), while
+    # MAE reflects the typical error. Ties within 1% of the lowest MAE go to the lower RMSE.
+    servable = {"Linear Regression", "Ridge Regression", "Random Forest", "XGBoost"}
+    temporal = [r for r in results if r["split"] == "temporal" and r["model"] in servable and r["latency_p95_ms"] <= 20]
+    floor = min(r["mae"] for r in temporal)
+    tied = [r for r in temporal if r["mae"] <= floor * 1.01]
+    best = min(tied, key=lambda r: (r["rmse"], r["latency_p95_ms"]))
     print(f"[4/4] Selected {best['model']} ({best['target']}) on the temporal split; refitting on all data…")
 
     tr = df.index[df["year"] <= TEMPORAL_CUTOFF].to_numpy()
@@ -278,6 +289,8 @@ def main():
             pc = json.load(f)
         if pc.get("version") != VERSION:
             previous = {"version": pc.get("version"), "features": pc.get("features"), "selected": pc.get("selected")}
+        else:  # retraining the same version keeps the comparison with the version before it
+            previous = pc.get("previous_version") or {}
     res = fwd(df[TARGET].to_numpy()[te], best["target"]) - tmp.predict(df[cat + num].iloc[te])
     q10, q90 = (float(v) for v in np.quantile(res, [0.10, 0.90]))
     final = Pipeline([("prep", preprocessor(cat, num)), ("model", models[best["model"]]())])
@@ -303,7 +316,7 @@ def main():
         "version": VERSION,
         "trained_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "selected": {"model": best["model"], "target": best["target"], "split": "temporal", "metrics": best},
-        "selection_rule": "Lowest RMSE on the temporal split (train ≤ 2008, test 2009–2013); models within 1% of the lowest RMSE are tied and the one with the lower p95 latency is served. The Keras MLP is evaluated but not served (it would add TensorFlow to the API runtime).",
+        "selection_rule": "Lowest MAE on the temporal split (train ≤ 2017, test 2018–2023) among models the API runtime can serve (Linear, Ridge, Random Forest, XGBoost) with single-row p95 latency ≤ 20 ms; ties within 1% go to the lower RMSE. MAE is used because RMSE is dominated by a few very high-yield root crops. LightGBM and the Keras MLP are evaluated but not served (they would add LightGBM or TensorFlow to the API runtime).",
         "features": {"categorical": cat, "numeric": num},
         "excluded_features": [
             {"feature": "NDVI_index", "reason": "Derived from the yield's own percentile rank during preprocessing (target leakage)."},
@@ -318,7 +331,7 @@ def main():
             "split": "temporal",
             "model": best["model"],
             "target": best["target"],
-            "note": "Rainfall in this dataset is one long-term average per country (constant across years), so its effect is a cross-country association, not a year-to-year weather effect. Temperature varies by year.",
+            "note": "Rainfall and temperature are CRU TS 4.08 country values for each year, so this measures their year-to-year effect on top of the yield history.",
             "results": ablation,
         },
         "previous_version": previous,
@@ -328,13 +341,42 @@ def main():
         "limitations": [
             "Trained on country-level FAOSTAT yields, not individual fields.",
             "Soil, humidity, sunlight, irrigation, fertilizer, disease and crop-duration columns in the dataset are synthetic and are not used by the model.",
-            "Rainfall is a constant long-term average per country, so the model cannot learn a year-to-year rainfall effect.",
-            "Tree models do not extrapolate trends beyond the last training year.",
+            "Rainfall and temperature are CRU TS 4.08 country averages for each year, not field weather. On top of the yield history their measured effect is small (see the weather ablation).",
+            "The yield-history inputs (previous season, 3-season mean) are national values from the crop records unless a farm supplies its own; a crop with no history in a country gets an imputed value and a wider real error.",
+            "Tree models do not extrapolate trends; the yield-history inputs carry the latest level forward.",
         ],
     }
     with open(os.path.join(OUT_DIR, "model_card.json"), "w", encoding="utf-8") as f:
         json.dump(card, f, indent=2, ensure_ascii=False)
     print(f"Saved {OUT_DIR}/model.pkl and model_card.json")
+    update_registry(card, df)
+
+
+def update_registry(card: dict, df: pd.DataFrame) -> None:
+    """models/registry.json: one entry per trained version (replaced when the same version is retrained)."""
+    path = os.path.join("models", "registry.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            entries = json.load(f)
+    except (OSError, ValueError):
+        entries = []
+    m = card["selected"]["metrics"]
+    entry = {
+        "version": card["version"],
+        "trained_at": card.get("trained_at"),
+        "model": card["selected"]["model"],
+        "target": card["selected"]["target"],
+        "features": card["features"]["categorical"] + card["features"]["numeric"],
+        "data_rows": int(len(df)),
+        "data_first_year": int(df["year"].min()),
+        "data_last_year": int(df["year"].max()),
+        "test_split": card["splits"].get("temporal"),
+        "metrics": {k: m.get(k) for k in ("r2", "rmse", "mae", "mape", "latency_p95_ms")},
+        "heldout_interval_coverage": ((card.get("interval") or {}).get("heldout") or {}).get("coverage"),
+    }
+    entries = [e for e in entries if e.get("version") != entry["version"]] + [entry]
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(entries, f, indent=2, ensure_ascii=False)
 
 
 if __name__ == "__main__":

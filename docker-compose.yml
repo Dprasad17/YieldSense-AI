@@ -63,6 +63,20 @@ services:
       GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-20b}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
       WEB_CONCURRENCY: ${API_WORKERS:-2}
+      # API-wide limit per user/IP (requests per minute, 0 = off)
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-600}
+      # Optional integrations (empty = off): Google sign-in, error tracking, digests by email / SMS
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      CRON_TOKEN: ${CRON_TOKEN:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM: ${TWILIO_FROM:-}
     expose:
       - "8000"
     logging:

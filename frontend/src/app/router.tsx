@@ -34,6 +34,9 @@ const screens = {
   farm: named(() => import('../pages/app/FarmPages'), 'FarmDetailPage'),
   collect: named(() => import('../pages/app/ManagementPages'), 'DataCollectionPage'),
   users: named(() => import('../pages/app/ManagementPages'), 'UsersPage'),
+  assistant: named(() => import('../pages/app/NextLevelPages'), 'AssistantPage'),
+  market: named(() => import('../pages/app/NextLevelPages'), 'MarketPage'),
+  leaf: named(() => import('../pages/app/NextLevelPages'), 'LeafCheckPage'),
 };
 
 const AppShell = named(() => import('../components/shell/AppShell'), 'AppShell');
@@ -109,6 +112,9 @@ export const router = createBrowserRouter([
               screen('users', 'users', screens.users),
               screen('risk', 'risk', screens.risk),
               screen('notifications', 'notifications', screens.notifications),
+              screen('assistant', 'assistant', screens.assistant),
+              screen('market', 'market', screens.market),
+              screen('leaf-check', 'leaf', screens.leaf),
               { path: '*', element: <NotFoundPage /> },
             ],
           },

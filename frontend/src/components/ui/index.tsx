@@ -34,6 +34,7 @@ import {
 import { formatCount, formatDeltaPercent, formatIndex, formatRange } from '../../lib/format';
 import { usePreferences } from '../../store/preferences';
 import { formatYield } from '../../lib/format';
+import { useLanguage } from '../../lib/i18n';
 import s from './ui.module.css';
 
 // ---------------------------------------------------------------- Button
@@ -888,10 +889,11 @@ export function PageHeader({
   actions?: ReactNode;
   meta?: ReactNode;
 }) {
+  const [, t] = useLanguage();
   return (
     <div className={s.pageHeader}>
       <div style={{ minWidth: 0 }}>
-        <h1 className={s.pageTitle}>{title}</h1>
+        <h1 className={s.pageTitle}>{t(title)}</h1>
         {description && <p className={s.pageDesc}>{description}</p>}
         {meta && (
           <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', marginTop: 'var(--space-3)' }}>

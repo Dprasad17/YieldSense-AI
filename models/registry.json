@@ -1,0 +1,57 @@
+[
+  {
+    "version": "2.1.0",
+    "trained_at": "2026-09-30T11:04:19+00:00",
+    "model": "XGBoost",
+    "target": "raw",
+    "features": [
+      "crop_type",
+      "region",
+      "year",
+      "rainfall_mm",
+      "temperature_C",
+      "pesticide_usage_ml"
+    ],
+    "data_rows": 28242,
+    "data_first_year": 1990,
+    "data_last_year": 2013,
+    "test_split": "Train ≤ 2008, test 2009–2013",
+    "metrics": {
+      "r2": 0.9528,
+      "rmse": 2065.37,
+      "mae": 1098.56,
+      "mape": 20.32,
+      "latency_p95_ms": 6.982
+    },
+    "heldout_interval_coverage": 0.7447,
+    "note": "Kaggle yield_df (FAOSTAT + World Bank), rainfall constant per country"
+  },
+  {
+    "version": "3.0.0",
+    "trained_at": "2026-10-08T19:46:45+00:00",
+    "model": "XGBoost",
+    "target": "log1p",
+    "features": [
+      "crop_type",
+      "region",
+      "year",
+      "rainfall_mm",
+      "temperature_C",
+      "pesticide_usage_ml",
+      "yield_lag1",
+      "yield_mean3"
+    ],
+    "data_rows": 19834,
+    "data_first_year": 1990,
+    "data_last_year": 2023,
+    "test_split": "Train ≤ 2017, test 2018–2023",
+    "metrics": {
+      "r2": 0.9364,
+      "rmse": 2586.59,
+      "mae": 884.32,
+      "mape": 13.58,
+      "latency_p95_ms": 10.924
+    },
+    "heldout_interval_coverage": 0.8193
+  }
+]

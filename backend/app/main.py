@@ -1,7 +1,9 @@
+import hashlib
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -16,6 +18,14 @@ from backend.app.api.domain import (
     soil_router,
     weather_router,
 )
+from backend.app.api.intelligence import (
+    assistant_router,
+    digest_router,
+    disease_router,
+    market_router,
+    ops_router,
+    satellite_router,
+)
 from backend.app.api.predictions import history_router, router as predictions_router
 from backend.app.api.management import farms_router, soil_tests_router
 from backend.app.api.public import router as public_router
@@ -27,6 +37,24 @@ from backend.app.core.errors import install_error_handlers
 from backend.app.core.observability import RequestContextMiddleware
 from backend.app.services.dataset import get_df
 from backend.app.core.observability import log
+from backend.app.core.ratelimit import api_limiter
+
+
+def _init_sentry() -> None:
+    """Error tracking when SENTRY_DSN is set (no request bodies or personal data are sent)."""
+    if not settings.SENTRY_DSN:
+        return
+    try:
+        import sentry_sdk
+
+        sentry_sdk.init(dsn=settings.SENTRY_DSN, environment=settings.APP_ENV, release=settings.PROJECT_VERSION, traces_sample_rate=0.05, send_default_pii=False)
+        log.info("[startup] Sentry error tracking enabled")
+    except Exception as e:
+        log.warning(f"[startup] Sentry not started: {e}")
+
+
+_init_sentry()
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -56,6 +84,25 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "Accept", "X-Request-ID"],
     expose_headers=["Content-Disposition", "X-Total-Records", "X-Truncated", "Retry-After", "X-Request-ID", "Server-Timing"],
 )
+
+
+@app.middleware("http")
+async def rate_limit(request: Request, call_next):
+    """API-wide limit per signed-in user (token) or per IP; health checks and static files are exempt."""
+    path = request.url.path
+    if path.startswith("/api/") and path != "/api/health" and request.method != "OPTIONS":
+        auth = request.headers.get("authorization", "")
+        key = "t:" + hashlib.sha256(auth.encode()).hexdigest()[:24] if auth.lower().startswith("bearer ") else "ip:" + (request.client.host if request.client else "?")
+        wait = api_limiter.take(key)
+        if wait:
+            return JSONResponse(
+                {"error": {"code": "rate_limited", "message": f"Too many requests. Try again in {wait} seconds.", "request_id": getattr(request.state, "request_id", None)}},
+                status_code=429,
+                headers={"Retry-After": str(wait)},
+            )
+    return await call_next(request)
+
+
 # Added after CORS so it wraps it: every response, including preflights and errors, gets an ID.
 app.add_middleware(RequestContextMiddleware)
 install_error_handlers(app)
@@ -82,6 +129,12 @@ for r in (
     farms_router,
     soil_tests_router,
     uploads_router,
+    assistant_router,
+    satellite_router,
+    market_router,
+    disease_router,
+    ops_router,
+    digest_router,
 ):
     app.include_router(r)
 

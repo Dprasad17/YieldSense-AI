@@ -55,7 +55,7 @@ DEMO_FARMS = [
     {"name": "Riverbend Fields", "region": "Pakistan", "area_ha": 20.0, "crops": ["Wheat", "Maize"], "irrigation_type": "Flood", "soil_ph": 7.6, "soil_moisture_percent": 31.0, "soil_type": "Silty clay", "latitude": 31.85, "longitude": 73.95},
     {"name": "Hillside Potatoes", "region": "Bangladesh", "area_ha": 6.0, "crops": ["Potato", "Rice"], "irrigation_type": "Sprinkler", "soil_ph": 5.9, "soil_moisture_percent": 44.0, "soil_type": "Sandy loam", "latitude": 24.95, "longitude": 89.25},
 ]
-SEASONS = range(2009, 2014)
+SEASONS = range(2019, 2024)
 
 
 def seed_crop_records(reset: bool) -> int:
@@ -65,10 +65,16 @@ def seed_crop_records(reset: bool) -> int:
         if reset:
             s.execute(text("DELETE FROM crop_records WHERE source = 'reference'"))
             count = 0
+    df = pd.read_csv(settings.DATASET_PATH)
+    if count and count != len(df):
+        # The reference dataset changed (e.g. v2 1990–2013 -> v3 1990–2023): replace the reference rows.
+        print(f"crop_records: {count:,} reference rows differ from the dataset file ({len(df):,}); reloading")
+        with session_scope() as s:
+            s.execute(text("DELETE FROM crop_records WHERE source = 'reference'"))
+        count = 0
     if count:
         print(f"crop_records: {count:,} reference rows already present")
         return 0
-    df = pd.read_csv(settings.DATASET_PATH)
     df = df[list(CSV_COLUMNS)].rename(columns=CSV_COLUMNS)
     df["year"] = pd.to_datetime(df["sowing_date"]).dt.year
     df["crop_disease_status"] = df["crop_disease_status"].fillna("None")

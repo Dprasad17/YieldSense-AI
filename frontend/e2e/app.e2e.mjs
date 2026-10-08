@@ -133,7 +133,7 @@ const check = async (name, fn) => {
 await check('landing: static page, CTAs, facts', async () => {
   await go('/');
   await waitText('Know your harvest before you plant it');
-  await waitText('28,242');
+  await waitText('19,834');
   await waitText('101');
   await waitText('Frequently asked questions');
   await noText('testimonial', 'Milestone');
@@ -182,9 +182,9 @@ await check('product tour shows once and can be skipped', async () => {
 });
 await check('dashboard: real KPIs, sample pill on regions, crop portfolio', async () => {
   await waitText('Farm records');
-  await waitText('28,242');
+  await waitText('19,834');
   await waitText('Data coverage by crop');
-  await waitText('28,242 records in total');
+  await waitText('19,834 records in total');
   await waitText('the fewest');
   await waitText('Even share per crop');
   await waitText('Crop portfolio');
@@ -211,13 +211,17 @@ await check('predictor: validation, predict, insight, what-if, save, history', a
   await waitText('Productivity:', 30000);
   await waitText('What if?');
   await waitText('Likely range (P10–P90)');
-  await waitText('XGBoost v2.1.0');
+  await waitText('XGBoost v3.0.0');
+  await waitText('Why this prediction');
+  await waitText('Last season’s yield');
   await noText('NDVI');
   await noText('Methodological', 'docs/');
   await clickText('button', 'View in history');
   await waitUrl('/app/history');
   await waitText('Prediction history');
-  await waitText('XGBoost v2.1.0');
+  await waitText('XGBoost v3.0.0');
+  await waitText('Why this prediction');
+  await waitText('Last season’s yield');
   await waitFor(
     () => evaluate(`[...document.querySelectorAll('tbody button')].some(b => b.innerText.trim() === 'Re-run')`),
     're-run button',
@@ -347,10 +351,10 @@ await check('phase G: predictor has 6 model inputs, no rainfall what-if, labelle
   await go('/app/predict?region=India&crop=Rice');
   await waitText('6/6');
   await noText('Growing period');
-  await waitText('cross-country association');
+  await waitText('CRU TS country average');
   await evaluate(`[...document.querySelectorAll('button[type=submit]')].pop().click()`);
   await waitText('Likely range', 30000);
-  await waitText('Rainfall is left out');
+  await waitText('Change rainfall, temperature or pesticide use');
   await waitFor(async () => /AI · Groq|Fallback · rule engine/.test(await text()), 'insight source label', 40000);
 });
 await check('phase G: real soil (SoilGrids) and nutrient ratings on the farm and Soil pages', async () => {
@@ -377,13 +381,12 @@ await check('phase G: real soil (SoilGrids) and nutrient ratings on the farm and
   await waitText('Reference dataset view');
   await waitText('Synthetic soil columns');
 });
-await check('phase G: rainfall impact is not estimated; drought and flood are structural', async () => {
-  await go('/app/recommendations?region=Egypt');
-  await waitText('cross-country association', 40000);
+await check('v3: yearly rainfall puts drought and flood on the risk timeline', async () => {
   await go('/app/risk?region=India&crop=Rice');
   await waitText('Risk timeline');
-  await waitText('Structural');
-  await waitText('climate-zone risks');
+  await waitText('Drought');
+  await waitText('CRU TS country values');
+  await noText('climate-zone risks', 'Structural');
 });
 await check('phase E: risk page matrix, timeline, anomalies, mitigation', async () => {
   await go('/app/risk?region=India&crop=Rice');
@@ -472,6 +475,31 @@ await check('analytics: real yearly trend, band, record table, export', async ()
   await evaluate(`[...document.querySelectorAll('table')].pop().querySelector('tbody tr').click()`);
   await waitText('Risk flags');
 });
+await check('v3: assistant, market revenue, leaf check, satellite panel, language', async () => {
+  await go('/app/assistant');
+  await waitText('Ask YieldSense');
+  await waitFor(async () => /needs a Groq API key|Ask about your farms/.test(await text()), 'assistant state', 20000);
+  await go('/app/market?region=Kenya');
+  await waitText('Expected revenue by crop', 30000);
+  await waitText('not profit');
+  await go('/app/leaf-check');
+  await waitText('Take or choose photo');
+  await waitText('First check, not a diagnosis');
+  await go('/app/farms');
+  await waitText('Green Valley Farm');
+  await clickText('a', 'Green Valley Farm');
+  await waitText('Load satellite data', 30000);
+  await go('/app/settings');
+  await waitText('Weekly digest');
+  await evaluate(
+    `(() => { const sel = document.querySelector('select[aria-label="Interface language"]'); const set = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set; set.call(sel, 'hi'); sel.dispatchEvent(new Event('change', { bubbles: true })); })()`,
+  );
+  await waitText('डैशबोर्ड');
+  await evaluate(
+    `(() => { const sel = document.querySelector('select[aria-label="Interface language"]'); const set = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set; set.call(sel, 'en'); sel.dispatchEvent(new Event('change', { bubbles: true })); })()`,
+  );
+  await waitText('Dashboard');
+});
 await check('settings + help', async () => {
   await go('/app/settings');
   await waitText('Preferences');
@@ -519,7 +547,7 @@ await check('admin: users, audit log, system metrics, agronomist screens', async
   await go('/app/models');
   await waitText('Model comparison');
   await go('/app/data');
-  await waitText('1–15 of 28,242');
+  await waitText('1–15 of 19,834');
   await signOut();
   await waitUrl('/login');
 });
@@ -530,7 +558,7 @@ await check('agronomist: dataset explorer table, drawer → predictor prefill', 
   await waitText('Step 1 of 4');
   await skipTour();
   await go('/app/data');
-  await waitText('1–15 of 28,242');
+  await waitText('1–15 of 19,834');
   await waitText('Temp (°C)');
   await waitText('S · Synthetic');
   await waitFor(
@@ -554,11 +582,10 @@ await check('agronomist: EDA 4 real charts, no orphan', async () => {
   if (n < 4) throw new Error('charts ' + n);
   await noText('Sample data');
 });
-await check('agronomist: EDA for a single country shows "No fit" instead of crashing', async () => {
+await check('agronomist: EDA for a single country fits yearly rainfall; empty context does not crash', async () => {
   await go('/app/eda?region=India&crop=Rice');
   await waitText('Rainfall vs yield');
-  await waitText('No fit');
-  await waitText('single long-term value per country');
+  await waitText('rainfall accounts for');
   await noText('Something went wrong');
   await go('/app/eda?region=Albania&crop=Cassava');
   await waitText('No records for this context');
@@ -571,11 +598,13 @@ await check('agronomist: model performance from the model card', async () => {
   await waitText('P10–P90 coverage · held out');
   await waitText('Weather impact (ablation)');
   await waitText('without rainfall');
-  await waitText('Before / after · v2.0.0 → v2.1.0');
+  await waitText('Before / after · v2.1.0 → v3.0.0');
+  await waitText('Model registry & monitoring');
+  await waitText('Input drift');
   await waitText('Selection rule');
   await waitText('Permutation importance');
   await waitText('Keras MLP');
-  await waitText('Train ≤ 2008, test 2009–2013');
+  await waitText('Train ≤ 2017, test 2018–2023');
   await clickText('button[role=radio]', 'Unseen regions');
   await waitText('20% of regions held out entirely');
   await clickText('button[role=radio]', 'Random');
@@ -597,6 +626,9 @@ await check('mobile 360px: no horizontal overflow, drawer nav', async () => {
     '/app/soil',
     '/app/models',
     '/app/farms',
+    '/app/assistant',
+    '/app/market',
+    '/app/leaf-check',
     '/report/productivity',
     '/',
   ]) {

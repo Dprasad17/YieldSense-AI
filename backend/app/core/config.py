@@ -47,7 +47,7 @@ def normalize_database_url(url: str) -> str:
 
 class Settings:
     PROJECT_NAME: str = "YieldSense AI Platform"
-    PROJECT_VERSION: str = "2.0.0"
+    PROJECT_VERSION: str = "3.0.0"
     APP_ENV: str = os.getenv("APP_ENV", "development")
     # JWT signing secret. Required in production; in development a random per-process secret is
     # used when unset (sessions then end on restart). Never a hardcoded default.
@@ -76,6 +76,18 @@ class Settings:
     # Login throttling: failed attempts allowed per (IP, username) within the window.
     LOGIN_MAX_FAILURES: int = int(os.getenv("LOGIN_MAX_FAILURES", "5"))
     LOGIN_WINDOW_SECONDS: int = int(os.getenv("LOGIN_WINDOW_SECONDS", "60"))
+
+    # API-wide rate limit per signed-in user (or per IP without a token), requests per minute; 0 = off.
+    RATE_LIMIT_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "600"))
+
+    # Google sign-in (OAuth 2.0 / OpenID Connect ID tokens). Empty = the button is hidden.
+    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+
+    # Error tracking (Sentry). Empty = off.
+    SENTRY_DSN: str = os.getenv("SENTRY_DSN", "").strip()
+
+    # Shared secret for scheduled jobs (weekly digests) that call admin endpoints without a user session.
+    CRON_TOKEN: str = os.getenv("CRON_TOKEN", "").strip()
 
     # Uploads
     UPLOAD_MAX_BYTES: int = int(os.getenv("UPLOAD_MAX_BYTES", str(10 * 1024 * 1024)))

@@ -17,6 +17,9 @@ import {
   Sparkles,
   ShieldAlert,
   Bell,
+  Bot,
+  Coins,
+  Leaf,
   type LucideProps,
 } from 'lucide-react';
 import type { Permission } from '../auth/permissions';
@@ -81,6 +84,27 @@ export const NAV_GROUPS: readonly NavGroup[] = [
         icon: ShieldAlert,
         permission: 'risk',
         keywords: 'drought flood heat pest matrix anomalies mitigation',
+      },
+      {
+        path: 'assistant',
+        label: 'Ask YieldSense',
+        icon: Bot,
+        permission: 'assistant',
+        keywords: 'ai chat assistant question help llm',
+      },
+      {
+        path: 'market',
+        label: 'Market & revenue',
+        icon: Coins,
+        permission: 'market',
+        keywords: 'price revenue profit money which crop pays',
+      },
+      {
+        path: 'leaf-check',
+        label: 'Leaf check',
+        icon: Leaf,
+        permission: 'leaf',
+        keywords: 'disease photo camera pest diagnosis plantvillage',
       },
     ],
   },

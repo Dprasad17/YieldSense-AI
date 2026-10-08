@@ -25,6 +25,8 @@ RUN sed 's/^xgboost==/xgboost-cpu==/' requirements.txt > /tmp/requirements.txt \
 COPY backend ./backend
 COPY scripts/seed.py scripts/create_admin.py ./scripts/
 COPY models/v2 ./models/v2
+COPY models/disease ./models/disease
+COPY models/registry.json ./models/registry.json
 COPY datasets/processed ./datasets/processed
 COPY eda_plots ./eda_plots
 COPY backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

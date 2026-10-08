@@ -196,3 +196,57 @@ export type ContextQuery = {
   year_from?: number;
   year_to?: number;
 };
+
+// ---------------------------------------------------------------- next-level features (v3)
+export type Explanation = S['Explanation'];
+export type Contribution = S['Contribution'];
+export type AskOut = S['AskOut'];
+export type ChatMessage = S['ChatMessage'];
+export type AssistantStatus = S['AssistantStatus'];
+export type FarmNdvi = S['FarmNdvi'];
+export type NdviPoint = S['NdviPoint'];
+export type CropEconomics = S['CropEconomics'];
+export type CropRevenue = S['CropRevenue'];
+export type LeafResult = S['LeafResult'];
+export type DigestResult = S['DigestResult'];
+export type DigestChannels = S['Channels'];
+export type AuthProviders = S['AuthProviders'];
+
+/** GET /api/admin/model-monitoring (untyped dict on the server). */
+export interface RegistryEntry {
+  version: string;
+  trained_at: string | null;
+  model: string;
+  target: string;
+  features: string[];
+  data_rows: number;
+  data_first_year: number;
+  data_last_year: number;
+  test_split?: string | null;
+  metrics: { r2: number; rmse: number; mae: number; mape: number; latency_p95_ms: number };
+  heldout_interval_coverage: number | null;
+  note?: string;
+  served: boolean;
+}
+export interface DriftFeature {
+  feature: string;
+  level: 'stable' | 'watch' | 'drifted';
+  psi?: number;
+  unseen_share?: number;
+  train_median?: number;
+  recent_median?: number;
+}
+export interface ModelMonitoring {
+  served_version: string;
+  registry: RegistryEntry[];
+  drift: {
+    window_days: number;
+    predictions: number;
+    min_predictions: number;
+    status: 'not_enough_data' | 'stable' | 'watch' | 'drifted';
+    features: DriftFeature[];
+  };
+  retrain_recommended: boolean;
+  reasons: string[];
+  retraining: string;
+}

@@ -124,9 +124,27 @@ class MLService:
     def name(self) -> str:
         return str(self._ensure_ready()["model"])
 
+    def _with_history(self, frame: pd.DataFrame) -> pd.DataFrame:
+        """Fills the yield-history inputs (v3 models) from the crop records when the caller didn't give them."""
+        from backend.app.services import history_features
+
+        if any(f in history_features.LAG_FEATURES for f in self._ensure_ready()["features"]):
+            return history_features.fill(frame)
+        return frame
+
+    def history_inputs(self, payload: dict) -> dict:
+        """The yield-history values a prediction used (given or looked up), for display."""
+        from backend.app.services import history_features
+
+        if not any(f in history_features.LAG_FEATURES for f in self.features):
+            return {}
+        row = self._with_history(pd.DataFrame([{k: payload.get(k) for k in ("region", "crop_type", "year", *history_features.LAG_FEATURES)}]))
+        return {k: (None if pd.isna(row.iloc[0][k]) else round(float(row.iloc[0][k]), 1)) for k in history_features.LAG_FEATURES}
+
     def predict_frame(self, frame: pd.DataFrame) -> np.ndarray:
         """Point predictions (kg/ha) for many rows."""
         b = self._ensure_ready()
+        frame = self._with_history(frame)
         pred = np.asarray(b["pipeline"].predict(frame[b["features"]]), dtype=float)
         if b["target"] == "log1p":
             pred = np.expm1(pred)
@@ -142,13 +160,61 @@ class MLService:
             lo, hi = p + b["residual_q10"], p + b["residual_q90"]
         return np.clip(lo, 0.0, None), np.clip(hi, 0.0, None)
 
+    def explain(self, payload: dict) -> Optional[dict]:
+        """Exact per-feature contributions (TreeSHAP, computed by XGBoost itself) for one prediction.
+
+        The one-hot columns of a categorical input are summed back into that input, so the result has one
+        entry per model feature. base + Σ contributions = the model's raw output. For a log1p target the
+        contributions are in log space and are reported as approximate % changes instead of kg/ha."""
+        b = self._ensure_ready()
+        pipe = b["pipeline"]
+        estimator = pipe[-1]
+        if not hasattr(estimator, "get_booster"):
+            return None
+        import xgboost as xgb
+
+        features: list[str] = [str(f) for f in b["features"]]
+        frame = self._with_history(pd.DataFrame([{f: payload.get(f) for f in features}]))
+        prep = pipe[:-1]
+        X = np.asarray(prep.transform(frame[features]), dtype=float)
+        names = [str(n) for n in prep.get_feature_names_out()]
+        contribs = estimator.get_booster().predict(xgb.DMatrix(X, feature_names=None), pred_contribs=True)[0]
+        totals: dict[str, float] = {f: 0.0 for f in features}
+        for name, value in zip(names, contribs[:-1]):
+            raw = name.split("__", 1)[-1].removeprefix("missingindicator_")
+            owner = next((f for f in sorted(features, key=len, reverse=True) if raw == f or raw.startswith(f + "_")), None)
+            if owner:
+                totals[owner] += float(value)
+        base = float(contribs[-1])
+        log_target = b["target"] == "log1p"
+        items = []
+        for f in features:
+            v = totals[f]
+            items.append(
+                {
+                    "feature": f,
+                    "value": None if pd.isna(frame.iloc[0][f]) else (frame.iloc[0][f].item() if hasattr(frame.iloc[0][f], "item") else frame.iloc[0][f]),
+                    "contribution_kg_ha": None if log_target else round(v, 1),
+                    "contribution_pct": round((np.expm1(v)) * 100, 1) if log_target else None,
+                }
+            )
+        items.sort(key=lambda r: -abs(r["contribution_kg_ha"] if r["contribution_kg_ha"] is not None else r["contribution_pct"]))
+        return {
+            "method": "TreeSHAP contributions from XGBoost (pred_contribs); one-hot columns summed per input",
+            "base_kg_ha": round(float(np.expm1(base)) if log_target else base, 1),
+            "unit": "percent" if log_target else "kg/ha",
+            "contributions": items,
+        }
+
     def predict_yield(self, payload: dict) -> dict:
+        from backend.app.services.history_features import LAG_FEATURES
+
         features = self.features
-        missing = [f for f in features if payload.get(f) is None]
+        missing = [f for f in features if payload.get(f) is None and f not in LAG_FEATURES]
         if missing:
             raise ValueError(f"Missing required model inputs: {missing}")
 
-        frame = pd.DataFrame([{f: payload[f] for f in features}])
+        frame = pd.DataFrame([{f: payload.get(f) for f in features}])
         started = time.perf_counter()
         point = float(self.predict_frame(frame)[0])
         self.latency.add((time.perf_counter() - started) * 1000)

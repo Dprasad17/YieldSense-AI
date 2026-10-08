@@ -1,7 +1,7 @@
 """Every /api route requires a token except the public ones; role gates follow the permissions map."""
 import pytest
 
-PUBLIC = {"/api/auth/login", "/api/auth/register", "/api/health", "/api/public/stats"}
+PUBLIC = {"/api/auth/login", "/api/auth/register", "/api/auth/providers", "/api/auth/google", "/api/health", "/api/public/stats"}
 
 FARMER_OK = [
     "/api/data/summary",
@@ -45,7 +45,7 @@ def test_every_api_route_is_protected(client):
 
 def test_public_stats_is_aggregate_only(client):
     body = client.get("/api/public/stats").json()
-    assert body["record_count"] == 28242 and body["crop_count"] == 10 and body["region_count"] == 101
+    assert body["record_count"] == 19834 and body["crop_count"] == 10 and body["region_count"] == 101
     assert body["model_name"] == "XGBoost"
     assert set(body) == {"record_count", "crop_count", "region_count", "year_min", "year_max", "model_name", "r2", "rmse", "mae"}
 
@@ -107,7 +107,7 @@ def test_admin_system_metrics(client, auth):
     m = client.get("/api/admin/metrics", headers=auth("admin")).json()
     assert m["api"]["requests_total"] > 0 and m["api"]["overall"]["p95_ms"] is not None
     assert m["inference"]["count"] >= 1 and m["inference"]["p50_ms"] is not None
-    assert m["database"]["crop_records"] == 28242 and m["model"]["name"] == "XGBoost"
+    assert m["database"]["crop_records"] == 19834 and m["model"]["name"] == "XGBoost"
     assert m["api"]["routes"] and all(r["route"].split(" ")[0] in {"GET", "POST", "PATCH", "DELETE"} for r in m["api"]["routes"])
 
 

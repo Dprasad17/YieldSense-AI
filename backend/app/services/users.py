@@ -15,7 +15,7 @@ DEMO_USERS = {
     "agronomist": ("agro123", "Agronomist", "agronomist@yieldsense.ai", "Dr. Sarah Jenkins"),
 }
 
-DEFAULT_NOTIFICATION_PREFS = {"recommendations": True, "alerts": True, "weather": True, "system": True}
+DEFAULT_NOTIFICATION_PREFS = {"recommendations": True, "alerts": True, "weather": True, "system": True, "email_digest": False, "sms_digest": False, "phone": None}
 
 
 def to_dict(u: User) -> dict:
@@ -30,6 +30,12 @@ def to_dict(u: User) -> dict:
         "active": u.active,
         "notification_prefs": {**DEFAULT_NOTIFICATION_PREFS, **(u.notification_prefs or {})},
     }
+
+
+def find_by_email(email: str) -> Optional[dict]:
+    with session_scope() as s:
+        u = s.scalar(select(User).where(func.lower(User.email) == email.strip().lower()).order_by(User.id))
+        return to_dict(u) if u else None
 
 
 def get_user(username: str) -> Optional[dict]:

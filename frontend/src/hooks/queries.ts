@@ -14,6 +14,9 @@ import {
   uploadsApi,
   soilApi,
   weatherApi,
+  assistantApi,
+  digestApi,
+  marketApi,
 } from '../api/endpoints';
 import type { ContextQuery, PredictionInput, RecommendationAction } from '../api/types';
 import { useCan } from '../auth/context';
@@ -320,5 +323,65 @@ export function useWeatherOverview() {
     queryKey: ['weather', 'overview'],
     queryFn: () => weatherApi.analysis('', false),
     staleTime: Infinity,
+  });
+}
+
+// ---------------------------------------------------------------- next-level features (v3)
+
+/** Satellite NDVI for a farm. The first request can take ~30 s (NASA MODIS service), then it is cached. */
+export function useFarmNdvi(id: number | null, enabled = true) {
+  return useQuery({
+    queryKey: ['farms', 'ndvi', id],
+    queryFn: () => farmsApi.ndvi(id as number),
+    enabled: id != null && enabled,
+    staleTime: 6 * 60 * 60_000,
+    retry: false,
+  });
+}
+
+export function useCropEconomics(q: { region?: string; farm_id?: number }) {
+  return useQuery({
+    queryKey: ['market', q],
+    queryFn: () => marketApi.cropEconomics(q),
+    enabled: Boolean(q.region || q.farm_id),
+    staleTime: 30 * 60_000,
+  });
+}
+
+export function useAssistantStatus() {
+  return useQuery({ queryKey: ['assistant', 'status'], queryFn: assistantApi.status, staleTime: 10 * 60_000 });
+}
+
+export function useAssistantHistory() {
+  return useQuery({ queryKey: ['assistant', 'history'], queryFn: assistantApi.history });
+}
+
+export function useAskAssistant() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ message, page }: { message: string; page?: string }) => assistantApi.ask(message, page),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['assistant', 'history'] }),
+  });
+}
+
+export function useClearAssistant() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: assistantApi.clear,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['assistant', 'history'] }),
+  });
+}
+
+export function useDigestChannels() {
+  return useQuery({ queryKey: ['digest', 'channels'], queryFn: digestApi.channels, staleTime: 10 * 60_000 });
+}
+
+export function useModelMonitoring() {
+  const can = useCan();
+  return useQuery({
+    queryKey: ['admin', 'model-monitoring'],
+    queryFn: adminApi.modelMonitoring,
+    enabled: can('models'),
+    staleTime: 5 * 60_000,
   });
 }

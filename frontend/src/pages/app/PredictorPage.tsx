@@ -22,6 +22,7 @@ import {
   Select,
   Skeleton,
 } from '../../components/ui';
+import { ExplanationCard } from '../../components/Explanation';
 import { ratingTone } from '../../components/ui/helpers';
 import {
   useActiveModel,
@@ -86,7 +87,7 @@ const CONDITION_KEYS = [
 const DEFAULTS: FormValues = {
   crop_type: 'Wheat',
   region: 'India',
-  year: 2013,
+  year: 2024,
   rainfall_mm: 850,
   temperature_C: 24.5,
   pesticide_usage_ml: 450,
@@ -264,7 +265,7 @@ export function PredictorPage() {
   const farmId = filters.farm ? Number(filters.farm) : undefined;
   const farm = useFarms({ page: 1, page_size: 100, mine: true }).data?.items.find(f => f.id === farmId);
   const summary = useDatasetSummary().data;
-  const lastYear = summary?.year_max ?? 2013;
+  const lastYear = summary?.year_max ?? 2023;
   const [values, setValues] = useState<FormValues>(() => ({
     ...DEFAULTS,
     ...(filters.crop ? { crop_type: filters.crop } : {}),
@@ -353,13 +354,13 @@ export function PredictorPage() {
   };
 
   // ---------------------------------------------------------------- what-if
-  const [whatIf, setWhatIf] = useState({ temp: 0, pest: 0 });
+  const [whatIf, setWhatIf] = useState({ temp: 0, pest: 0, rain: 0 });
   const debounced = useDebouncedValue(whatIf, 500);
   const [scenario, setScenario] = useState<{ value: number | null; loading: boolean; error?: string }>({
     value: null,
     loading: false,
   });
-  const changed = debounced.temp !== 0 || debounced.pest !== 0;
+  const changed = debounced.temp !== 0 || debounced.pest !== 0 || debounced.rain !== 0;
 
   useEffect(() => {
     if (!result || !changed) return;
@@ -369,6 +370,7 @@ export function PredictorPage() {
       ...base,
       temperature_C: Math.round((base.temperature_C + debounced.temp) * 10) / 10,
       pesticide_usage_ml: Math.max(0, Math.round(base.pesticide_usage_ml * (1 + debounced.pest / 100))),
+      rainfall_mm: Math.max(0, Math.round(base.rainfall_mm * (1 + debounced.rain / 100))),
       farm_id: undefined,
     };
     Promise.resolve()
@@ -408,7 +410,7 @@ export function PredictorPage() {
     setErrors({});
     setResult(null);
     setInsights(null);
-    setWhatIf({ temp: 0, pest: 0 });
+    setWhatIf({ temp: 0, pest: 0, rain: 0 });
   };
 
   return (
@@ -495,7 +497,7 @@ export function PredictorPage() {
               label="Rainfall"
               htmlFor="p-rain"
               error={errors.rainfall_mm}
-              hint="Long-term annual average for the country (one value per country in the data, so the model sees a cross-country association, not a yearly weather effect)"
+              hint="The country's annual rainfall for the season (CRU TS country average); varies year to year"
             >
               <Input
                 id="p-rain"
@@ -783,9 +785,26 @@ export function PredictorPage() {
             <Card>
               <CardHeader
                 title="What if?"
-                subtitle="Change temperature or pesticide use and see how the prediction moves. Rainfall is left out: it is constant per country in the data."
+                subtitle="Change rainfall, temperature or pesticide use and see how the prediction moves (the model’s response, not a field trial)."
               />
               <div className={s.stack}>
+                <FormField label={`Rainfall ${whatIf.rain >= 0 ? '+' : ''}${whatIf.rain}%`} htmlFor="wi-rain">
+                  <Slider.Root
+                    id="wi-rain"
+                    className={s.slider}
+                    value={[whatIf.rain]}
+                    min={-50}
+                    max={50}
+                    step={5}
+                    onValueChange={v => setWhatIf(w => ({ ...w, rain: v[0] }))}
+                    aria-label="Rainfall change"
+                  >
+                    <Slider.Track className={s.sliderTrack}>
+                      <Slider.Range className={s.sliderRange} />
+                    </Slider.Track>
+                    <Slider.Thumb className={s.sliderThumb} aria-label="Rainfall change" />
+                  </Slider.Root>
+                </FormField>
                 <FormField label={`Temperature ${whatIf.temp >= 0 ? '+' : ''}${whatIf.temp} °C`} htmlFor="wi-temp">
                   <Slider.Root
                     id="wi-temp"
@@ -842,7 +861,7 @@ export function PredictorPage() {
                     </div>
                   ) : null}
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => setWhatIf({ temp: 0, pest: 0 })}>
+                <Button size="sm" variant="ghost" onClick={() => setWhatIf({ temp: 0, pest: 0, rain: 0 })}>
                   Reset scenario
                 </Button>
               </div>
@@ -853,6 +872,7 @@ export function PredictorPage() {
               View prediction history
             </Button>
           )}
+          {result?.result.explanation && <ExplanationCard explanation={result.result.explanation} />}
         </aside>
       </div>
     </div>

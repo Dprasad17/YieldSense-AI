@@ -17,7 +17,10 @@ export type Permission =
   | 'eda'
   | 'dataset'
   | 'models'
-  | 'users';
+  | 'users'
+  | 'assistant'
+  | 'market'
+  | 'leaf';
 
 const FARMER: readonly Permission[] = [
   'dashboard',
@@ -32,6 +35,9 @@ const FARMER: readonly Permission[] = [
   'notifications',
   'settings',
   'help',
+  'assistant',
+  'market',
+  'leaf',
 ];
 
 const AGRONOMIST: readonly Permission[] = [...FARMER, 'eda', 'dataset', 'models'];

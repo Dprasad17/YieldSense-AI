@@ -153,7 +153,7 @@ Yield forecast to explain (country-level model; inputs are national figures):
 - Predicted yield: {prediction_result.get('predicted_yield_kg_ha')} kg/ha (productivity: {prediction_result.get('productivity_rating')}, P10-P90 {prediction_result.get('low_kg_ha')}-{prediction_result.get('high_kg_ha')} kg/ha)
 - Risk rating: {prediction_result.get('risk_rating')}; flags: {', '.join(prediction_result.get('risk_flags') or []) or 'none'}
 - Temperature: {payload.get('temperature_C')} °C (annual mean)
-- Rainfall: {payload.get('rainfall_mm')} mm (long-term country average, not this season's rain)
+- Rainfall: {payload.get('rainfall_mm')} mm (country's annual rainfall for that year, CRU TS)
 Field conditions reported by the user (not used by the model):
 {conditions or '- none reported'}
 

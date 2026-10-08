@@ -21,10 +21,14 @@ class YieldPredictionRequest(BaseModel):
     # Model inputs: the features the served model was trained on.
     crop_type: str = Field(..., json_schema_extra={"example": "Wheat"})
     region: str = Field(..., json_schema_extra={"example": "India"})
-    year: Optional[int] = Field(None, ge=1950, le=2100, description="Season year. Defaults to the latest year in the dataset.")
+    year: Optional[int] = Field(None, ge=1950, le=2100, description="Season year. Defaults to the season after the latest year in the dataset.")
     rainfall_mm: float = Field(..., ge=0.0, le=5000.0)
     temperature_C: float = Field(..., ge=-10.0, le=60.0)
     pesticide_usage_ml: float = Field(..., ge=0.0)
+    # Yield history (model inputs since v3.0). Looked up from the crop records when omitted; send your
+    # farm's own figures to use them instead.
+    yield_lag1: Optional[float] = Field(None, ge=0.0, le=200_000.0, description="Previous season's yield (kg/ha). Default: the country's last recorded yield.")
+    yield_mean3: Optional[float] = Field(None, ge=0.0, le=200_000.0, description="Mean yield of the last 3 seasons (kg/ha). Default: from the crop records.")
     # Field conditions: optional; used for risk flags and insights, not by the model.
     total_days: Optional[int] = Field(None, ge=1, le=400, description="Growing period. Not a model input since v2.1 (synthetic crop proxy in the dataset).")
     irrigation_type: Optional[str] = Field(None, json_schema_extra={"example": "Drip"})
@@ -44,7 +48,7 @@ class YieldPredictionRequest(BaseModel):
         data.pop("farm_id", None)
         data.pop("record_code", None)
         if data.get("year") is None:
-            data["year"] = year_range()[1]
+            data["year"] = year_range()[1] + 1
         return data
 
 
@@ -68,8 +72,38 @@ class PredictionRecord(BaseModel):
     model_r2: Optional[float]
 
 
+class Contribution(BaseModel):
+    feature: str
+    value: Optional[str | float | int]
+    contribution_kg_ha: Optional[float]
+    contribution_pct: Optional[float]
+
+
+class Explanation(BaseModel):
+    method: str
+    base_kg_ha: float
+    unit: Literal["kg/ha", "percent"]
+    contributions: list[Contribution]
+    history: dict[str, Optional[float]] = {}
+
+
+def _explain(request: "YieldPredictionRequest") -> Optional[dict]:
+    """Per-input contributions; a failure here never blocks the prediction itself."""
+    try:
+        out = ml_service.explain(request.features())
+        if out is not None:
+            out["history"] = ml_service.history_inputs(request.features())
+        return out
+    except Exception as e:
+        from backend.app.core.observability import log
+
+        log.warning(f"[predict] explanation failed: {e}")
+        return None
+
+
 class YieldPredictionResponse(PredictionRecord):
     risk_flags: list[str]
+    explanation: Optional[Explanation] = None
 
 
 class AIInsightsResponse(BaseModel):
@@ -159,7 +193,7 @@ def predict_crop_yield(request: YieldPredictionRequest, user: dict = Depends(req
     """Predicts yield with a P10–P90 interval (split-conformal, out-of-time residuals) and saves it to history."""
     result = _run_prediction(request)
     saved = store.save_prediction(user["username"], request.features(), result, active_model_summary(), request.farm_id, request.record_code)
-    return {**saved, "risk_flags": result["risk_flags"]}
+    return {**saved, "risk_flags": result["risk_flags"], "explanation": _explain(request)}
 
 
 class WhatIfResponse(BaseModel):
@@ -169,12 +203,13 @@ class WhatIfResponse(BaseModel):
     productivity_rating: Literal["Low", "Medium", "High"]
     risk_rating: Literal["Low", "Medium", "High"]
     risk_flags: list[str]
+    explanation: Optional[Explanation] = None
 
 
 @router.post("/what-if", response_model=WhatIfResponse)
 def predict_scenario(request: YieldPredictionRequest, _user: dict = Depends(require_user)):
     """Same prediction as POST /api/predict, but not saved to history (for what-if scenarios)."""
-    return _run_prediction(request)
+    return {**_run_prediction(request), "explanation": _explain(request)}
 
 
 @router.post("/insights", response_model=AIInsightsResponse)

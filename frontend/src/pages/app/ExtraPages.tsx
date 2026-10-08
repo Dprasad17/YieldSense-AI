@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { errorMessage } from '../../api/client';
-import { authApi, profileApi } from '../../api/endpoints';
+import { authApi, digestApi, profileApi } from '../../api/endpoints';
+import type { MeResponse } from '../../api/types';
 import { toast } from 'sonner';
 import { BookOpen, Keyboard, Monitor, Moon, Printer, Search, Sun, UserCircle2 } from 'lucide-react';
 import {
@@ -22,7 +23,8 @@ import {
 } from '../../components/ui';
 import { ratingTone } from '../../components/ui/helpers';
 import { useAuth } from '../../auth/context';
-import { useDatasetSummary, useRegions } from '../../hooks/queries';
+import { useDatasetSummary, useDigestChannels, useRegions } from '../../hooks/queries';
+import { LANGUAGES, setLanguage, useLanguage, type Lang } from '../../lib/i18n';
 import { formatCount, formatIndex, formatYield } from '../../lib/format';
 import { markTourSeen, readReport } from '../../lib/localStore';
 import { YIELD_UNITS, type YieldUnit } from '../../lib/units';
@@ -337,6 +339,8 @@ export function SettingsPage() {
               <Skeleton height={120} />
             )}
           </Card>
+          {prefs && <DigestSettings prefs={prefs} onSaved={() => me.refetch()} />}
+          <LanguageSettings />
           <Card>
             <CardHeader title="Preferences" subtitle="Saved in this browser" />
             <div className={s.stack} style={{ gap: 'var(--space-5)' }}>
@@ -424,7 +428,7 @@ export function SettingsPage() {
 const FAQ: [string, string][] = [
   [
     'How is the predicted yield calculated?',
-    'An XGBoost model trained on 28,242 country-level FAOSTAT records uses 6 inputs (crop, region, year, rainfall, temperature and pesticides) to estimate yield per hectare, with a P10–P90 range. Field conditions such as soil and irrigation add risk flags but do not change the estimate.',
+    'An XGBoost model trained on 19,834 country-level FAOSTAT records (1990–2023) uses 8 inputs (crop, region, season, the year’s rainfall and temperature, pesticides, and the country’s last-season and 3-season yields) to estimate yield per hectare, with a P10–P90 range. Field conditions such as soil and irrigation add risk flags but do not change the estimate.',
   ],
   [
     'Why does my region or crop change on every screen?',
@@ -515,7 +519,7 @@ export function HelpPage() {
               <li>The inputs are encoded exactly as during training.</li>
               <li>
                 The XGBoost model adds up many small decision trees; the P10–P90 range comes from its errors on
-                2009–2013, years it never saw in training.
+                2018–2023, years it never saw in training.
               </li>
               <li>
                 You get yield in kg/ha with a likely range, a productivity class, and a risk rating from any field
@@ -562,5 +566,96 @@ export function HelpPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------- digests and language (v3)
+
+type Prefs = NonNullable<MeResponse['user']['notification_prefs']>;
+
+function DigestSettings({ prefs, onSaved }: { prefs: Prefs; onSaved: () => void }) {
+  const channels = useDigestChannels().data;
+  const [phone, setPhone] = useState(prefs.phone ?? '');
+  const [busy, setBusy] = useState(false);
+  const save = async (patch: Partial<Prefs>) => {
+    setBusy(true);
+    try {
+      await profileApi.update({ notification_prefs: { ...prefs, ...patch } });
+      onSaved();
+      toast.success('Digest preferences saved');
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const sendNow = async () => {
+    setBusy(true);
+    try {
+      const r = await digestApi.sendMe();
+      if (r.email + r.sms > 0) toast.success(`Digest sent (${r.email} email, ${r.sms} SMS)`);
+      else toast('Nothing sent: turn on a channel that the server supports.');
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Card>
+      <CardHeader title="Weekly digest" subtitle="A summary of alerts, open tasks and farm risks, by email or SMS" />
+      <div className={s.stack}>
+        {channels && !channels.email && !channels.sms && (
+          <Banner tone="info">The server has no email or SMS service configured yet, so digests can’t be sent.</Banner>
+        )}
+        <Switch
+          label={`Email digest${channels && !channels.email ? ' (not configured on the server)' : ''}`}
+          checked={Boolean(prefs.email_digest)}
+          onCheckedChange={v => save({ email_digest: v })}
+          disabled={busy}
+        />
+        <Switch
+          label={`SMS / WhatsApp digest${channels && !channels.sms ? ' (not configured on the server)' : ''}`}
+          checked={Boolean(prefs.sms_digest)}
+          onCheckedChange={v => save({ sms_digest: v })}
+          disabled={busy}
+        />
+        <div className={s.row} style={{ alignItems: 'flex-end' }}>
+          <FormField label="Mobile number" htmlFor="st-phone" hint="International format, e.g. +919876543210">
+            <Input
+              id="st-phone"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              placeholder="+91…"
+              inputMode="tel"
+            />
+          </FormField>
+          <Button onClick={() => save({ phone: phone.trim() || null })} disabled={busy}>
+            Save number
+          </Button>
+          <Button variant="ghost" onClick={sendNow} loading={busy}>
+            Send me one now
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function LanguageSettings() {
+  const [lang, t] = useLanguage();
+  return (
+    <Card>
+      <CardHeader
+        title={t('Language')}
+        subtitle="Menus and page titles. The AI assistant answers in the language you write in."
+      />
+      <Select
+        aria-label="Interface language"
+        value={lang}
+        onChange={e => setLanguage(e.target.value as Lang)}
+        options={LANGUAGES.map(l => ({ value: l.code, label: l.label }))}
+      />
+    </Card>
   );
 }

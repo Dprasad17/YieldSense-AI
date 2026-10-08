@@ -1,0 +1,41 @@
+# Retrain the yield model on fresh FAOSTAT + CRU data, then run the validation gate.
+# The new model is uploaded as an artifact for review; it is not committed or deployed automatically.
+name: Retrain model
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 1 */3 *" # quarterly, 03:00 UTC on the 1st
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install training dependencies
+        run: pip install -r requirements.txt -r requirements-train.txt
+      - name: Rebuild the dataset (FAOSTAT yields and pesticides, CRU TS weather)
+        run: python scripts/build_dataset_v3.py
+      - name: Train
+        env:
+          TF_CPP_MIN_LOG_LEVEL: "3"
+        run: python scripts/train_models_v2.py
+      - name: Validation gate
+        run: python scripts/validate_model.py --json validation.json
+      - name: Upload model, card, registry and validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retrained-model
+          path: |
+            models/v2/model.pkl
+            models/v2/model_card.json
+            models/registry.json
+            datasets/processed/cleaned_crop_yield.csv
+            datasets/processed/producer_prices.json
+            validation.json

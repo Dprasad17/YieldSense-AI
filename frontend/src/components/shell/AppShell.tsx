@@ -51,6 +51,7 @@ import {
 } from '../ui';
 import { LoadingState, OfflineDemoBanner } from '../ui/States';
 import { Banner } from '../ui';
+import { useLanguage } from '../../lib/i18n';
 import s from './shell.module.css';
 
 const COLLAPSE_KEY = 'yieldsense_sidebar_collapsed';
@@ -67,6 +68,7 @@ function readCollapsed(): boolean {
 
 function SidebarNav({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
   const can = useCan();
+  const [, t] = useLanguage();
   const [params] = useSearchParams();
   const search = filtersSearch(params);
   return (
@@ -76,18 +78,18 @@ function SidebarNav({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate
         if (!items.length) return null;
         return (
           <div key={group.label} className={s.group}>
-            <div className={s.groupLabel}>{group.label}</div>
+            <div className={s.groupLabel}>{t(group.label)}</div>
             {items.map(item => (
               <NavLink
                 key={item.path}
                 to={{ pathname: `/app/${item.path}`, search }}
                 className={({ isActive }) => clsx(s.navItem, isActive && s.active)}
-                title={collapsed ? item.label : undefined}
+                title={collapsed ? t(item.label) : undefined}
                 onClick={onNavigate}
                 data-tour={item.path === 'predict' ? 'predict' : undefined}
               >
                 <item.icon size={18} aria-hidden="true" />
-                <span className={s.navLabel}>{item.label}</span>
+                <span className={s.navLabel}>{t(item.label)}</span>
               </NavLink>
             ))}
           </div>
@@ -99,6 +101,7 @@ function SidebarNav({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate
 
 function FooterNav({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
   const can = useCan();
+  const [, t] = useLanguage();
   return (
     <>
       {FOOTER_ITEMS.filter(i => can(i.permission)).map(item => (
@@ -106,11 +109,11 @@ function FooterNav({ collapsed, onNavigate }: { collapsed?: boolean; onNavigate?
           key={item.path}
           to={`/app/${item.path}`}
           className={({ isActive }) => clsx(s.navItem, isActive && s.active)}
-          title={collapsed ? item.label : undefined}
+          title={collapsed ? t(item.label) : undefined}
           onClick={onNavigate}
         >
           <item.icon size={18} aria-hidden="true" />
-          <span className={s.navLabel}>{item.label}</span>
+          <span className={s.navLabel}>{t(item.label)}</span>
         </NavLink>
       ))}
     </>

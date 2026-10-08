@@ -3,8 +3,8 @@ Model validation gate (Milestone 4). Fails (exit code 1) when the served model d
 
 Checks, all on data the check itself controls:
   1. Integrity: the bundle loads, its features match the model card, no excluded column is used.
-  2. Out-of-time accuracy: a clone of the served pipeline is refitted on 1990-2008 and scored on 2009-2013.
-  3. Interval: P10-P90 residuals calibrated on 2009-2010 must cover enough of 2011-2013.
+  2. Out-of-time accuracy: a clone of the served pipeline is refitted on 1990-2017 and scored on 2018-2023.
+  3. Interval: P10-P90 residuals calibrated on 2018-2019 must cover enough of 2020-2023.
   4. Sanity: predictions are finite and non-negative for every crop; same input gives the same output.
   5. Latency: single-row predictions of the served bundle (p95).
 
@@ -17,7 +17,9 @@ import os
 import sys
 import time
 
-import joblib
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+import joblib  # noqa: E402
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
@@ -28,15 +30,16 @@ MODEL = os.path.join(ROOT, "models", "v2", "model.pkl")
 CARD = os.path.join(ROOT, "models", "v2", "model_card.json")
 DATA = os.path.join(ROOT, "datasets", "processed", "cleaned_crop_yield.csv")
 TARGET = "yield_kg_per_hectare"
-CUTOFF = 2008
+CUTOFF = 2017
+CALIBRATION_END = 2019
 
 # Acceptance thresholds. Set a little below the trained results so ordinary retraining noise passes,
 # while a real regression (leakage removed badly, wrong features, broken pipeline) fails.
 THRESHOLDS = {
-    "temporal_r2_min": 0.94,
-    "temporal_rmse_max": 2300.0,
-    "temporal_mae_max": 1300.0,
-    "interval_coverage_min": 0.70,
+    "temporal_r2_min": 0.92,
+    "temporal_rmse_max": 2900.0,
+    "temporal_mae_max": 1000.0,
+    "interval_coverage_min": 0.75,
     "latency_p95_ms_max": 50.0,
 }
 FORBIDDEN_FEATURES = {"NDVI_index", "total_days", "soil_pH", "soil_moisture_%", "humidity_%", "sunlight_hours",
@@ -44,9 +47,11 @@ FORBIDDEN_FEATURES = {"NDVI_index", "total_days", "soil_pH", "soil_moisture_%", 
 
 
 def load_data() -> pd.DataFrame:
+    from backend.app.services.history_features import add_lag_features
+
     df = pd.read_csv(DATA)
     df["year"] = pd.to_datetime(df["sowing_date"]).dt.year
-    return df
+    return add_lag_features(df)
 
 
 def main() -> int:
@@ -84,9 +89,9 @@ def main() -> int:
     check("temporal RMSE", rmse <= THRESHOLDS["temporal_rmse_max"], f"{rmse:,.1f} kg/ha (max {THRESHOLDS['temporal_rmse_max']:,.0f})")
     check("temporal MAE", mae <= THRESHOLDS["temporal_mae_max"], f"{mae:,.1f} kg/ha (max {THRESHOLDS['temporal_mae_max']:,.0f})")
 
-    # 3. interval: calibrate on 2009-2010, evaluate on 2011-2013
+    # 3. interval: calibrate on 2018-2019, evaluate on 2020-2023
     years = test["year"].to_numpy()
-    cal, ev = years <= 2010, years > 2010
+    cal, ev = years <= CALIBRATION_END, years > CALIBRATION_END
     res = fwd(yt[cal]) - pipe.predict(test[feats][cal])
     q10, q90 = np.quantile(res, [0.10, 0.90])
     p_ev = pipe.predict(test[feats][ev])

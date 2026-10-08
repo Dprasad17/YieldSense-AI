@@ -31,6 +31,9 @@ def ensure_indexes() -> None:
     d.soilgrids_cache.create_index("key", unique=True)
     d.soilgrids_cache.create_index("expires_at", expireAfterSeconds=0)
     d.llm_cache.create_index("created_at", expireAfterSeconds=30 * 24 * 3600)
+    d.satellite_cache.create_index("key", unique=True)
+    d.satellite_cache.create_index("expires_at", expireAfterSeconds=0)
+    d.assistant_chats.create_index([("user", ASCENDING), ("created_at", DESCENDING)])
 
 
 def ping() -> bool:
