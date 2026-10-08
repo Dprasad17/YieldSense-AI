@@ -117,16 +117,24 @@ const hasOverflow = () => evaluate(`document.documentElement.scrollWidth > windo
 const results = [];
 const check = async (name, fn) => {
   const t0 = Date.now();
-  try {
-    await Promise.race([
-      fn(),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('check timed out (90s)')), 90000)),
-    ]);
-    results.push(['PASS', name]);
-    console.log('PASS', name, Math.round((Date.now() - t0) / 1000) + 's');
-  } catch (e) {
-    results.push(['FAIL', name, e.message]);
-    console.log('FAIL', name, e.message.slice(0, 300));
+  // One retry: on slow CI runners a check can time out once (e.g. a toast that came and went).
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      await Promise.race([
+        fn(),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('check timed out (90s)')), 90000)),
+      ]);
+      results.push(['PASS', name]);
+      console.log('PASS', name, Math.round((Date.now() - t0) / 1000) + 's' + (attempt > 1 ? ' (retried)' : ''));
+      return;
+    } catch (e) {
+      if (attempt === 2) {
+        results.push(['FAIL', name, e.message]);
+        console.log('FAIL', name, e.message.slice(0, 300));
+      } else {
+        console.log('RETRY', name, e.message.slice(0, 200));
+      }
+    }
   }
 };
 

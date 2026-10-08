@@ -121,7 +121,8 @@ jobs:
     name: Full-stack browser test (Docker Compose)
     runs-on: ubuntu-latest
     needs: [docker]
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    # Runs in the project repository only; copies used just for hosting (e.g. the Render repo) skip it.
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.repository_owner == 'springboardmentor12233a-tech'
     env:
       POSTGRES_PASSWORD: ci-password
       SECRET_KEY: ci-only-secret-key-that-is-long-enough-1234567890
