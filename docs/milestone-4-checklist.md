@@ -24,7 +24,7 @@ Legend: ✅ Done and verified · 🟡 Implemented, waiting for a run in the targ
 | Containers run as non-root, health-checked, restart automatically | ✅ | API runs as uid 10001; healthchecks on all four services, all reported healthy; `restart: unless-stopped` |
 | Databases not exposed outside Docker | ✅ | `docker compose ps`: only `web` publishes a port (80); PostgreSQL, MongoDB and the API are internal |
 | Demo accounts can be switched off | ✅ | `SEED_DEMO_DATA=false`; `scripts/create_admin.py` creates the first administrator (tested) |
-| Backups and restore | 🟡 | `deploy/backup.sh` (PostgreSQL + MongoDB, 14-day retention). The dump commands ran inside the local containers; the script itself runs on the Linux server, and a restore has not been rehearsed yet |
+| Backups and restore | ✅ | `deploy/backup.sh` (PostgreSQL + MongoDB, 14-day retention). Restore rehearsed in the local containers: dumps (816 KB and 152 KB) restored into scratch databases with identical counts for every table (28,242 crop records, users, farms, farm records, predictions) and every MongoDB collection |
 | HTTPS | ⏳ | Caddy with automatic certificates (`--profile tls`); needs a domain |
 | Rollback | 🟡 | Images tagged per commit; re-deploy an earlier tag |
 
