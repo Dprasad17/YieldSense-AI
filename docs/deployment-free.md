@@ -1,110 +1,119 @@
-# Free cloud deployment (Hugging Face Spaces + Neon + MongoDB Atlas)
+# Free cloud deployment (Render + Neon + MongoDB Atlas)
 
 This deploys YieldSense AI to the internet at no cost and without a credit card, using three free services:
 
 | Part | Service | What runs there |
 | --- | --- | --- |
-| App (web + API in one container) | **Hugging Face Spaces**, Docker, free CPU tier | Nginx serves the React app and forwards `/api` to FastAPI |
+| App (web + API in one container) | **Render**, free web service (Docker) | Nginx serves the React app and forwards `/api` to FastAPI |
 | PostgreSQL | **Neon**, free plan | Users, farms, crop records, predictions, tasks, audit |
 | MongoDB | **MongoDB Atlas**, free M0 cluster | Uploads, soil tests, caches |
 
-Free tiers change; check each provider's current limits when you sign up. At the time of writing the free Space has 2 vCPU and 16 GB RAM and **goes to sleep after about 48 hours without visitors**: the first visit after that takes 1–2 minutes while it starts.
+Free tiers change; check each provider's current limits when you sign up. At the time of writing a free Render web service has **512 MB of memory and 0.1 CPU**, and it **goes to sleep after 15 minutes without visitors**: the next visit takes about a minute while it wakes up.
 
-The same image was tested locally from an empty database: healthy after about 40 seconds, and the browser test passed (38/38 checks, 0 console errors).
+The image is `deploy/huggingface/Dockerfile` (it also runs on any Docker host). It was tested locally with a 512 MB memory limit and a quarter of a CPU against the real Neon and Atlas databases. Results:
+
+- first start, including seeding the empty cloud databases: about 3 minutes;
+- memory in use: about 235 MB;
+- browser test: all checks passed, 0 console errors.
+
+> Hugging Face Spaces was the first choice, but Docker Spaces now need a paid PRO plan, so the deployment moved to Render. `deploy/huggingface/deploy_space.py` still works for a PRO account.
 
 ---
 
 ## Step 1 — PostgreSQL on Neon (5 minutes)
 
 1. Go to **https://neon.tech** → **Sign up** (GitHub or Google sign-in is fastest).
-2. Create a project: name `yieldsense`, PostgreSQL version 16 or later, region closest to you (e.g. *AWS Asia Pacific (Singapore)* or *Mumbai* if listed).
-3. On the project dashboard click **Connect**. Copy the **connection string**; it looks like
-   `postgresql://neondb_owner:xxxx@ep-xxxx.ap-southeast-1.aws.neon.tech/neondb?sslmode=require`
-4. Keep it for Step 4. You don't need to create tables; the app does that on first start.
+2. Create a project: name `yieldsense`, PostgreSQL 16 or later, region **AWS US East 2 (Ohio)**, which matches Render's Ohio region.
+3. On the project dashboard click **Connect**. Turn **Connection pooling off** and copy the **connection string**. The host must not contain `-pooler`. It looks like
+   `postgresql://neondb_owner:xxxx@ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
+4. You don't need to create tables; the app creates them on first start.
 
 ## Step 2 — MongoDB on Atlas (7 minutes)
 
 1. Go to **https://www.mongodb.com/cloud/atlas/register** → sign up.
-2. Create a cluster → choose **M0 (Free)**, any provider, a nearby region → **Create**.
-3. **Security quickstart:**
-   - *Database user:* username `yieldsense`, click **Autogenerate secure password**, **copy the password**, then **Create user**.
-   - *Network access:* add **`0.0.0.0/0`** (allow access from anywhere). Hugging Face doesn't have fixed IP addresses, so this is required; the database is still protected by the user and password.
-4. **Connect** → **Drivers** → copy the connection string, e.g.
-   `mongodb+srv://yieldsense:<db_password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
-5. Replace `<db_password>` with the password you copied. If the password contains `@ : / ? #`, autogenerate a new one without symbols.
+2. Create a cluster → **M0 (Free)**, AWS, a US East region → **Create**.
+3. **Database user:**
+   - Create a user, click **Autogenerate secure password** and copy the password.
+   - Use a password made only of letters and digits.
+4. **Network Access:** add **`0.0.0.0/0`** (allow access from anywhere). Render's free services have no fixed IP address; the database is still protected by the username and password.
+5. **Connect** → **Drivers**. Copy the string and replace `<db_password>` with the password, e.g.
+   `mongodb+srv://user:password@cluster0.xxxxx.mongodb.net/?appName=Cluster0`
 
-## Step 3 — Hugging Face account and token (3 minutes)
+## Step 3 — Put the code on GitHub
 
-1. Go to **https://huggingface.co/join** → sign up and confirm your email.
-2. Profile picture → **Settings** → **Access Tokens** → **Create new token** → type **Write** → name `yieldsense-deploy` → **Create** → copy the token (starts with `hf_`).
-3. Note your username (shown in the top-right menu).
-
-## Step 4 — Fill in the deployment settings (2 minutes)
-
-In PowerShell, in the project folder:
+Render builds from a GitHub repository. Push the branch that contains `render.yaml`:
 
 ```powershell
-cd "C:\INFOSYS 7.0"
-copy deploy\huggingface\space.env.example deploy\huggingface\space.env
-notepad deploy\huggingface\space.env
+git push origin DURGA-PRASAD-A
 ```
 
-Fill in:
+If Render can't see the organisation repository, there are two ways round it:
 
-```
-HF_TOKEN=hf_...                       # from Step 3
-HF_SPACE=<your-hf-username>/yieldsense-ai
-DATABASE_URL=postgresql://...         # from Step 1 (paste as-is)
-MONGO_URL=mongodb+srv://...           # from Step 2, with the password filled in
-```
+- ask an organisation owner to approve Render under GitHub → *Settings* → *Applications*; or
+- fork the repository to your own GitHub account and deploy the fork.
 
-Leave `SECRET_KEY` empty (a random one is generated). `space.env` is gitignored, so it never goes into the repository.
+## Step 4 — Create the service on Render (5 minutes, then about 10 minutes of building)
 
-## Step 5 — Deploy (1 command, then about 10 minutes of building)
+1. Go to **https://render.com** → **Get Started** → sign up with **GitHub**. No card is needed for the free plan.
+2. **New +** → **Blueprint** → connect the repository and choose the branch `DURGA-PRASAD-A`. Render reads `render.yaml` and shows one service, `yieldsense-ai` (free, Docker).
+3. Render asks for the values that are not stored in Git:
+   - `DATABASE_URL`: the Neon string from Step 1.
+   - `MONGO_URL`: the Atlas string from Step 2.
+   - `GROQ_API_KEY`: optional (AI text); leave it empty to skip.
 
-```powershell
-pip install huggingface_hub
-python deploy/huggingface/deploy_space.py
-```
+   `SECRET_KEY` is generated by Render.
+4. **Apply**. Open the service → **Logs**. You will see:
+   1. the image build;
+   2. `[start] web server listening on port 10000`;
+   3. migrations;
+   4. `crop_records: inserted 28,242 reference rows`, demo users and farms;
+   5. `Application startup complete`.
 
-The script:
+Without the Blueprint, use **New +** → **Web Service** instead:
 
-1. builds a bundle of only the files the image needs (no `.env` files, tests or raw data);
-2. creates the Space;
-3. stores `DATABASE_URL`, `MONGO_URL` and `SECRET_KEY` as **Space secrets**, so they are not visible in the Space's files;
-4. uploads the bundle and prints the app URL.
+- choose the repository; *Language* **Docker**;
+- *Dockerfile Path* `./deploy/huggingface/Dockerfile`, *Docker build context* `.`;
+- *Instance type* **Free**; *Health Check Path* `/api/health`;
+- add the same environment variables, plus `SECRET_KEY` set to a long random string.
 
-Open the printed Space page (`https://huggingface.co/spaces/<user>/yieldsense-ai`). The status goes **Building** → **Running** in about 10 minutes. The **Logs** tab shows the build and then the start-up: migrations, `crop_records: inserted 28,242 reference rows`, demo users and farms, then `listening on port 7860`.
+## Step 5 — Check it
 
-## Step 6 — Check it
-
-- App: **`https://<user>-yieldsense-ai.hf.space`** (the script prints the exact address)
-- Health: add `/api/health` to that address; it should show `"status": "healthy"` with `database`, `mongo` and `model_loaded` all `true`.
+- App: **`https://yieldsense-ai.onrender.com`** (Render shows the exact address at the top of the service page; it may have a suffix).
+- Health: add `/api/health` to that address. It should show `"status": "healthy"` with `database`, `mongo` and `model_loaded` all `true`.
 - Sign in with `farmer / farmer123` and follow `docs/demo-script.md`.
 
-Optional, from the project folder, using the address the script printed:
+Optional, from the project folder:
 
 ```powershell
-python scripts/load_test.py --base https://<user>-yieldsense-ai.hf.space --users 5 --seconds 30
+python scripts/load_test.py --base https://yieldsense-ai.onrender.com --users 5 --seconds 30
 ```
 
 ## Updating after code changes
 
-Run `python deploy/huggingface/deploy_space.py` again. It uploads the new files and the Space rebuilds. The data in Neon and Atlas is kept; seeding only adds what is missing.
+Push to the branch, then click **Manual Deploy** → **Deploy latest commit** on Render. (`autoDeploy` is off in `render.yaml` so that every push doesn't use build minutes; set it to `true` to deploy on every push.) The data in Neon and Atlas is kept; seeding only adds what is missing, so later starts take well under a minute.
 
 ## Troubleshooting
 
 | What you see | Fix |
 | --- | --- |
 | Logs: `databases not reachable` with a Mongo error | Atlas *Network Access* must include `0.0.0.0/0`, and the password in `MONGO_URL` must be the database user's password (not your Atlas login) |
-| Logs: `password authentication failed` (Postgres) | Copy the Neon connection string again; reset the role password in Neon if needed |
-| Space shows **Runtime error** | Open **Logs**; the last lines name the problem. Fix `space.env` and run the script again |
-| App takes 1–2 minutes to open | The Space was asleep after 48 h without visitors; it wakes on the first visit. Open it a few minutes before a demo |
+| Logs: `password authentication failed` (Postgres) | Copy the Neon string again; reset the role password in Neon if needed |
+| Logs: `prepared statement ... already exists` | Use Neon's direct host (no `-pooler` in the address) |
+| Deploy fails with *Ran out of memory* | Check that `WEB_CONCURRENCY` is `1` |
+| App takes about a minute to open | The service was asleep after 15 minutes without visitors. Open it a few minutes before a demo |
+| Pages are slow (1–2 s) | The free plan has 0.1 CPU. Keep Render, Neon and Atlas in the same region (US East) |
 | Soil panel shows an error for a new farm | SoilGrids is slow; demo farms are pre-cached during start-up |
-| `401` from the deploy script | The token needs **Write** access |
 
 ## What this is (and isn't) compared with the VM setup
 
-- It **is** a cloud deployment of the full platform with managed databases, HTTPS (Hugging Face provides it), secrets kept out of the code, and repeatable one-command deploys.
+- It **is** a cloud deployment of the full platform. It has:
+  - managed databases;
+  - HTTPS, which Render provides;
+  - secrets kept out of the code;
+  - repeatable deploys from Git.
 - It is **not** the AWS/Azure VM named in the specification. The VM route (`docs/deployment.md`) stays available if you later get cloud credits.
-- Free-tier limits: the Space sleeps when idle, Neon's free compute suspends when idle (adds about a second on the next query), and Atlas M0 has 512 MB of storage, far more than this app uses.
+- Free-tier limits:
+  - the service sleeps when idle;
+  - Render's free instance hours are capped at 750 a month, enough for one service running all month;
+  - Neon's free compute suspends when idle, adding about a second to the next query;
+  - Atlas M0 has 512 MB of storage, far more than this app uses.

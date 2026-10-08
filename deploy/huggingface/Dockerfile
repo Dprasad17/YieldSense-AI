@@ -1,7 +1,7 @@
-# YieldSense AI in one container for Hugging Face Spaces (free CPU tier).
-# Nginx serves the web app on port 7860 and forwards /api to the FastAPI app on 127.0.0.1:8000.
-# PostgreSQL and MongoDB are external free services (Neon, MongoDB Atlas) passed in as Space secrets.
-# Built by deploy/huggingface/deploy_space.py, which copies this file to the root of the Space.
+# YieldSense AI in one container (Render, Hugging Face Spaces or any Docker host).
+# Nginx serves the web app on $PORT (default 7860) and forwards /api to the FastAPI app on 127.0.0.1:8000.
+# PostgreSQL and MongoDB are external free services (Neon, MongoDB Atlas) passed in as environment secrets.
+# Build context is the repository root (Render: render.yaml; Hugging Face: deploy_space.py builds the bundle).
 
 FROM node:22-alpine AS web
 WORKDIR /web
@@ -30,8 +30,8 @@ COPY models/v2 ./models/v2
 COPY datasets/processed ./datasets/processed
 COPY eda_plots ./eda_plots
 COPY --from=web /web/dist /app/web
-COPY nginx.conf /app/nginx.conf
-COPY start.sh /app/start.sh
+COPY deploy/huggingface/nginx.conf /app/nginx.conf
+COPY deploy/huggingface/start.sh /app/start.sh
 COPY backend/docker-entrypoint.sh /app/docker-entrypoint.sh
 
 # Spaces run the container as uid 1000; give it the app folder and nginx's runtime paths.
@@ -49,4 +49,5 @@ ENV APP_ENV=production \
     MONGO_DB=yieldsense
 
 EXPOSE 7860
-CMD ["/app/docker-entrypoint.sh", "/app/start.sh"]
+# start.sh opens the web port first, then migrates/seeds and starts the API (see the script).
+CMD ["/app/start.sh"]

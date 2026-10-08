@@ -1,0 +1,30 @@
+# Render Blueprint: YieldSense AI as one free Docker web service (web app + API in one container).
+# PostgreSQL (Neon) and MongoDB (MongoDB Atlas) are external free services; their connection strings
+# are entered in the Render dashboard when the Blueprint is created (sync: false = never stored in Git).
+# Guide: docs/deployment-free.md
+services:
+  - type: web
+    name: yieldsense-ai
+    runtime: docker
+    plan: free
+    dockerfilePath: ./deploy/huggingface/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: false
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: MONGO_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GROQ_API_KEY
+        sync: false
+      - key: MONGO_DB
+        value: yieldsense
+      - key: SEED_DEMO_DATA
+        value: "true"
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-20b
+      - key: WEB_CONCURRENCY
+        value: "1"

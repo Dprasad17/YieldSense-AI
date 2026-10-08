@@ -23,8 +23,8 @@ BUILD = os.path.join(ROOT, ".space-build")
 # (source relative to the repo, destination in the Space)
 INCLUDE = [
     ("deploy/huggingface/Dockerfile", "Dockerfile"),
-    ("deploy/huggingface/nginx.conf", "nginx.conf"),
-    ("deploy/huggingface/start.sh", "start.sh"),
+    ("deploy/huggingface/nginx.conf", "deploy/huggingface/nginx.conf"),
+    ("deploy/huggingface/start.sh", "deploy/huggingface/start.sh"),
     ("deploy/huggingface/SPACE_README.md", "README.md"),
     ("requirements.txt", "requirements.txt"),
     ("backend", "backend"),
@@ -69,7 +69,7 @@ def build_bundle() -> None:
             os.makedirs(os.path.dirname(d), exist_ok=True)
             shutil.copy2(s, d)
     # Windows checkouts may have CRLF; the Linux image needs LF in shell scripts.
-    for name in ("start.sh", os.path.join("backend", "docker-entrypoint.sh")):
+    for name in (os.path.join("deploy", "huggingface", "start.sh"), os.path.join("backend", "docker-entrypoint.sh")):
         p = os.path.join(BUILD, name)
         with open(p, "rb") as f:
             data = f.read().replace(b"\r\n", b"\n")
