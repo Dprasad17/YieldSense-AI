@@ -1,0 +1,111 @@
+# YieldSense AI: full stack (PostgreSQL, MongoDB, API, web) on one host.
+#
+#   cp .env.docker.example .env.docker      # then edit the passwords and SECRET_KEY
+#   docker compose --env-file .env.docker up -d --build
+#   open http://localhost  (API docs: http://localhost/docs)
+#
+# With a domain and HTTPS (Caddy obtains the certificate automatically):
+#   docker compose --env-file .env.docker --profile tls up -d
+#
+# Production images from the registry instead of local builds:
+#   docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+name: yieldsense
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: yieldsense
+      POSTGRES_USER: yieldsense
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.docker}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yieldsense -d yieldsense"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: ${API_IMAGE:-yieldsense-api:local}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env.docker}
+      DATABASE_URL: postgresql+psycopg://yieldsense:${POSTGRES_PASSWORD}@postgres:5432/yieldsense
+      MONGO_URL: mongodb://mongo:27017
+      MONGO_DB: yieldsense
+      CORS_ORIGINS: ${PUBLIC_URL:-http://localhost}
+      SEED_ON_START: ${SEED_ON_START:-true}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-20b}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+    expose:
+      - "8000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  web:
+    build:
+      context: ./frontend
+    image: ${WEB_IMAGE:-yieldsense-web:local}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      # With --profile tls, set WEB_BIND=127.0.0.1 and WEB_PORT=8080 so Caddy owns ports 80/443.
+      - "${WEB_BIND:-0.0.0.0}:${WEB_PORT:-80}:80"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional HTTPS front door: `--profile tls`. Needs DOMAIN pointing at this host and ports 80/443 open.
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["tls"]
+    restart: unless-stopped
+    depends_on:
+      - web
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+
+volumes:
+  pgdata:
+  mongodata:
+  caddydata:
+  caddyconfig:

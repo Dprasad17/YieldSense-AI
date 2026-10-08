@@ -138,14 +138,20 @@ def main() -> None:
             record_seed_timing(seconds, loaded)
         except Exception as e:
             print(f"mongo: seed timing not recorded ({e})")
-    seed_users()
-    seed_farms(reset)
+    # Demo accounts have published passwords. Production sets SEED_DEMO_DATA=false and creates real users.
+    demo = os.getenv("SEED_DEMO_DATA", "true").lower() == "true"
+    if demo:
+        seed_users()
+        seed_farms(reset)
+    else:
+        print("demo users and farms: skipped (SEED_DEMO_DATA=false)")
     try:
         mongo.ensure_indexes()
         print("mongo: indexes ensured")
     except Exception as e:
         print(f"mongo: skipped ({e})")
-    seed_soil_cache()
+    if demo:
+        seed_soil_cache()
 
 
 SOIL_SNAPSHOT = os.path.join("datasets", "processed", "soilgrids_demo_farms.json")

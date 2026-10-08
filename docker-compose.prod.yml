@@ -1,0 +1,12 @@
+# Production override: run the images built by CI (GitHub Container Registry) instead of building on the server.
+#   docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.prod.yml pull
+#   docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.prod.yml up -d
+services:
+  api:
+    build: !reset null
+    image: ${API_IMAGE:?set API_IMAGE, e.g. ghcr.io/<owner>/yieldsense-api:latest}
+    pull_policy: always
+  web:
+    build: !reset null
+    image: ${WEB_IMAGE:?set WEB_IMAGE, e.g. ghcr.io/<owner>/yieldsense-web:latest}
+    pull_policy: always

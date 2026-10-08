@@ -70,3 +70,24 @@ def test_cors_uses_explicit_origins(client):
     assert "access-control-allow-credentials" not in res.headers
     evil = client.options("/api/public/stats", headers={"Origin": "http://evil.test", "Access-Control-Request-Method": "GET"})
     assert evil.headers.get("access-control-allow-origin") is None
+
+
+def test_create_admin_script_creates_and_promotes(client, monkeypatch):
+    import sys
+
+    sys.path.insert(0, "scripts")
+    import create_admin
+
+    monkeypatch.setenv("ADMIN_PASSWORD", "a-long-admin-password")
+    monkeypatch.setattr(sys, "argv", ["create_admin.py", "--username", "opsadmin", "--email", "ops@example.org", "--name", "Ops"])
+    assert create_admin.main() == 0
+    res = client.post("/api/auth/login", json={"username": "opsadmin", "password": "a-long-admin-password"})
+    assert res.status_code == 200 and res.json()["role"] == "Admin"
+
+    client.post("/api/auth/register", json={"username": "cli_promote", "email": "cli@example.org", "password": "secret12"})
+    monkeypatch.setattr(sys, "argv", ["create_admin.py", "--username", "cli_promote", "--email", "cli@example.org"])
+    assert create_admin.main() == 0  # promotes an existing user and resets the password
+    assert client.post("/api/auth/login", json={"username": "cli_promote", "password": "a-long-admin-password"}).json()["role"] == "Admin"
+
+    monkeypatch.setenv("ADMIN_PASSWORD", "short")
+    assert create_admin.main() == 2

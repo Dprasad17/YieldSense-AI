@@ -1,0 +1,111 @@
+# Continuous delivery: build the API and web images, push them to GitHub Container Registry,
+# then deploy them to a cloud VM (AWS EC2 or Azure VM) with Docker Compose over SSH.
+#
+# Runs on a manual trigger, or on pushes to the deployment branch once the repository variable
+# DEPLOY_ENABLED is set to "true". Needs the secrets and variables listed in docs/deployment.md.
+name: Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [DURGA-PRASAD-A]
+    paths-ignore: ["docs/**", "**/*.md"]
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  API_IMAGE: ghcr.io/${{ github.repository_owner }}/yieldsense-api
+  WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/yieldsense-web
+
+jobs:
+  images:
+    name: Build and push images
+    if: github.event_name == 'workflow_dispatch' || vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        run: echo "tag=sha-${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:${{ steps.tag.outputs.tag }}
+            ${{ env.API_IMAGE }}:latest
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+      - name: Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          tags: |
+            ${{ env.WEB_IMAGE }}:${{ steps.tag.outputs.tag }}
+            ${{ env.WEB_IMAGE }}:latest
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+  deploy:
+    name: Deploy to the VM
+    needs: images
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.PUBLIC_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy the Compose files to the server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "docker-compose.yml,docker-compose.prod.yml,deploy/Caddyfile,deploy/backup.sh"
+          target: "~/yieldsense"
+      - name: Pull the new images and restart
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          TAG: ${{ needs.images.outputs.tag }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMPOSE_PROFILES: ${{ vars.COMPOSE_PROFILES }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: TAG,GHCR_USER,GHCR_TOKEN,COMPOSE_PROFILES,API_IMAGE,WEB_IMAGE
+          script: |
+            set -euo pipefail
+            cd ~/yieldsense
+            test -f .env.docker || { echo "Create ~/yieldsense/.env.docker first (see docs/deployment.md)"; exit 1; }
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            export API_IMAGE="$API_IMAGE:$TAG" WEB_IMAGE="$WEB_IMAGE:$TAG"
+            docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.prod.yml pull api web
+            docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.prod.yml up -d --wait --wait-timeout 300
+            docker image prune -f
+            docker logout ghcr.io
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "${{ vars.PUBLIC_URL }}/api/health" | tee health.json | grep -q '"healthy"'; then exit 0; fi
+            sleep 10
+          done
+          echo "Health check failed"; cat health.json || true; exit 1

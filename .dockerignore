@@ -1,0 +1,22 @@
+# Build context for backend/Dockerfile (repository root). Keep secrets and bulky local files out.
+.git
+.venv
+.vscode
+.pytest_cache
+**/__pycache__
+**/*.pyc
+.env
+**/.env
+**/.env.*
+!**/.env.example
+frontend
+datasets/raw
+docs
+*.csv
+!datasets/processed/*.csv
+*.xlsx
+backend/tests
+backend/data
+backend/app/api/users_db.json
+models/*.pkl
+models/model_performance_metrics.json

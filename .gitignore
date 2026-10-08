@@ -20,3 +20,4 @@ backend/app/api/users_db.json
 
 # App database (legacy SQLite store)
 backend/data/
+.env.docker

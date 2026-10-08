@@ -4,16 +4,17 @@
 
 YieldSense AI helps farmers, agronomists and agricultural organisations estimate crop yields, understand weather, soil and risk, and act on data-driven recommendations. It combines a leakage-free machine-learning model, a rule-based recommendation and risk engine, real soil and weather data, and a role-aware web application.
 
-This repository covers **Milestones 1–3** of the project specification: project setup and data pipeline, yield prediction and agricultural analysis, and dashboards, reporting and recommendations. Milestone 4 (Docker, cloud deployment, CI/CD) is not part of this submission.
+This repository covers all four milestones of the project specification: project setup and data pipeline (1), yield prediction and agricultural analysis (2), dashboards, reporting and recommendations (3), and testing, containerisation, cloud deployment and CI/CD (4).
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
 | | |
 | --- | --- |
-| **Status** | Milestones 1–3 complete; see the [milestone checklist](docs/milestone-1-3-checklist.md) for what is done, what carries a caveat, and why |
+| **Status** | Milestones 1–3 complete ([checklist](docs/milestone-1-3-checklist.md)). Milestone 4 (Docker, cloud deployment, CI/CD, model validation) implemented; cloud deployment waits on account setup ([checklist](docs/milestone-4-checklist.md)) |
 | **Served model** | XGBoost v2.1.0 · R² 0.9528 · RMSE 2,065 kg/ha on unseen years (2009–2013) |
 | **Stack** | FastAPI · PostgreSQL · MongoDB · React 19 · TypeScript · Vite |
-| **Quality** | 129 backend tests · 41 frontend unit tests · 38 browser checks across all three roles · Lighthouse 99–100 |
+| **Quality** | 130 backend tests · 41 frontend unit tests · 38 browser checks across all three roles · model validation gate · Lighthouse 99–100 |
+| **Deployment** | Docker Compose stack, GitHub Actions CI/CD, AWS or Azure VM with optional HTTPS ([guide](docs/deployment.md)) |
 
 ---
 
@@ -26,15 +27,16 @@ This repository covers **Milestones 1–3** of the project specification: projec
 5. [Data and provenance](#data-and-provenance)
 6. [The yield model](#the-yield-model)
 7. [Getting started](#getting-started)
-8. [Configuration](#configuration)
-9. [API overview](#api-overview)
-10. [Testing and quality](#testing-and-quality)
-11. [Screenshots](#screenshots)
-12. [Project structure](#project-structure)
-13. [Documentation](#documentation)
-14. [Known limitations](#known-limitations)
-15. [Roadmap](#roadmap)
-16. [Author](#author)
+8. [Run with Docker and deploy](#run-with-docker-and-deploy)
+9. [Configuration](#configuration)
+10. [API overview](#api-overview)
+11. [Testing and quality](#testing-and-quality)
+12. [Screenshots](#screenshots)
+13. [Project structure](#project-structure)
+14. [Documentation](#documentation)
+15. [Known limitations](#known-limitations)
+16. [Roadmap](#roadmap)
+17. [Author](#author)
 
 ---
 
@@ -269,6 +271,37 @@ python scripts/train_models_v2.py       # writes models/v2/model.pkl and model_c
 
 ---
 
+## Run with Docker and deploy
+
+The whole stack (PostgreSQL, MongoDB, API and web) runs with Docker Compose. Nginx serves the web app and forwards `/api` to the API, so everything is on one address.
+
+```powershell
+copy .env.docker.example .env.docker      # set SECRET_KEY and POSTGRES_PASSWORD
+docker compose --env-file .env.docker up -d --build
+# open http://localhost   (API docs: http://localhost/docs)
+```
+
+The first start creates the schema and loads the data. For HTTPS with your own domain, add `--profile tls` (Caddy obtains the certificate automatically).
+
+**Cloud deployment.** The project deploys to one Ubuntu virtual machine on **AWS EC2** or **Azure**. `deploy/server-setup.sh` prepares the machine once. After that, the GitHub Actions *Deploy* workflow:
+
+1. builds both images and pushes them to GitHub Container Registry;
+2. copies the Compose files to the server and restarts the stack;
+3. checks `/api/health`.
+
+**CI.** Every push runs the backend tests, the model validation gate, the frontend checks and a Docker build. Pushes also start the full stack and run the browser test and a load test against it.
+
+Step-by-step instructions (VM creation on AWS and Azure, GitHub secrets, HTTPS, backups, rollback, troubleshooting) are in **[docs/deployment.md](docs/deployment.md)**.
+
+| Script | Purpose |
+| --- | --- |
+| `scripts/validate_model.py` | Model validation gate: out-of-time accuracy, interval coverage, feature integrity, latency; exit code 1 below the thresholds |
+| `scripts/load_test.py` | Concurrent load test with throughput and latency percentiles |
+| `scripts/create_admin.py` | Creates the first administrator when demo accounts are disabled (`SEED_DEMO_DATA=false`) |
+| `deploy/backup.sh` | PostgreSQL and MongoDB backups with 14-day retention |
+
+---
+
 ## Configuration
 
 Backend settings are read from `backend/.env` (see [`backend/.env.example`](backend/.env.example)); the repository-root `.env` is also read for the LLM keys. Neither file is committed.
@@ -318,7 +351,9 @@ The complete reference is the Swagger UI at `/docs`. A Postman collection is pro
 
 | Command | What it checks | Latest result |
 | --- | --- | --- |
-| `python -m pytest backend/tests -q` | API behaviour, access for every route and role, model and provenance, uploads, soil, LLM wording, observability | 129 passed |
+| `python -m pytest backend/tests -q` | API behaviour, access for every route and role, model and provenance, uploads, soil, LLM wording, observability, admin bootstrap | 130 passed |
+| `python scripts/validate_model.py` | Model validation gate (refit on 1990–2008, score 2009–2013) | Passed: R² 0.9545, RMSE 2,028 kg/ha, coverage 0.745, p95 16 ms |
+| `python scripts/load_test.py --base <url>` | 10 concurrent users for 20 s against the local API | 66 req/s, p95 249 ms, 0 errors |
 | `cd frontend; npx tsc -b --noEmit` | Type checking | Clean |
 | `npx oxlint src` · `npx prettier --check src` | Lint and formatting | Clean |
 | `npx vitest run` | Unit tests | 41 passed |
@@ -349,6 +384,7 @@ Notes:
 
 ```text
 backend/
+  Dockerfile        API image; docker-entrypoint.sh waits for the databases, migrates and seeds
   app/
     api/            Routers: auth, data, analytics, predictions, management (farms, soil),
                     uploads, domain (risk, weather, soil, notifications, admin), reports
@@ -358,6 +394,7 @@ backend/
   migrations/       Alembic migrations (schema, weather observations, query indexes)
   tests/            pytest suite and fixtures
 frontend/
+  Dockerfile        Web image; nginx.conf serves the app and proxies /api
   src/
     pages/          Public pages and application screens
     components/     UI kit, charts, application shell, farm map, soil panel
@@ -365,7 +402,10 @@ frontend/
     hooks/ store/   Data hooks, URL-based context filters, preferences
     styles/         Design tokens and global styles
   e2e/              Browser test and Lighthouse scripts
-scripts/            Preprocessing, EDA, seed, model training, legacy-data migration
+scripts/            Preprocessing, EDA, seed, model training and validation, load test, admin bootstrap
+deploy/             Server setup, Caddy (HTTPS) and backup scripts
+.github/workflows/  CI and Deploy pipelines
+docker-compose.yml  Full stack; docker-compose.prod.yml runs the registry images
 models/v2/          Served model bundle and model card
 datasets/           Raw and processed data, SoilGrids snapshot for the demo farms
 docs/               Specification, architecture, schema, checklist, Postman collection, screenshots
@@ -378,6 +418,8 @@ docs/               Specification, architecture, schema, checklist, Postman coll
 | Document | Contents |
 | --- | --- |
 | [Milestone 1–3 checklist](docs/milestone-1-3-checklist.md) | Every requirement with its status, evidence, measured metrics, limitations and deviations from the specification |
+| [Milestone 4 checklist](docs/milestone-4-checklist.md) | Testing, deployment and documentation status, and what has to be set up |
+| [Deployment guide](docs/deployment.md) | Docker, AWS/Azure VM, HTTPS, CI/CD, backups, rollback and troubleshooting |
 | [System architecture](docs/system_architecture.md) | Components, data flow and services |
 | [Database schema](docs/database-schema.md) | Entity-relationship diagram and MongoDB collections |
 | [UI layout](docs/ui_layout.md) | Application shell, screens and design system |
@@ -405,11 +447,13 @@ Deviations from the specification (CSS Modules instead of Tailwind, React with V
 
 ## Roadmap
 
-Milestone 4 of the specification is the next step:
+Done in Milestone 4: Docker images and Compose stack, GitHub Actions CI/CD, cloud deployment to an AWS or Azure VM, a model validation gate and a load test.
 
-- Containerise the API, the frontend and both databases with Docker and Docker Compose.
-- Deploy to a cloud platform (AWS or Azure) with managed PostgreSQL and MongoDB.
-- Add a CI pipeline that runs the checks above on every change.
+Next steps:
+
+- Run the first cloud deployment and record the production load-test results.
+- Move the databases to managed services (Amazon RDS / Azure Database for PostgreSQL, MongoDB Atlas) for automatic backups and failover.
+- Add error tracking and uptime monitoring with alerts.
 - Add harvested-area and production data, and field-level data, to move beyond national averages.
 
 ---
