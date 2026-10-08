@@ -27,7 +27,8 @@ COPY eda_plots ./eda_plots
 COPY backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 # Strip Windows line endings in case the file was checked out with CRLF.
-RUN sed -i 's/$//' /usr/local/bin/docker-entrypoint.sh \n    && chmod +x /usr/local/bin/docker-entrypoint.sh \
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
+    && chmod +x /usr/local/bin/docker-entrypoint.sh \
     && useradd --create-home --uid 10001 yieldsense \
     && chown -R yieldsense:yieldsense /app
 USER yieldsense
