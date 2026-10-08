@@ -60,12 +60,17 @@ docker compose --env-file .env.docker up -d --build
 
 Open http://localhost (API documentation: http://localhost/docs). The first start takes a minute or two: it creates the schema, loads the 28,242 reference rows and seeds the demo users and farms.
 
+Every `docker compose` command needs the settings file. Either pass `--env-file .env.docker` each time, or set it once per terminal:
+
 ```powershell
-docker compose --env-file .env.docker ps          # all services should be "healthy"
-docker compose --env-file .env.docker logs -f api # follow the API logs (one JSON line per request)
-docker compose --env-file .env.docker down        # stop (data stays in the volumes)
-docker compose --env-file .env.docker down -v     # stop and delete all data
+$env:COMPOSE_ENV_FILES = ".env.docker"   # PowerShell; bash: export COMPOSE_ENV_FILES=.env.docker
+docker compose ps                        # all services should be "healthy"
+docker compose logs -f api               # follow the API logs (one JSON line per request)
+docker compose down                      # stop (data stays in the volumes)
+docker compose down -v                   # stop and delete all data
 ```
+
+Without it, Compose stops with `required variable SECRET_KEY is missing a value`.
 
 If port 80 is taken on your machine, set `WEB_PORT=8080` in `.env.docker` and open http://localhost:8080.
 
@@ -213,7 +218,21 @@ python scripts/load_test.py --base http://<host> --users 20 --seconds 60
 | Single-row latency p95 | ≤ 50 ms | 16 ms |
 | Features match the card, no excluded columns | — | Pass |
 
-**Load test** (local API, 2 workers, 10 concurrent users, 20 s): 1,333 requests, 66 requests/s, p50 143 ms, p95 249 ms, p99 344 ms, 0 errors. Results on the cloud VM will differ with its size; run the same command against it and record the numbers.
+**Docker stack, measured locally (8 October 2026, Docker Desktop on a laptop, 8 CPUs, 7.6 GB for Docker):**
+
+| Check | Result |
+| --- | --- |
+| First start | Migrations, 28,242 reference rows in 6.9 s, demo data, SoilGrids cache; API healthy after about 2 minutes |
+| Browser test (`APP=http://127.0.0.1 node e2e/app.e2e.mjs`) | 38 of 38 checks, 0 console errors, all three roles |
+| Load test, 20 users for 60 s | 4,327 requests, 72 requests/s, p50 259 ms, p95 507 ms, p99 628 ms, 0 errors |
+| Lighthouse (`/`, `/login`, `/app/dashboard`) | Performance 99–100, accessibility, best practices and SEO 100 |
+| Image sizes | API 831 MB (CPU-only XGBoost), web 77 MB |
+| Training-only libraries in the API image | None (checked by importing the app) |
+| Admin bootstrap and backups | `create_admin.py` created an administrator who could sign in; `pg_dump` and `mongodump` ran inside the containers |
+
+Run the same commands against the cloud VM after deploying and record its numbers; they depend on the machine size.
+
+On Windows, use `127.0.0.1` rather than `localhost` for the Python load test: Python tries IPv6 first for `localhost` and adds about 2 seconds to every request, which measures the lookup, not the server.
 
 ---
 

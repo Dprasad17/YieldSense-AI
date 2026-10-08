@@ -1,7 +1,7 @@
 // Runs Lighthouse (desktop + mobile) on /, /login and /app/dashboard against the production build.
 // /app/dashboard is audited signed in: the token is put in localStorage first and storage reset is disabled.
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -11,6 +11,7 @@ const API = process.env.API ?? 'http://localhost:8765';
 const EDGE = process.env.BROWSER_PATH ?? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
 const PORT = 9340;
 const OUT = process.argv[2] ?? tmpdir();
+mkdirSync(OUT, { recursive: true });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const login = await (

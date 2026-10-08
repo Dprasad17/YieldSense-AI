@@ -13,7 +13,7 @@ This repository covers all four milestones of the project specification: project
 | **Status** | Milestones 1–3 complete ([checklist](docs/milestone-1-3-checklist.md)). Milestone 4 (Docker, cloud deployment, CI/CD, model validation) implemented; cloud deployment waits on account setup ([checklist](docs/milestone-4-checklist.md)) |
 | **Served model** | XGBoost v2.1.0 · R² 0.9528 · RMSE 2,065 kg/ha on unseen years (2009–2013) |
 | **Stack** | FastAPI · PostgreSQL · MongoDB · React 19 · TypeScript · Vite |
-| **Quality** | 130 backend tests · 41 frontend unit tests · 38 browser checks across all three roles · model validation gate · Lighthouse 99–100 |
+| **Quality** | 130 backend tests · 41 frontend unit tests · 38 browser checks across all three roles (also against the Docker stack) · model validation gate · Lighthouse 99–100 |
 | **Deployment** | Docker Compose stack, GitHub Actions CI/CD, AWS or Azure VM with optional HTTPS ([guide](docs/deployment.md)) |
 
 ---
@@ -281,7 +281,9 @@ docker compose --env-file .env.docker up -d --build
 # open http://localhost   (API docs: http://localhost/docs)
 ```
 
-The first start creates the schema and loads the data. For HTTPS with your own domain, add `--profile tls` (Caddy obtains the certificate automatically).
+The first start creates the schema and loads the data (about two minutes). To avoid repeating `--env-file`, set `$env:COMPOSE_ENV_FILES = ".env.docker"` in the terminal. For HTTPS with your own domain, add `--profile tls` (Caddy obtains the certificate automatically).
+
+Verified locally with Docker Desktop: all services healthy, the browser test passes (38/38), and 20 concurrent users get 72 requests/s with p95 507 ms and no errors.
 
 **Cloud deployment.** The project deploys to one Ubuntu virtual machine on **AWS EC2** or **Azure**. `deploy/server-setup.sh` prepares the machine once. After that, the GitHub Actions *Deploy* workflow:
 

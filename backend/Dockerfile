@@ -17,10 +17,13 @@ WORKDIR /app
 
 # Runtime dependencies only (no TensorFlow / LightGBM / plotting: those are in requirements-train.txt).
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+# xgboost-cpu is the same library without the CUDA/NCCL GPU runtime (about 350 MB the API never uses).
+RUN sed 's/^xgboost==/xgboost-cpu==/' requirements.txt > /tmp/requirements.txt \
+    && pip install -r /tmp/requirements.txt \
+    && rm /tmp/requirements.txt
 
 COPY backend ./backend
-COPY scripts/seed.py ./scripts/seed.py
+COPY scripts/seed.py scripts/create_admin.py ./scripts/
 COPY models/v2 ./models/v2
 COPY datasets/processed ./datasets/processed
 COPY eda_plots ./eda_plots
@@ -39,4 +42,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
     CMD curl -fsS http://127.0.0.1:8000/api/health || exit 1
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--proxy-headers", "--forwarded-allow-ips", "*"]
+# Worker processes come from WEB_CONCURRENCY (uvicorn reads it). Each worker keeps its own in-memory
+# request metrics and sign-in rate limit, so the admin metrics show the worker that answered.
+ENV WEB_CONCURRENCY=2
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
