@@ -29,6 +29,7 @@ graph TB
 
     subgraph External
         OpenMeteo["Open-Meteo API<br/>Live weather + ERA5 archive"]
+        MET["MET Norway<br/>Forecast fallback"]
         SoilGrids["ISRIC SoilGrids 2.0<br/>Real soil properties"]
         Groq["Groq Cloud<br/>LLM rationale"]
     end
@@ -51,6 +52,7 @@ graph TB
     Soil --> SoilGrids
     Soil --> Mongo
     Predict --> OpenMeteo
+    Predict --> MET
 ```
 
 ## Tech Stack
@@ -63,7 +65,8 @@ graph TB
 | Document DB | MongoDB (PyMongo) |
 | ML Model | XGBoost 3.4 (scikit-learn pipeline, trained on FAOSTAT data) |
 | Auth | JWT (PyJWT + bcrypt), role-based: Farmer / Agronomist / Admin |
-| External APIs | Open-Meteo (weather), ISRIC SoilGrids (soil), Groq (LLM) |
+| External APIs | Open-Meteo (weather; MET Norway fallback when rate-limited), ISRIC SoilGrids (soil), Groq (LLM) |
+| Deployment | Docker (API, Nginx web, PostgreSQL, MongoDB) via Compose; live single-container service on Render with Neon PostgreSQL and MongoDB Atlas; GitHub Actions CI |
 
 ## Database Design
 
