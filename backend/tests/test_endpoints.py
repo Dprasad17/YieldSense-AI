@@ -144,8 +144,37 @@ def test_live_weather_uses_sunshine_duration(client, auth, monkeypatch):
         raise OSError("offline")
 
     monkeypatch.setattr(ws, "_http_get_json", down)
+    monkeypatch.setattr(ws, "_met_norway_forecast", lambda lat, lon: down(""))
     res = client.get("/api/weather/analysis?region=India&live=true", headers=auth("farmer"))
     assert res.status_code == 502 and res.json()["error"]["code"] == "live_weather_unavailable"
+
+
+def test_live_weather_falls_back_to_met_norway(client, auth, monkeypatch):
+    """Open-Meteo answers 429 from shared cloud IPs; the forecast then comes from MET Norway."""
+    series = []
+    for h in range(0, 9 * 24, 6):  # 9 days of 6-hourly entries from 00:00 UTC
+        t = f"2026-10-{1 + h // 24:02d}T{h % 24:02d}:00:00Z"
+        series.append({
+            "time": t,
+            "data": {
+                "instant": {"details": {"air_temperature": 20.0 + (h % 24) / 2, "relative_humidity": 60.0, "wind_speed": 5.0, "cloud_area_fraction": 50.0}},
+                "next_6_hours": {"details": {"precipitation_amount": 1.5}},
+            },
+        })
+    payload = {"properties": {"timeseries": series}}
+    monkeypatch.setattr(ws, "_fetch_json", lambda url, ua="": payload)
+
+    def limited(url: str) -> dict:
+        raise OSError("HTTP Error 429: Too Many Requests")
+
+    monkeypatch.setattr(ws, "_http_get_json", limited)
+    monkeypatch.setattr(ws, "mongo_cached", lambda url, fetch: fetch())
+    body = client.get("/api/weather/analysis?region=Germany&live=true", headers=auth("farmer")).json()
+    assert body["data_source"] == "MET Norway" and len(body["forecast"]) == 7
+    day = body["forecast"][0]
+    assert day["temp_max_C"] == 29.0 and day["temp_min_C"] == 20.0 and day["precipitation_mm"] == 6.0
+    assert 0 < day["sunshine_hours"] < 12
+    assert body["current"]["wind_speed_kmh"] == 18.0
 
 
 def test_admin_user_management_and_audit(client, auth):

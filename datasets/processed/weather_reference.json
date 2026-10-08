@@ -1,0 +1,3227 @@
+{
+ "generated": "2026-10-09",
+ "coordinates": {
+  "albania": {
+   "lat": 41.0,
+   "lon": 20.0,
+   "name": "Albania (country centroid)"
+  },
+  "algeria": {
+   "lat": 28.0,
+   "lon": 3.0,
+   "name": "Algeria (country centroid)"
+  },
+  "angola": {
+   "lat": -12.5,
+   "lon": 18.5,
+   "name": "Angola (country centroid)"
+  },
+  "argentina": {
+   "lat": -34.0,
+   "lon": -64.0,
+   "name": "Argentina (country centroid)"
+  },
+  "armenia": {
+   "lat": 40.25,
+   "lon": 45.0,
+   "name": "Armenia (country centroid)"
+  },
+  "austria": {
+   "lat": 47.33333,
+   "lon": 13.33333,
+   "name": "Austria (country centroid)"
+  },
+  "azerbaijan": {
+   "lat": 40.5,
+   "lon": 47.5,
+   "name": "Azerbaijan (country centroid)"
+  },
+  "bahamas": {
+   "lat": 25.04082,
+   "lon": -77.37122,
+   "name": "Bahamas (country centroid)"
+  },
+  "bahrain": {
+   "lat": 26.03333,
+   "lon": 50.55,
+   "name": "Bahrain (country centroid)"
+  },
+  "bangladesh": {
+   "lat": 24.0,
+   "lon": 90.0,
+   "name": "Bangladesh (country centroid)"
+  },
+  "belarus": {
+   "lat": 53.0,
+   "lon": 28.0,
+   "name": "Belarus (country centroid)"
+  },
+  "belgium": {
+   "lat": 50.75,
+   "lon": 4.5,
+   "name": "Belgium (country centroid)"
+  },
+  "botswana": {
+   "lat": -22.0,
+   "lon": 24.0,
+   "name": "Botswana (country centroid)"
+  },
+  "bulgaria": {
+   "lat": 42.66667,
+   "lon": 25.25,
+   "name": "Bulgaria (country centroid)"
+  },
+  "burkina faso": {
+   "lat": 12.5,
+   "lon": -1.66667,
+   "name": "Burkina Faso (country centroid)"
+  },
+  "burundi": {
+   "lat": -3.35,
+   "lon": 29.88333,
+   "name": "Burundi (country centroid)"
+  },
+  "cameroon": {
+   "lat": 6.0,
+   "lon": 12.5,
+   "name": "Cameroon (country centroid)"
+  },
+  "central african republic": {
+   "lat": 7.0,
+   "lon": 21.0,
+   "name": "Central African Republic (country centroid)"
+  },
+  "chile": {
+   "lat": -30.0,
+   "lon": -71.0,
+   "name": "Chile (country centroid)"
+  },
+  "colombia": {
+   "lat": 4.0,
+   "lon": -73.25,
+   "name": "Colombia (country centroid)"
+  },
+  "croatia": {
+   "lat": 45.16667,
+   "lon": 15.5,
+   "name": "Croatia (country centroid)"
+  },
+  "denmark": {
+   "lat": 56.0,
+   "lon": 10.0,
+   "name": "Denmark (country centroid)"
+  },
+  "dominican republic": {
+   "lat": 19.0,
+   "lon": -70.66667,
+   "name": "Dominican Republic (country centroid)"
+  },
+  "ecuador": {
+   "lat": -1.25,
+   "lon": -78.25,
+   "name": "Ecuador (country centroid)"
+  },
+  "el salvador": {
+   "lat": 13.83333,
+   "lon": -88.91667,
+   "name": "El Salvador (country centroid)"
+  },
+  "eritrea": {
+   "lat": 15.0,
+   "lon": 39.0,
+   "name": "Eritrea (country centroid)"
+  },
+  "estonia": {
+   "lat": 59.0,
+   "lon": 26.0,
+   "name": "Estonia (country centroid)"
+  },
+  "finland": {
+   "lat": 64.0,
+   "lon": 26.0,
+   "name": "Finland (country centroid)"
+  },
+  "ghana": {
+   "lat": 8.1,
+   "lon": -1.2,
+   "name": "Ghana (country centroid)"
+  },
+  "greece": {
+   "lat": 39.0,
+   "lon": 22.0,
+   "name": "Greece (country centroid)"
+  },
+  "guatemala": {
+   "lat": 15.5,
+   "lon": -90.25,
+   "name": "Guatemala (country centroid)"
+  },
+  "guinea": {
+   "lat": 10.83333,
+   "lon": -10.66667,
+   "name": "Guinea (country centroid)"
+  },
+  "guyana": {
+   "lat": 5.0,
+   "lon": -59.0,
+   "name": "Guyana (country centroid)"
+  },
+  "haiti": {
+   "lat": 19.07582,
+   "lon": -72.29616,
+   "name": "Haiti (country centroid)"
+  },
+  "honduras": {
+   "lat": 15.0,
+   "lon": -86.5,
+   "name": "Honduras (country centroid)"
+  },
+  "hungary": {
+   "lat": 47.0,
+   "lon": 20.0,
+   "name": "Hungary (country centroid)"
+  },
+  "indonesia": {
+   "lat": -5.0,
+   "lon": 120.0,
+   "name": "Indonesia (country centroid)"
+  },
+  "iraq": {
+   "lat": 33.0,
+   "lon": 44.0,
+   "name": "Iraq (country centroid)"
+  },
+  "ireland": {
+   "lat": 53.0,
+   "lon": -8.0,
+   "name": "Ireland (country centroid)"
+  },
+  "italy": {
+   "lat": 42.83333,
+   "lon": 12.83333,
+   "name": "Italy (country centroid)"
+  },
+  "jamaica": {
+   "lat": 18.16667,
+   "lon": -77.25,
+   "name": "Jamaica (country centroid)"
+  },
+  "japan": {
+   "lat": 35.68536,
+   "lon": 139.7531,
+   "name": "Japan (country centroid)"
+  },
+  "kazakhstan": {
+   "lat": 48.0,
+   "lon": 68.0,
+   "name": "Kazakhstan (country centroid)"
+  },
+  "kenya": {
+   "lat": 1.0,
+   "lon": 38.0,
+   "name": "Kenya (country centroid)"
+  },
+  "latvia": {
+   "lat": 57.0,
+   "lon": 25.0,
+   "name": "Latvia (country centroid)"
+  },
+  "lebanon": {
+   "lat": 33.83333,
+   "lon": 35.83333,
+   "name": "Lebanon (country centroid)"
+  },
+  "lesotho": {
+   "lat": -29.5,
+   "lon": 28.25,
+   "name": "Lesotho (country centroid)"
+  },
+  "libya": {
+   "lat": 28.0,
+   "lon": 17.0,
+   "name": "Libya (country centroid)"
+  },
+  "lithuania": {
+   "lat": 55.41667,
+   "lon": 24.0,
+   "name": "Lithuania (country centroid)"
+  },
+  "madagascar": {
+   "lat": -20.0,
+   "lon": 47.0,
+   "name": "Madagascar (country centroid)"
+  },
+  "malawi": {
+   "lat": -13.5,
+   "lon": 34.0,
+   "name": "Malawi (country centroid)"
+  },
+  "malaysia": {
+   "lat": 2.5,
+   "lon": 112.5,
+   "name": "Malaysia (country centroid)"
+  },
+  "mali": {
+   "lat": 18.0,
+   "lon": -2.0,
+   "name": "Mali (country centroid)"
+  },
+  "mauritania": {
+   "lat": 20.25,
+   "lon": -10.5,
+   "name": "Mauritania (country centroid)"
+  },
+  "mauritius": {
+   "lat": -20.3,
+   "lon": 57.58333,
+   "name": "Mauritius (country centroid)"
+  },
+  "montenegro": {
+   "lat": 42.75,
+   "lon": 19.25,
+   "name": "Montenegro (country centroid)"
+  },
+  "morocco": {
+   "lat": 28.5,
+   "lon": -10.0,
+   "name": "Morocco (country centroid)"
+  },
+  "mozambique": {
+   "lat": -18.25,
+   "lon": 35.0,
+   "name": "Mozambique (country centroid)"
+  },
+  "namibia": {
+   "lat": -22.0,
+   "lon": 17.0,
+   "name": "Namibia (country centroid)"
+  },
+  "nepal": {
+   "lat": 28.0,
+   "lon": 84.0,
+   "name": "Nepal (country centroid)"
+  },
+  "new zealand": {
+   "lat": -42.0,
+   "lon": 174.0,
+   "name": "New Zealand (country centroid)"
+  },
+  "nicaragua": {
+   "lat": 13.0,
+   "lon": -85.0,
+   "name": "Nicaragua (country centroid)"
+  },
+  "niger": {
+   "lat": 18.0,
+   "lon": 9.0,
+   "name": "Niger (country centroid)"
+  },
+  "norway": {
+   "lat": 62.0,
+   "lon": 10.0,
+   "name": "Norway (country centroid)"
+  },
+  "papua new guinea": {
+   "lat": -6.0,
+   "lon": 147.0,
+   "name": "Papua New Guinea (country centroid)"
+  },
+  "peru": {
+   "lat": -10.0,
+   "lon": -75.25,
+   "name": "Peru (country centroid)"
+  },
+  "poland": {
+   "lat": 52.0,
+   "lon": 20.0,
+   "name": "Poland (country centroid)"
+  },
+  "portugal": {
+   "lat": 39.6945,
+   "lon": -8.13057,
+   "name": "Portugal (country centroid)"
+  },
+  "qatar": {
+   "lat": 25.5,
+   "lon": 51.25,
+   "name": "Qatar (country centroid)"
+  },
+  "romania": {
+   "lat": 46.0,
+   "lon": 25.0,
+   "name": "Romania (country centroid)"
+  },
+  "rwanda": {
+   "lat": -2.0,
+   "lon": 30.0,
+   "name": "Rwanda (country centroid)"
+  },
+  "saudi arabia": {
+   "lat": 25.0,
+   "lon": 45.0,
+   "name": "Saudi Arabia (country centroid)"
+  },
+  "senegal": {
+   "lat": 14.5,
+   "lon": -14.25,
+   "name": "Senegal (country centroid)"
+  },
+  "slovenia": {
+   "lat": 46.08333,
+   "lon": 15.0,
+   "name": "Slovenia (country centroid)"
+  },
+  "sri lanka": {
+   "lat": 7.75,
+   "lon": 80.75,
+   "name": "Sri Lanka (country centroid)"
+  },
+  "sudan": {
+   "lat": 16.0,
+   "lon": 30.0,
+   "name": "Sudan (country centroid)"
+  },
+  "suriname": {
+   "lat": 4.0,
+   "lon": -56.0,
+   "name": "Suriname (country centroid)"
+  },
+  "sweden": {
+   "lat": 62.0,
+   "lon": 15.0,
+   "name": "Sweden (country centroid)"
+  },
+  "switzerland": {
+   "lat": 47.00016,
+   "lon": 8.01427,
+   "name": "Switzerland (country centroid)"
+  },
+  "tajikistan": {
+   "lat": 39.0,
+   "lon": 71.0,
+   "name": "Tajikistan (country centroid)"
+  },
+  "thailand": {
+   "lat": 15.5,
+   "lon": 101.0,
+   "name": "Thailand (country centroid)"
+  },
+  "tunisia": {
+   "lat": 34.0,
+   "lon": 9.0,
+   "name": "Tunisia (country centroid)"
+  },
+  "uganda": {
+   "lat": 1.25,
+   "lon": 32.5,
+   "name": "Uganda (country centroid)"
+  },
+  "ukraine": {
+   "lat": 49.0,
+   "lon": 32.0,
+   "name": "Ukraine (country centroid)"
+  },
+  "united kingdom": {
+   "lat": 54.75844,
+   "lon": -2.69531,
+   "name": "United Kingdom (country centroid)"
+  },
+  "uruguay": {
+   "lat": -33.0,
+   "lon": -56.0,
+   "name": "Uruguay (country centroid)"
+  },
+  "zambia": {
+   "lat": -14.33333,
+   "lon": 28.5,
+   "name": "Zambia (country centroid)"
+  },
+  "zimbabwe": {
+   "lat": -19.0,
+   "lon": 29.75,
+   "name": "Zimbabwe (country centroid)"
+  },
+  "netherlands": {
+   "lat": 52.25,
+   "lon": 5.54,
+   "name": "Netherlands (country centroid)"
+  }
+ },
+ "climate": {
+  "India": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 24.52,
+     "precipitation_mm": 780.6
+    },
+    {
+     "year": 1991,
+     "temperature_C": 25.07,
+     "precipitation_mm": 445.6
+    },
+    {
+     "year": 1992,
+     "temperature_C": 24.76,
+     "precipitation_mm": 520.9
+    },
+    {
+     "year": 1993,
+     "temperature_C": 25.09,
+     "precipitation_mm": 466.1
+    },
+    {
+     "year": 1994,
+     "temperature_C": 24.84,
+     "precipitation_mm": 642.9
+    },
+    {
+     "year": 1995,
+     "temperature_C": 24.74,
+     "precipitation_mm": 797.1
+    },
+    {
+     "year": 1996,
+     "temperature_C": 23.96,
+     "precipitation_mm": 975.7
+    },
+    {
+     "year": 1997,
+     "temperature_C": 23.14,
+     "precipitation_mm": 865.7
+    },
+    {
+     "year": 1998,
+     "temperature_C": 24.25,
+     "precipitation_mm": 872.5
+    },
+    {
+     "year": 1999,
+     "temperature_C": 24.92,
+     "precipitation_mm": 686.7
+    },
+    {
+     "year": 2000,
+     "temperature_C": 24.45,
+     "precipitation_mm": 666.9
+    },
+    {
+     "year": 2001,
+     "temperature_C": 24.49,
+     "precipitation_mm": 598.6
+    },
+    {
+     "year": 2002,
+     "temperature_C": 25.46,
+     "precipitation_mm": 401.8
+    },
+    {
+     "year": 2003,
+     "temperature_C": 23.94,
+     "precipitation_mm": 908.0
+    },
+    {
+     "year": 2004,
+     "temperature_C": 25.06,
+     "precipitation_mm": 475.4
+    },
+    {
+     "year": 2005,
+     "temperature_C": 24.53,
+     "precipitation_mm": 719.2
+    },
+    {
+     "year": 2006,
+     "temperature_C": 25.51,
+     "precipitation_mm": 549.0
+    },
+    {
+     "year": 2007,
+     "temperature_C": 25.0,
+     "precipitation_mm": 649.3
+    },
+    {
+     "year": 2008,
+     "temperature_C": 24.55,
+     "precipitation_mm": 790.7
+    },
+    {
+     "year": 2009,
+     "temperature_C": 25.63,
+     "precipitation_mm": 427.0
+    },
+    {
+     "year": 2010,
+     "temperature_C": 25.46,
+     "precipitation_mm": 886.0
+    },
+    {
+     "year": 2011,
+     "temperature_C": 24.38,
+     "precipitation_mm": 656.6
+    },
+    {
+     "year": 2012,
+     "temperature_C": 24.33,
+     "precipitation_mm": 573.8
+    },
+    {
+     "year": 2013,
+     "temperature_C": 23.94,
+     "precipitation_mm": 753.1
+    },
+    {
+     "year": 2014,
+     "temperature_C": 24.55,
+     "precipitation_mm": 493.6
+    },
+    {
+     "year": 2015,
+     "temperature_C": 24.38,
+     "precipitation_mm": 814.9
+    },
+    {
+     "year": 2016,
+     "temperature_C": 25.18,
+     "precipitation_mm": 794.4
+    },
+    {
+     "year": 2017,
+     "temperature_C": 24.82,
+     "precipitation_mm": 584.1
+    },
+    {
+     "year": 2018,
+     "temperature_C": 24.52,
+     "precipitation_mm": 706.3
+    },
+    {
+     "year": 2019,
+     "temperature_C": 24.3,
+     "precipitation_mm": 625.3
+    },
+    {
+     "year": 2020,
+     "temperature_C": 24.01,
+     "precipitation_mm": 585.3
+    },
+    {
+     "year": 2021,
+     "temperature_C": 24.47,
+     "precipitation_mm": 816.2
+    },
+    {
+     "year": 2022,
+     "temperature_C": 24.78,
+     "precipitation_mm": 731.4
+    },
+    {
+     "year": 2023,
+     "temperature_C": 24.1,
+     "precipitation_mm": 860.5
+    },
+    {
+     "year": 2024,
+     "temperature_C": 24.78,
+     "precipitation_mm": 1101.0
+    },
+    {
+     "year": 2025,
+     "temperature_C": 25.25,
+     "precipitation_mm": 716.0
+    }
+   ]
+  },
+  "United States": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 10.49,
+     "precipitation_mm": 1257.0
+    },
+    {
+     "year": 1991,
+     "temperature_C": 10.62,
+     "precipitation_mm": 960.4
+    },
+    {
+     "year": 1992,
+     "temperature_C": 9.33,
+     "precipitation_mm": 941.6
+    },
+    {
+     "year": 1993,
+     "temperature_C": 9.1,
+     "precipitation_mm": 1057.5
+    },
+    {
+     "year": 1994,
+     "temperature_C": 9.36,
+     "precipitation_mm": 881.0
+    },
+    {
+     "year": 1995,
+     "temperature_C": 9.6,
+     "precipitation_mm": 922.4
+    },
+    {
+     "year": 1996,
+     "temperature_C": 8.46,
+     "precipitation_mm": 899.1
+    },
+    {
+     "year": 1997,
+     "temperature_C": 9.13,
+     "precipitation_mm": 830.6
+    },
+    {
+     "year": 1998,
+     "temperature_C": 11.77,
+     "precipitation_mm": 942.0
+    },
+    {
+     "year": 1999,
+     "temperature_C": 10.6,
+     "precipitation_mm": 813.6
+    },
+    {
+     "year": 2000,
+     "temperature_C": 9.94,
+     "precipitation_mm": 955.8
+    },
+    {
+     "year": 2001,
+     "temperature_C": 10.25,
+     "precipitation_mm": 876.9
+    },
+    {
+     "year": 2002,
+     "temperature_C": 10.42,
+     "precipitation_mm": 815.9
+    },
+    {
+     "year": 2003,
+     "temperature_C": 9.01,
+     "precipitation_mm": 759.7
+    },
+    {
+     "year": 2004,
+     "temperature_C": 9.86,
+     "precipitation_mm": 892.6
+    },
+    {
+     "year": 2005,
+     "temperature_C": 10.39,
+     "precipitation_mm": 642.6
+    },
+    {
+     "year": 2006,
+     "temperature_C": 10.71,
+     "precipitation_mm": 982.9
+    },
+    {
+     "year": 2007,
+     "temperature_C": 10.48,
+     "precipitation_mm": 859.1
+    },
+    {
+     "year": 2008,
+     "temperature_C": 9.06,
+     "precipitation_mm": 1113.0
+    },
+    {
+     "year": 2009,
+     "temperature_C": 8.98,
+     "precipitation_mm": 1060.1
+    },
+    {
+     "year": 2010,
+     "temperature_C": 10.45,
+     "precipitation_mm": 945.7
+    },
+    {
+     "year": 2011,
+     "temperature_C": 10.0,
+     "precipitation_mm": 1088.0
+    },
+    {
+     "year": 2012,
+     "temperature_C": 12.06,
+     "precipitation_mm": 664.0
+    },
+    {
+     "year": 2013,
+     "temperature_C": 9.22,
+     "precipitation_mm": 865.6
+    },
+    {
+     "year": 2014,
+     "temperature_C": 7.44,
+     "precipitation_mm": 972.5
+    },
+    {
+     "year": 2015,
+     "temperature_C": 9.21,
+     "precipitation_mm": 1041.8
+    },
+    {
+     "year": 2016,
+     "temperature_C": 10.48,
+     "precipitation_mm": 904.1
+    },
+    {
+     "year": 2017,
+     "temperature_C": 10.83,
+     "precipitation_mm": 1297.2
+    },
+    {
+     "year": 2018,
+     "temperature_C": 9.66,
+     "precipitation_mm": 1392.8
+    },
+    {
+     "year": 2019,
+     "temperature_C": 9.45,
+     "precipitation_mm": 1394.8
+    },
+    {
+     "year": 2020,
+     "temperature_C": 10.66,
+     "precipitation_mm": 1089.5
+    },
+    {
+     "year": 2021,
+     "temperature_C": 11.23,
+     "precipitation_mm": 1142.8
+    },
+    {
+     "year": 2022,
+     "temperature_C": 10.03,
+     "precipitation_mm": 1117.7
+    },
+    {
+     "year": 2023,
+     "temperature_C": 10.97,
+     "precipitation_mm": 1245.4
+    },
+    {
+     "year": 2024,
+     "temperature_C": 11.8,
+     "precipitation_mm": 1030.8
+    },
+    {
+     "year": 2025,
+     "temperature_C": 10.62,
+     "precipitation_mm": 832.3
+    }
+   ]
+  },
+  "Brazil": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 21.4,
+     "precipitation_mm": 1198.3
+    },
+    {
+     "year": 1991,
+     "temperature_C": 20.87,
+     "precipitation_mm": 1666.3
+    },
+    {
+     "year": 1992,
+     "temperature_C": 20.61,
+     "precipitation_mm": 2037.5
+    },
+    {
+     "year": 1993,
+     "temperature_C": 21.43,
+     "precipitation_mm": 1388.9
+    },
+    {
+     "year": 1994,
+     "temperature_C": 21.46,
+     "precipitation_mm": 1472.1
+    },
+    {
+     "year": 1995,
+     "temperature_C": 21.28,
+     "precipitation_mm": 1386.2
+    },
+    {
+     "year": 1996,
+     "temperature_C": 21.27,
+     "precipitation_mm": 1435.8
+    },
+    {
+     "year": 1997,
+     "temperature_C": 21.03,
+     "precipitation_mm": 1733.6
+    },
+    {
+     "year": 1998,
+     "temperature_C": 22.26,
+     "precipitation_mm": 1490.3
+    },
+    {
+     "year": 1999,
+     "temperature_C": 21.33,
+     "precipitation_mm": 1383.8
+    },
+    {
+     "year": 2000,
+     "temperature_C": 21.38,
+     "precipitation_mm": 1402.3
+    },
+    {
+     "year": 2001,
+     "temperature_C": 21.39,
+     "precipitation_mm": 1258.9
+    },
+    {
+     "year": 2002,
+     "temperature_C": 22.04,
+     "precipitation_mm": 1285.6
+    },
+    {
+     "year": 2003,
+     "temperature_C": 21.53,
+     "precipitation_mm": 1081.2
+    },
+    {
+     "year": 2004,
+     "temperature_C": 21.37,
+     "precipitation_mm": 1517.0
+    },
+    {
+     "year": 2005,
+     "temperature_C": 21.63,
+     "precipitation_mm": 1493.0
+    },
+    {
+     "year": 2006,
+     "temperature_C": 21.08,
+     "precipitation_mm": 1693.8
+    },
+    {
+     "year": 2007,
+     "temperature_C": 21.96,
+     "precipitation_mm": 985.7
+    },
+    {
+     "year": 2008,
+     "temperature_C": 21.49,
+     "precipitation_mm": 1379.3
+    },
+    {
+     "year": 2009,
+     "temperature_C": 21.41,
+     "precipitation_mm": 1633.1
+    },
+    {
+     "year": 2010,
+     "temperature_C": 21.86,
+     "precipitation_mm": 1287.5
+    },
+    {
+     "year": 2011,
+     "temperature_C": 21.22,
+     "precipitation_mm": 1460.3
+    },
+    {
+     "year": 2012,
+     "temperature_C": 21.62,
+     "precipitation_mm": 1220.6
+    },
+    {
+     "year": 2013,
+     "temperature_C": 21.54,
+     "precipitation_mm": 1521.9
+    },
+    {
+     "year": 2014,
+     "temperature_C": 21.72,
+     "precipitation_mm": 1390.5
+    },
+    {
+     "year": 2015,
+     "temperature_C": 22.37,
+     "precipitation_mm": 1212.1
+    },
+    {
+     "year": 2016,
+     "temperature_C": 22.57,
+     "precipitation_mm": 1250.2
+    },
+    {
+     "year": 2017,
+     "temperature_C": 21.92,
+     "precipitation_mm": 975.3
+    },
+    {
+     "year": 2018,
+     "temperature_C": 21.78,
+     "precipitation_mm": 1098.5
+    },
+    {
+     "year": 2019,
+     "temperature_C": 22.51,
+     "precipitation_mm": 819.5
+    },
+    {
+     "year": 2020,
+     "temperature_C": 21.66,
+     "precipitation_mm": 1282.4
+    },
+    {
+     "year": 2021,
+     "temperature_C": 21.73,
+     "precipitation_mm": 1156.2
+    },
+    {
+     "year": 2022,
+     "temperature_C": 21.54,
+     "precipitation_mm": 1059.6
+    },
+    {
+     "year": 2023,
+     "temperature_C": 22.34,
+     "precipitation_mm": 872.5
+    },
+    {
+     "year": 2024,
+     "temperature_C": 22.19,
+     "precipitation_mm": 1091.3
+    },
+    {
+     "year": 2025,
+     "temperature_C": 22.32,
+     "precipitation_mm": 1009.6
+    }
+   ]
+  },
+  "China": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 11.76,
+     "precipitation_mm": 903.5
+    },
+    {
+     "year": 1991,
+     "temperature_C": 11.69,
+     "precipitation_mm": 561.7
+    },
+    {
+     "year": 1992,
+     "temperature_C": 12.12,
+     "precipitation_mm": 563.4
+    },
+    {
+     "year": 1993,
+     "temperature_C": 12.08,
+     "precipitation_mm": 490.7
+    },
+    {
+     "year": 1994,
+     "temperature_C": 12.75,
+     "precipitation_mm": 856.0
+    },
+    {
+     "year": 1995,
+     "temperature_C": 12.11,
+     "precipitation_mm": 736.9
+    },
+    {
+     "year": 1996,
+     "temperature_C": 11.57,
+     "precipitation_mm": 702.8
+    },
+    {
+     "year": 1997,
+     "temperature_C": 12.73,
+     "precipitation_mm": 390.0
+    },
+    {
+     "year": 1998,
+     "temperature_C": 12.99,
+     "precipitation_mm": 646.6
+    },
+    {
+     "year": 1999,
+     "temperature_C": 13.13,
+     "precipitation_mm": 409.3
+    },
+    {
+     "year": 2000,
+     "temperature_C": 12.36,
+     "precipitation_mm": 654.8
+    },
+    {
+     "year": 2001,
+     "temperature_C": 12.51,
+     "precipitation_mm": 531.1
+    },
+    {
+     "year": 2002,
+     "temperature_C": 12.91,
+     "precipitation_mm": 436.0
+    },
+    {
+     "year": 2003,
+     "temperature_C": 12.64,
+     "precipitation_mm": 589.3
+    },
+    {
+     "year": 2004,
+     "temperature_C": 12.91,
+     "precipitation_mm": 547.3
+    },
+    {
+     "year": 2005,
+     "temperature_C": 12.64,
+     "precipitation_mm": 445.3
+    },
+    {
+     "year": 2006,
+     "temperature_C": 12.9,
+     "precipitation_mm": 502.5
+    },
+    {
+     "year": 2007,
+     "temperature_C": 13.36,
+     "precipitation_mm": 438.4
+    },
+    {
+     "year": 2008,
+     "temperature_C": 12.54,
+     "precipitation_mm": 506.7
+    },
+    {
+     "year": 2009,
+     "temperature_C": 12.69,
+     "precipitation_mm": 439.4
+    },
+    {
+     "year": 2010,
+     "temperature_C": 11.63,
+     "precipitation_mm": 515.2
+    },
+    {
+     "year": 2011,
+     "temperature_C": 12.41,
+     "precipitation_mm": 499.3
+    },
+    {
+     "year": 2012,
+     "temperature_C": 12.01,
+     "precipitation_mm": 542.3
+    },
+    {
+     "year": 2013,
+     "temperature_C": 12.16,
+     "precipitation_mm": 483.2
+    },
+    {
+     "year": 2014,
+     "temperature_C": 13.42,
+     "precipitation_mm": 384.1
+    },
+    {
+     "year": 2015,
+     "temperature_C": 12.98,
+     "precipitation_mm": 520.2
+    },
+    {
+     "year": 2016,
+     "temperature_C": 12.72,
+     "precipitation_mm": 674.8
+    },
+    {
+     "year": 2017,
+     "temperature_C": 13.23,
+     "precipitation_mm": 694.8
+    },
+    {
+     "year": 2018,
+     "temperature_C": 12.85,
+     "precipitation_mm": 562.9
+    },
+    {
+     "year": 2019,
+     "temperature_C": 13.45,
+     "precipitation_mm": 495.0
+    },
+    {
+     "year": 2020,
+     "temperature_C": 13.12,
+     "precipitation_mm": 523.0
+    },
+    {
+     "year": 2021,
+     "temperature_C": 12.7,
+     "precipitation_mm": 834.4
+    },
+    {
+     "year": 2022,
+     "temperature_C": 12.64,
+     "precipitation_mm": 609.2
+    },
+    {
+     "year": 2023,
+     "temperature_C": 13.44,
+     "precipitation_mm": 640.6
+    },
+    {
+     "year": 2024,
+     "temperature_C": 13.75,
+     "precipitation_mm": 726.5
+    },
+    {
+     "year": 2025,
+     "temperature_C": 14.41,
+     "precipitation_mm": 711.0
+    }
+   ]
+  },
+  "France": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 12.15,
+     "precipitation_mm": 532.2
+    },
+    {
+     "year": 1991,
+     "temperature_C": 10.76,
+     "precipitation_mm": 492.4
+    },
+    {
+     "year": 1992,
+     "temperature_C": 11.21,
+     "precipitation_mm": 586.6
+    },
+    {
+     "year": 1993,
+     "temperature_C": 10.86,
+     "precipitation_mm": 726.9
+    },
+    {
+     "year": 1994,
+     "temperature_C": 12.11,
+     "precipitation_mm": 767.7
+    },
+    {
+     "year": 1995,
+     "temperature_C": 11.71,
+     "precipitation_mm": 684.5
+    },
+    {
+     "year": 1996,
+     "temperature_C": 10.27,
+     "precipitation_mm": 558.8
+    },
+    {
+     "year": 1997,
+     "temperature_C": 11.54,
+     "precipitation_mm": 653.5
+    },
+    {
+     "year": 1998,
+     "temperature_C": 11.21,
+     "precipitation_mm": 655.5
+    },
+    {
+     "year": 1999,
+     "temperature_C": 11.88,
+     "precipitation_mm": 803.5
+    },
+    {
+     "year": 2000,
+     "temperature_C": 11.65,
+     "precipitation_mm": 828.4
+    },
+    {
+     "year": 2001,
+     "temperature_C": 11.39,
+     "precipitation_mm": 876.1
+    },
+    {
+     "year": 2002,
+     "temperature_C": 11.94,
+     "precipitation_mm": 789.3
+    },
+    {
+     "year": 2003,
+     "temperature_C": 12.15,
+     "precipitation_mm": 513.0
+    },
+    {
+     "year": 2004,
+     "temperature_C": 11.48,
+     "precipitation_mm": 576.7
+    },
+    {
+     "year": 2005,
+     "temperature_C": 11.69,
+     "precipitation_mm": 534.9
+    },
+    {
+     "year": 2006,
+     "temperature_C": 11.98,
+     "precipitation_mm": 641.1
+    },
+    {
+     "year": 2007,
+     "temperature_C": 11.85,
+     "precipitation_mm": 700.6
+    },
+    {
+     "year": 2008,
+     "temperature_C": 11.26,
+     "precipitation_mm": 654.2
+    },
+    {
+     "year": 2009,
+     "temperature_C": 11.56,
+     "precipitation_mm": 612.7
+    },
+    {
+     "year": 2010,
+     "temperature_C": 10.43,
+     "precipitation_mm": 605.5
+    },
+    {
+     "year": 2011,
+     "temperature_C": 12.53,
+     "precipitation_mm": 570.9
+    },
+    {
+     "year": 2012,
+     "temperature_C": 11.53,
+     "precipitation_mm": 663.7
+    },
+    {
+     "year": 2013,
+     "temperature_C": 11.11,
+     "precipitation_mm": 671.3
+    },
+    {
+     "year": 2014,
+     "temperature_C": 12.25,
+     "precipitation_mm": 811.7
+    },
+    {
+     "year": 2015,
+     "temperature_C": 12.24,
+     "precipitation_mm": 534.7
+    },
+    {
+     "year": 2016,
+     "temperature_C": 11.7,
+     "precipitation_mm": 707.7
+    },
+    {
+     "year": 2017,
+     "temperature_C": 12.03,
+     "precipitation_mm": 705.2
+    },
+    {
+     "year": 2018,
+     "temperature_C": 12.57,
+     "precipitation_mm": 773.9
+    },
+    {
+     "year": 2019,
+     "temperature_C": 12.24,
+     "precipitation_mm": 744.8
+    },
+    {
+     "year": 2020,
+     "temperature_C": 13.04,
+     "precipitation_mm": 651.3
+    },
+    {
+     "year": 2021,
+     "temperature_C": 11.42,
+     "precipitation_mm": 754.4
+    },
+    {
+     "year": 2022,
+     "temperature_C": 12.87,
+     "precipitation_mm": 712.8
+    },
+    {
+     "year": 2023,
+     "temperature_C": 12.93,
+     "precipitation_mm": 949.0
+    },
+    {
+     "year": 2024,
+     "temperature_C": 12.28,
+     "precipitation_mm": 1152.1
+    },
+    {
+     "year": 2025,
+     "temperature_C": 12.85,
+     "precipitation_mm": 740.9
+    }
+   ]
+  },
+  "Germany": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 10.39,
+     "precipitation_mm": 662.7
+    },
+    {
+     "year": 1991,
+     "temperature_C": 9.27,
+     "precipitation_mm": 445.3
+    },
+    {
+     "year": 1992,
+     "temperature_C": 10.23,
+     "precipitation_mm": 526.0
+    },
+    {
+     "year": 1993,
+     "temperature_C": 8.99,
+     "precipitation_mm": 707.5
+    },
+    {
+     "year": 1994,
+     "temperature_C": 10.17,
+     "precipitation_mm": 735.9
+    },
+    {
+     "year": 1995,
+     "temperature_C": 9.46,
+     "precipitation_mm": 641.7
+    },
+    {
+     "year": 1996,
+     "temperature_C": 7.57,
+     "precipitation_mm": 542.5
+    },
+    {
+     "year": 1997,
+     "temperature_C": 9.27,
+     "precipitation_mm": 554.5
+    },
+    {
+     "year": 1998,
+     "temperature_C": 9.62,
+     "precipitation_mm": 621.5
+    },
+    {
+     "year": 1999,
+     "temperature_C": 10.32,
+     "precipitation_mm": 525.7
+    },
+    {
+     "year": 2000,
+     "temperature_C": 10.59,
+     "precipitation_mm": 560.2
+    },
+    {
+     "year": 2001,
+     "temperature_C": 9.34,
+     "precipitation_mm": 672.6
+    },
+    {
+     "year": 2002,
+     "temperature_C": 9.9,
+     "precipitation_mm": 796.9
+    },
+    {
+     "year": 2003,
+     "temperature_C": 9.94,
+     "precipitation_mm": 396.0
+    },
+    {
+     "year": 2004,
+     "temperature_C": 9.73,
+     "precipitation_mm": 546.4
+    },
+    {
+     "year": 2005,
+     "temperature_C": 9.66,
+     "precipitation_mm": 613.7
+    },
+    {
+     "year": 2006,
+     "temperature_C": 10.39,
+     "precipitation_mm": 499.5
+    },
+    {
+     "year": 2007,
+     "temperature_C": 10.66,
+     "precipitation_mm": 763.5
+    },
+    {
+     "year": 2008,
+     "temperature_C": 10.51,
+     "precipitation_mm": 578.0
+    },
+    {
+     "year": 2009,
+     "temperature_C": 9.82,
+     "precipitation_mm": 658.0
+    },
+    {
+     "year": 2010,
+     "temperature_C": 8.23,
+     "precipitation_mm": 773.4
+    },
+    {
+     "year": 2011,
+     "temperature_C": 10.25,
+     "precipitation_mm": 643.1
+    },
+    {
+     "year": 2012,
+     "temperature_C": 9.69,
+     "precipitation_mm": 664.7
+    },
+    {
+     "year": 2013,
+     "temperature_C": 9.39,
+     "precipitation_mm": 662.5
+    },
+    {
+     "year": 2014,
+     "temperature_C": 11.09,
+     "precipitation_mm": 615.7
+    },
+    {
+     "year": 2015,
+     "temperature_C": 10.83,
+     "precipitation_mm": 575.4
+    },
+    {
+     "year": 2016,
+     "temperature_C": 10.46,
+     "precipitation_mm": 511.8
+    },
+    {
+     "year": 2017,
+     "temperature_C": 9.97,
+     "precipitation_mm": 836.0
+    },
+    {
+     "year": 2018,
+     "temperature_C": 11.19,
+     "precipitation_mm": 412.5
+    },
+    {
+     "year": 2019,
+     "temperature_C": 11.45,
+     "precipitation_mm": 532.0
+    },
+    {
+     "year": 2020,
+     "temperature_C": 11.27,
+     "precipitation_mm": 538.7
+    },
+    {
+     "year": 2021,
+     "temperature_C": 9.79,
+     "precipitation_mm": 661.1
+    },
+    {
+     "year": 2022,
+     "temperature_C": 10.99,
+     "precipitation_mm": 489.0
+    },
+    {
+     "year": 2023,
+     "temperature_C": 11.14,
+     "precipitation_mm": 830.9
+    },
+    {
+     "year": 2024,
+     "temperature_C": 11.75,
+     "precipitation_mm": 647.3
+    },
+    {
+     "year": 2025,
+     "temperature_C": 10.66,
+     "precipitation_mm": 610.5
+    }
+   ]
+  },
+  "Mexico": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 15.14,
+     "precipitation_mm": 1169.2
+    },
+    {
+     "year": 1991,
+     "temperature_C": 15.58,
+     "precipitation_mm": 1131.9
+    },
+    {
+     "year": 1992,
+     "temperature_C": 14.7,
+     "precipitation_mm": 1326.8
+    },
+    {
+     "year": 1993,
+     "temperature_C": 15.6,
+     "precipitation_mm": 892.3
+    },
+    {
+     "year": 1994,
+     "temperature_C": 15.8,
+     "precipitation_mm": 1035.9
+    },
+    {
+     "year": 1995,
+     "temperature_C": 15.57,
+     "precipitation_mm": 1216.8
+    },
+    {
+     "year": 1996,
+     "temperature_C": 15.28,
+     "precipitation_mm": 969.8
+    },
+    {
+     "year": 1997,
+     "temperature_C": 15.15,
+     "precipitation_mm": 964.0
+    },
+    {
+     "year": 1998,
+     "temperature_C": 16.28,
+     "precipitation_mm": 804.7
+    },
+    {
+     "year": 1999,
+     "temperature_C": 15.22,
+     "precipitation_mm": 648.3
+    },
+    {
+     "year": 2000,
+     "temperature_C": 15.47,
+     "precipitation_mm": 759.6
+    },
+    {
+     "year": 2001,
+     "temperature_C": 15.09,
+     "precipitation_mm": 928.3
+    },
+    {
+     "year": 2002,
+     "temperature_C": 15.61,
+     "precipitation_mm": 896.7
+    },
+    {
+     "year": 2003,
+     "temperature_C": 15.69,
+     "precipitation_mm": 937.0
+    },
+    {
+     "year": 2004,
+     "temperature_C": 15.21,
+     "precipitation_mm": 882.8
+    },
+    {
+     "year": 2005,
+     "temperature_C": 15.84,
+     "precipitation_mm": 860.3
+    },
+    {
+     "year": 2006,
+     "temperature_C": 15.3,
+     "precipitation_mm": 1020.0
+    },
+    {
+     "year": 2007,
+     "temperature_C": 15.42,
+     "precipitation_mm": 1103.0
+    },
+    {
+     "year": 2008,
+     "temperature_C": 15.37,
+     "precipitation_mm": 991.8
+    },
+    {
+     "year": 2009,
+     "temperature_C": 16.03,
+     "precipitation_mm": 936.7
+    },
+    {
+     "year": 2010,
+     "temperature_C": 15.44,
+     "precipitation_mm": 1018.1
+    },
+    {
+     "year": 2011,
+     "temperature_C": 16.08,
+     "precipitation_mm": 837.4
+    },
+    {
+     "year": 2012,
+     "temperature_C": 15.56,
+     "precipitation_mm": 901.9
+    },
+    {
+     "year": 2013,
+     "temperature_C": 15.83,
+     "precipitation_mm": 1119.9
+    },
+    {
+     "year": 2014,
+     "temperature_C": 15.68,
+     "precipitation_mm": 1146.1
+    },
+    {
+     "year": 2015,
+     "temperature_C": 15.77,
+     "precipitation_mm": 1239.8
+    },
+    {
+     "year": 2016,
+     "temperature_C": 15.61,
+     "precipitation_mm": 1152.9
+    },
+    {
+     "year": 2017,
+     "temperature_C": 16.76,
+     "precipitation_mm": 1162.8
+    },
+    {
+     "year": 2018,
+     "temperature_C": 16.4,
+     "precipitation_mm": 1366.3
+    },
+    {
+     "year": 2019,
+     "temperature_C": 17.32,
+     "precipitation_mm": 1051.6
+    },
+    {
+     "year": 2020,
+     "temperature_C": 17.46,
+     "precipitation_mm": 889.4
+    },
+    {
+     "year": 2021,
+     "temperature_C": 16.83,
+     "precipitation_mm": 1336.4
+    },
+    {
+     "year": 2022,
+     "temperature_C": 16.8,
+     "precipitation_mm": 997.1
+    },
+    {
+     "year": 2023,
+     "temperature_C": 17.27,
+     "precipitation_mm": 833.7
+    },
+    {
+     "year": 2024,
+     "temperature_C": 17.75,
+     "precipitation_mm": 1254.0
+    },
+    {
+     "year": 2025,
+     "temperature_C": 17.52,
+     "precipitation_mm": 1400.4
+    }
+   ]
+  },
+  "Egypt": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 21.41,
+     "precipitation_mm": 19.3
+    },
+    {
+     "year": 1991,
+     "temperature_C": 21.25,
+     "precipitation_mm": 32.9
+    },
+    {
+     "year": 1992,
+     "temperature_C": 20.51,
+     "precipitation_mm": 20.0
+    },
+    {
+     "year": 1993,
+     "temperature_C": 21.35,
+     "precipitation_mm": 11.8
+    },
+    {
+     "year": 1994,
+     "temperature_C": 21.72,
+     "precipitation_mm": 36.6
+    },
+    {
+     "year": 1995,
+     "temperature_C": 21.35,
+     "precipitation_mm": 10.3
+    },
+    {
+     "year": 1996,
+     "temperature_C": 21.58,
+     "precipitation_mm": 29.0
+    },
+    {
+     "year": 1997,
+     "temperature_C": 21.36,
+     "precipitation_mm": 7.9
+    },
+    {
+     "year": 1998,
+     "temperature_C": 22.23,
+     "precipitation_mm": 10.4
+    },
+    {
+     "year": 1999,
+     "temperature_C": 22.16,
+     "precipitation_mm": 7.1
+    },
+    {
+     "year": 2000,
+     "temperature_C": 21.33,
+     "precipitation_mm": 10.4
+    },
+    {
+     "year": 2001,
+     "temperature_C": 22.0,
+     "precipitation_mm": 5.3
+    },
+    {
+     "year": 2002,
+     "temperature_C": 21.97,
+     "precipitation_mm": 16.5
+    },
+    {
+     "year": 2003,
+     "temperature_C": 21.8,
+     "precipitation_mm": 2.8
+    },
+    {
+     "year": 2004,
+     "temperature_C": 21.72,
+     "precipitation_mm": 16.6
+    },
+    {
+     "year": 2005,
+     "temperature_C": 21.58,
+     "precipitation_mm": 17.2
+    },
+    {
+     "year": 2006,
+     "temperature_C": 21.65,
+     "precipitation_mm": 10.4
+    },
+    {
+     "year": 2007,
+     "temperature_C": 21.9,
+     "precipitation_mm": 14.2
+    },
+    {
+     "year": 2008,
+     "temperature_C": 22.25,
+     "precipitation_mm": 5.6
+    },
+    {
+     "year": 2009,
+     "temperature_C": 22.3,
+     "precipitation_mm": 5.2
+    },
+    {
+     "year": 2010,
+     "temperature_C": 23.34,
+     "precipitation_mm": 9.4
+    },
+    {
+     "year": 2011,
+     "temperature_C": 21.6,
+     "precipitation_mm": 22.0
+    },
+    {
+     "year": 2012,
+     "temperature_C": 22.36,
+     "precipitation_mm": 11.7
+    },
+    {
+     "year": 2013,
+     "temperature_C": 22.35,
+     "precipitation_mm": 11.0
+    },
+    {
+     "year": 2014,
+     "temperature_C": 22.7,
+     "precipitation_mm": 8.8
+    },
+    {
+     "year": 2015,
+     "temperature_C": 22.53,
+     "precipitation_mm": 23.6
+    },
+    {
+     "year": 2016,
+     "temperature_C": 22.96,
+     "precipitation_mm": 12.2
+    },
+    {
+     "year": 2017,
+     "temperature_C": 22.35,
+     "precipitation_mm": 16.3
+    },
+    {
+     "year": 2018,
+     "temperature_C": 23.4,
+     "precipitation_mm": 29.8
+    },
+    {
+     "year": 2019,
+     "temperature_C": 23.0,
+     "precipitation_mm": 48.8
+    },
+    {
+     "year": 2020,
+     "temperature_C": 23.33,
+     "precipitation_mm": 72.3
+    },
+    {
+     "year": 2021,
+     "temperature_C": 23.66,
+     "precipitation_mm": 25.2
+    },
+    {
+     "year": 2022,
+     "temperature_C": 22.75,
+     "precipitation_mm": 58.6
+    },
+    {
+     "year": 2023,
+     "temperature_C": 23.81,
+     "precipitation_mm": 23.6
+    },
+    {
+     "year": 2024,
+     "temperature_C": 24.2,
+     "precipitation_mm": 14.8
+    },
+    {
+     "year": 2025,
+     "temperature_C": 24.2,
+     "precipitation_mm": 14.2
+    }
+   ]
+  },
+  "Australia": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 16.96,
+     "precipitation_mm": 1260.5
+    },
+    {
+     "year": 1991,
+     "temperature_C": 17.29,
+     "precipitation_mm": 630.8
+    },
+    {
+     "year": 1992,
+     "temperature_C": 16.38,
+     "precipitation_mm": 790.8
+    },
+    {
+     "year": 1993,
+     "temperature_C": 17.03,
+     "precipitation_mm": 524.4
+    },
+    {
+     "year": 1994,
+     "temperature_C": 16.99,
+     "precipitation_mm": 414.4
+    },
+    {
+     "year": 1995,
+     "temperature_C": 16.53,
+     "precipitation_mm": 699.7
+    },
+    {
+     "year": 1996,
+     "temperature_C": 16.63,
+     "precipitation_mm": 616.4
+    },
+    {
+     "year": 1997,
+     "temperature_C": 17.26,
+     "precipitation_mm": 593.1
+    },
+    {
+     "year": 1998,
+     "temperature_C": 17.63,
+     "precipitation_mm": 862.2
+    },
+    {
+     "year": 1999,
+     "temperature_C": 16.98,
+     "precipitation_mm": 717.0
+    },
+    {
+     "year": 2000,
+     "temperature_C": 16.95,
+     "precipitation_mm": 675.7
+    },
+    {
+     "year": 2001,
+     "temperature_C": 17.31,
+     "precipitation_mm": 559.7
+    },
+    {
+     "year": 2002,
+     "temperature_C": 17.38,
+     "precipitation_mm": 442.8
+    },
+    {
+     "year": 2003,
+     "temperature_C": 17.1,
+     "precipitation_mm": 653.9
+    },
+    {
+     "year": 2004,
+     "temperature_C": 17.44,
+     "precipitation_mm": 595.4
+    },
+    {
+     "year": 2005,
+     "temperature_C": 17.65,
+     "precipitation_mm": 637.0
+    },
+    {
+     "year": 2006,
+     "temperature_C": 17.6,
+     "precipitation_mm": 412.6
+    },
+    {
+     "year": 2007,
+     "temperature_C": 17.52,
+     "precipitation_mm": 820.4
+    },
+    {
+     "year": 2008,
+     "temperature_C": 16.89,
+     "precipitation_mm": 672.2
+    },
+    {
+     "year": 2009,
+     "temperature_C": 17.77,
+     "precipitation_mm": 488.7
+    },
+    {
+     "year": 2010,
+     "temperature_C": 17.52,
+     "precipitation_mm": 806.6
+    },
+    {
+     "year": 2011,
+     "temperature_C": 17.25,
+     "precipitation_mm": 663.9
+    },
+    {
+     "year": 2012,
+     "temperature_C": 17.01,
+     "precipitation_mm": 617.0
+    },
+    {
+     "year": 2013,
+     "temperature_C": 17.71,
+     "precipitation_mm": 811.3
+    },
+    {
+     "year": 2014,
+     "temperature_C": 17.68,
+     "precipitation_mm": 623.3
+    },
+    {
+     "year": 2015,
+     "temperature_C": 17.5,
+     "precipitation_mm": 840.1
+    },
+    {
+     "year": 2016,
+     "temperature_C": 18.05,
+     "precipitation_mm": 782.3
+    },
+    {
+     "year": 2017,
+     "temperature_C": 17.86,
+     "precipitation_mm": 826.4
+    },
+    {
+     "year": 2018,
+     "temperature_C": 17.61,
+     "precipitation_mm": 633.8
+    },
+    {
+     "year": 2019,
+     "temperature_C": 17.89,
+     "precipitation_mm": 667.4
+    },
+    {
+     "year": 2020,
+     "temperature_C": 17.38,
+     "precipitation_mm": 1350.5
+    },
+    {
+     "year": 2021,
+     "temperature_C": 16.82,
+     "precipitation_mm": 1131.2
+    },
+    {
+     "year": 2022,
+     "temperature_C": 17.0,
+     "precipitation_mm": 1588.4
+    },
+    {
+     "year": 2023,
+     "temperature_C": 17.57,
+     "precipitation_mm": 875.6
+    },
+    {
+     "year": 2024,
+     "temperature_C": 17.83,
+     "precipitation_mm": 1068.1
+    },
+    {
+     "year": 2025,
+     "temperature_C": 18.14,
+     "precipitation_mm": 1262.8
+    }
+   ]
+  },
+  "South Africa": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 18.23,
+     "precipitation_mm": 497.0
+    },
+    {
+     "year": 1991,
+     "temperature_C": 18.09,
+     "precipitation_mm": 644.3
+    },
+    {
+     "year": 1992,
+     "temperature_C": 19.12,
+     "precipitation_mm": 428.4
+    },
+    {
+     "year": 1993,
+     "temperature_C": 18.37,
+     "precipitation_mm": 561.2
+    },
+    {
+     "year": 1994,
+     "temperature_C": 17.63,
+     "precipitation_mm": 456.1
+    },
+    {
+     "year": 1995,
+     "temperature_C": 17.83,
+     "precipitation_mm": 840.6
+    },
+    {
+     "year": 1996,
+     "temperature_C": 16.97,
+     "precipitation_mm": 872.2
+    },
+    {
+     "year": 1997,
+     "temperature_C": 17.23,
+     "precipitation_mm": 774.7
+    },
+    {
+     "year": 1998,
+     "temperature_C": 18.45,
+     "precipitation_mm": 543.0
+    },
+    {
+     "year": 1999,
+     "temperature_C": 17.99,
+     "precipitation_mm": 621.3
+    },
+    {
+     "year": 2000,
+     "temperature_C": 16.53,
+     "precipitation_mm": 1064.7
+    },
+    {
+     "year": 2001,
+     "temperature_C": 17.52,
+     "precipitation_mm": 689.6
+    },
+    {
+     "year": 2002,
+     "temperature_C": 18.24,
+     "precipitation_mm": 474.3
+    },
+    {
+     "year": 2003,
+     "temperature_C": 19.02,
+     "precipitation_mm": 437.7
+    },
+    {
+     "year": 2004,
+     "temperature_C": 18.0,
+     "precipitation_mm": 663.0
+    },
+    {
+     "year": 2005,
+     "temperature_C": 19.11,
+     "precipitation_mm": 525.7
+    },
+    {
+     "year": 2006,
+     "temperature_C": 17.36,
+     "precipitation_mm": 787.9
+    },
+    {
+     "year": 2007,
+     "temperature_C": 18.08,
+     "precipitation_mm": 516.9
+    },
+    {
+     "year": 2008,
+     "temperature_C": 18.0,
+     "precipitation_mm": 569.9
+    },
+    {
+     "year": 2009,
+     "temperature_C": 17.75,
+     "precipitation_mm": 725.5
+    },
+    {
+     "year": 2010,
+     "temperature_C": 18.37,
+     "precipitation_mm": 689.0
+    },
+    {
+     "year": 2011,
+     "temperature_C": 17.81,
+     "precipitation_mm": 694.9
+    },
+    {
+     "year": 2012,
+     "temperature_C": 18.3,
+     "precipitation_mm": 685.4
+    },
+    {
+     "year": 2013,
+     "temperature_C": 18.59,
+     "precipitation_mm": 540.6
+    },
+    {
+     "year": 2014,
+     "temperature_C": 18.06,
+     "precipitation_mm": 722.8
+    },
+    {
+     "year": 2015,
+     "temperature_C": 19.73,
+     "precipitation_mm": 358.2
+    },
+    {
+     "year": 2016,
+     "temperature_C": 19.15,
+     "precipitation_mm": 589.1
+    },
+    {
+     "year": 2017,
+     "temperature_C": 17.96,
+     "precipitation_mm": 733.1
+    },
+    {
+     "year": 2018,
+     "temperature_C": 18.29,
+     "precipitation_mm": 474.3
+    },
+    {
+     "year": 2019,
+     "temperature_C": 19.01,
+     "precipitation_mm": 475.3
+    },
+    {
+     "year": 2020,
+     "temperature_C": 17.61,
+     "precipitation_mm": 655.3
+    },
+    {
+     "year": 2021,
+     "temperature_C": 17.75,
+     "precipitation_mm": 736.9
+    },
+    {
+     "year": 2022,
+     "temperature_C": 17.57,
+     "precipitation_mm": 753.0
+    },
+    {
+     "year": 2023,
+     "temperature_C": 18.3,
+     "precipitation_mm": 502.2
+    },
+    {
+     "year": 2024,
+     "temperature_C": 19.3,
+     "precipitation_mm": 306.9
+    },
+    {
+     "year": 2025,
+     "temperature_C": 17.8,
+     "precipitation_mm": 1038.8
+    }
+   ]
+  },
+  "Pakistan": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 23.26,
+     "precipitation_mm": 864.3
+    },
+    {
+     "year": 1991,
+     "temperature_C": 23.22,
+     "precipitation_mm": 560.4
+    },
+    {
+     "year": 1992,
+     "temperature_C": 22.87,
+     "precipitation_mm": 649.2
+    },
+    {
+     "year": 1993,
+     "temperature_C": 23.76,
+     "precipitation_mm": 674.2
+    },
+    {
+     "year": 1994,
+     "temperature_C": 23.36,
+     "precipitation_mm": 674.9
+    },
+    {
+     "year": 1995,
+     "temperature_C": 22.9,
+     "precipitation_mm": 817.4
+    },
+    {
+     "year": 1996,
+     "temperature_C": 22.75,
+     "precipitation_mm": 888.3
+    },
+    {
+     "year": 1997,
+     "temperature_C": 22.25,
+     "precipitation_mm": 820.8
+    },
+    {
+     "year": 1998,
+     "temperature_C": 23.7,
+     "precipitation_mm": 701.3
+    },
+    {
+     "year": 1999,
+     "temperature_C": 24.34,
+     "precipitation_mm": 493.3
+    },
+    {
+     "year": 2000,
+     "temperature_C": 24.1,
+     "precipitation_mm": 423.3
+    },
+    {
+     "year": 2001,
+     "temperature_C": 23.64,
+     "precipitation_mm": 629.2
+    },
+    {
+     "year": 2002,
+     "temperature_C": 24.6,
+     "precipitation_mm": 394.5
+    },
+    {
+     "year": 2003,
+     "temperature_C": 23.33,
+     "precipitation_mm": 610.4
+    },
+    {
+     "year": 2004,
+     "temperature_C": 24.28,
+     "precipitation_mm": 454.3
+    },
+    {
+     "year": 2005,
+     "temperature_C": 23.16,
+     "precipitation_mm": 552.1
+    },
+    {
+     "year": 2006,
+     "temperature_C": 24.2,
+     "precipitation_mm": 529.7
+    },
+    {
+     "year": 2007,
+     "temperature_C": 24.0,
+     "precipitation_mm": 578.8
+    },
+    {
+     "year": 2008,
+     "temperature_C": 23.58,
+     "precipitation_mm": 748.3
+    },
+    {
+     "year": 2009,
+     "temperature_C": 24.51,
+     "precipitation_mm": 389.3
+    },
+    {
+     "year": 2010,
+     "temperature_C": 24.55,
+     "precipitation_mm": 570.3
+    },
+    {
+     "year": 2011,
+     "temperature_C": 23.66,
+     "precipitation_mm": 606.1
+    },
+    {
+     "year": 2012,
+     "temperature_C": 23.39,
+     "precipitation_mm": 458.3
+    },
+    {
+     "year": 2013,
+     "temperature_C": 23.29,
+     "precipitation_mm": 700.8
+    },
+    {
+     "year": 2014,
+     "temperature_C": 23.07,
+     "precipitation_mm": 649.1
+    },
+    {
+     "year": 2015,
+     "temperature_C": 23.04,
+     "precipitation_mm": 778.6
+    },
+    {
+     "year": 2016,
+     "temperature_C": 24.54,
+     "precipitation_mm": 508.6
+    },
+    {
+     "year": 2017,
+     "temperature_C": 23.97,
+     "precipitation_mm": 597.4
+    },
+    {
+     "year": 2018,
+     "temperature_C": 23.71,
+     "precipitation_mm": 585.2
+    },
+    {
+     "year": 2019,
+     "temperature_C": 23.5,
+     "precipitation_mm": 557.8
+    },
+    {
+     "year": 2020,
+     "temperature_C": 23.31,
+     "precipitation_mm": 534.3
+    },
+    {
+     "year": 2021,
+     "temperature_C": 23.74,
+     "precipitation_mm": 351.9
+    },
+    {
+     "year": 2022,
+     "temperature_C": 24.0,
+     "precipitation_mm": 662.5
+    },
+    {
+     "year": 2023,
+     "temperature_C": 23.05,
+     "precipitation_mm": 782.5
+    },
+    {
+     "year": 2024,
+     "temperature_C": 23.31,
+     "precipitation_mm": 653.7
+    },
+    {
+     "year": 2025,
+     "temperature_C": 24.29,
+     "precipitation_mm": 931.9
+    }
+   ]
+  },
+  "Nigeria": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 26.62,
+     "precipitation_mm": 1326.8
+    },
+    {
+     "year": 1991,
+     "temperature_C": 26.19,
+     "precipitation_mm": 1554.5
+    },
+    {
+     "year": 1992,
+     "temperature_C": 25.84,
+     "precipitation_mm": 1362.4
+    },
+    {
+     "year": 1993,
+     "temperature_C": 26.21,
+     "precipitation_mm": 1492.1
+    },
+    {
+     "year": 1994,
+     "temperature_C": 26.13,
+     "precipitation_mm": 1796.8
+    },
+    {
+     "year": 1995,
+     "temperature_C": 26.35,
+     "precipitation_mm": 1766.1
+    },
+    {
+     "year": 1996,
+     "temperature_C": 26.49,
+     "precipitation_mm": 1480.5
+    },
+    {
+     "year": 1997,
+     "temperature_C": 26.16,
+     "precipitation_mm": 1637.2
+    },
+    {
+     "year": 1998,
+     "temperature_C": 27.14,
+     "precipitation_mm": 1589.3
+    },
+    {
+     "year": 1999,
+     "temperature_C": 26.31,
+     "precipitation_mm": 1465.5
+    },
+    {
+     "year": 2000,
+     "temperature_C": 26.54,
+     "precipitation_mm": 1410.4
+    },
+    {
+     "year": 2001,
+     "temperature_C": 26.57,
+     "precipitation_mm": 1180.8
+    },
+    {
+     "year": 2002,
+     "temperature_C": 26.46,
+     "precipitation_mm": 1376.3
+    },
+    {
+     "year": 2003,
+     "temperature_C": 26.82,
+     "precipitation_mm": 1165.2
+    },
+    {
+     "year": 2004,
+     "temperature_C": 26.75,
+     "precipitation_mm": 1385.9
+    },
+    {
+     "year": 2005,
+     "temperature_C": 27.07,
+     "precipitation_mm": 1267.9
+    },
+    {
+     "year": 2006,
+     "temperature_C": 27.03,
+     "precipitation_mm": 1334.4
+    },
+    {
+     "year": 2007,
+     "temperature_C": 26.7,
+     "precipitation_mm": 1214.5
+    },
+    {
+     "year": 2008,
+     "temperature_C": 26.48,
+     "precipitation_mm": 1252.5
+    },
+    {
+     "year": 2009,
+     "temperature_C": 26.75,
+     "precipitation_mm": 1453.2
+    },
+    {
+     "year": 2010,
+     "temperature_C": 27.06,
+     "precipitation_mm": 1336.6
+    },
+    {
+     "year": 2011,
+     "temperature_C": 26.74,
+     "precipitation_mm": 1152.6
+    },
+    {
+     "year": 2012,
+     "temperature_C": 26.4,
+     "precipitation_mm": 1812.1
+    },
+    {
+     "year": 2013,
+     "temperature_C": 26.61,
+     "precipitation_mm": 1468.8
+    },
+    {
+     "year": 2014,
+     "temperature_C": 26.53,
+     "precipitation_mm": 1533.0
+    },
+    {
+     "year": 2015,
+     "temperature_C": 26.82,
+     "precipitation_mm": 1192.5
+    },
+    {
+     "year": 2016,
+     "temperature_C": 26.94,
+     "precipitation_mm": 1514.9
+    },
+    {
+     "year": 2017,
+     "temperature_C": 26.7,
+     "precipitation_mm": 633.5
+    },
+    {
+     "year": 2018,
+     "temperature_C": 25.99,
+     "precipitation_mm": 1028.0
+    },
+    {
+     "year": 2019,
+     "temperature_C": 25.97,
+     "precipitation_mm": 1110.3
+    },
+    {
+     "year": 2020,
+     "temperature_C": 26.35,
+     "precipitation_mm": 867.5
+    },
+    {
+     "year": 2021,
+     "temperature_C": 26.39,
+     "precipitation_mm": 747.1
+    },
+    {
+     "year": 2022,
+     "temperature_C": 25.87,
+     "precipitation_mm": 1023.3
+    },
+    {
+     "year": 2023,
+     "temperature_C": 26.28,
+     "precipitation_mm": 833.8
+    },
+    {
+     "year": 2024,
+     "temperature_C": 26.79,
+     "precipitation_mm": 701.1
+    },
+    {
+     "year": 2025,
+     "temperature_C": 26.87,
+     "precipitation_mm": 959.3
+    }
+   ]
+  },
+  "Spain": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 14.25,
+     "precipitation_mm": 305.2
+    },
+    {
+     "year": 1991,
+     "temperature_C": 13.46,
+     "precipitation_mm": 384.1
+    },
+    {
+     "year": 1992,
+     "temperature_C": 13.37,
+     "precipitation_mm": 298.0
+    },
+    {
+     "year": 1993,
+     "temperature_C": 12.68,
+     "precipitation_mm": 416.9
+    },
+    {
+     "year": 1994,
+     "temperature_C": 14.38,
+     "precipitation_mm": 209.2
+    },
+    {
+     "year": 1995,
+     "temperature_C": 14.98,
+     "precipitation_mm": 297.3
+    },
+    {
+     "year": 1996,
+     "temperature_C": 13.82,
+     "precipitation_mm": 549.7
+    },
+    {
+     "year": 1997,
+     "temperature_C": 14.52,
+     "precipitation_mm": 599.2
+    },
+    {
+     "year": 1998,
+     "temperature_C": 13.99,
+     "precipitation_mm": 343.0
+    },
+    {
+     "year": 1999,
+     "temperature_C": 13.92,
+     "precipitation_mm": 344.9
+    },
+    {
+     "year": 2000,
+     "temperature_C": 14.11,
+     "precipitation_mm": 417.7
+    },
+    {
+     "year": 2001,
+     "temperature_C": 14.23,
+     "precipitation_mm": 372.7
+    },
+    {
+     "year": 2002,
+     "temperature_C": 14.17,
+     "precipitation_mm": 495.5
+    },
+    {
+     "year": 2003,
+     "temperature_C": 14.51,
+     "precipitation_mm": 576.8
+    },
+    {
+     "year": 2004,
+     "temperature_C": 13.84,
+     "precipitation_mm": 362.1
+    },
+    {
+     "year": 2005,
+     "temperature_C": 14.15,
+     "precipitation_mm": 224.0
+    },
+    {
+     "year": 2006,
+     "temperature_C": 14.82,
+     "precipitation_mm": 478.8
+    },
+    {
+     "year": 2007,
+     "temperature_C": 13.47,
+     "precipitation_mm": 380.1
+    },
+    {
+     "year": 2008,
+     "temperature_C": 13.6,
+     "precipitation_mm": 403.2
+    },
+    {
+     "year": 2009,
+     "temperature_C": 14.98,
+     "precipitation_mm": 295.7
+    },
+    {
+     "year": 2010,
+     "temperature_C": 13.71,
+     "precipitation_mm": 492.2
+    },
+    {
+     "year": 2011,
+     "temperature_C": 14.76,
+     "precipitation_mm": 429.1
+    },
+    {
+     "year": 2012,
+     "temperature_C": 14.4,
+     "precipitation_mm": 303.3
+    },
+    {
+     "year": 2013,
+     "temperature_C": 13.77,
+     "precipitation_mm": 406.8
+    },
+    {
+     "year": 2014,
+     "temperature_C": 14.79,
+     "precipitation_mm": 447.6
+    },
+    {
+     "year": 2015,
+     "temperature_C": 15.21,
+     "precipitation_mm": 245.0
+    },
+    {
+     "year": 2016,
+     "temperature_C": 14.86,
+     "precipitation_mm": 497.8
+    },
+    {
+     "year": 2017,
+     "temperature_C": 15.9,
+     "precipitation_mm": 356.8
+    },
+    {
+     "year": 2018,
+     "temperature_C": 14.65,
+     "precipitation_mm": 538.3
+    },
+    {
+     "year": 2019,
+     "temperature_C": 15.43,
+     "precipitation_mm": 373.1
+    },
+    {
+     "year": 2020,
+     "temperature_C": 15.4,
+     "precipitation_mm": 507.4
+    },
+    {
+     "year": 2021,
+     "temperature_C": 15.01,
+     "precipitation_mm": 553.6
+    },
+    {
+     "year": 2022,
+     "temperature_C": 16.33,
+     "precipitation_mm": 531.5
+    },
+    {
+     "year": 2023,
+     "temperature_C": 15.87,
+     "precipitation_mm": 516.7
+    },
+    {
+     "year": 2024,
+     "temperature_C": 15.8,
+     "precipitation_mm": 490.6
+    },
+    {
+     "year": 2025,
+     "temperature_C": 16.18,
+     "precipitation_mm": 680.4
+    }
+   ]
+  },
+  "Turkey": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 12.56,
+     "precipitation_mm": 340.3
+    },
+    {
+     "year": 1991,
+     "temperature_C": 12.04,
+     "precipitation_mm": 417.0
+    },
+    {
+     "year": 1992,
+     "temperature_C": 10.98,
+     "precipitation_mm": 342.1
+    },
+    {
+     "year": 1993,
+     "temperature_C": 11.87,
+     "precipitation_mm": 348.6
+    },
+    {
+     "year": 1994,
+     "temperature_C": 13.4,
+     "precipitation_mm": 352.6
+    },
+    {
+     "year": 1995,
+     "temperature_C": 12.4,
+     "precipitation_mm": 459.7
+    },
+    {
+     "year": 1996,
+     "temperature_C": 12.6,
+     "precipitation_mm": 569.8
+    },
+    {
+     "year": 1997,
+     "temperature_C": 11.4,
+     "precipitation_mm": 504.8
+    },
+    {
+     "year": 1998,
+     "temperature_C": 13.0,
+     "precipitation_mm": 512.1
+    },
+    {
+     "year": 1999,
+     "temperature_C": 13.08,
+     "precipitation_mm": 447.7
+    },
+    {
+     "year": 2000,
+     "temperature_C": 11.8,
+     "precipitation_mm": 404.7
+    },
+    {
+     "year": 2001,
+     "temperature_C": 13.42,
+     "precipitation_mm": 513.6
+    },
+    {
+     "year": 2002,
+     "temperature_C": 12.11,
+     "precipitation_mm": 323.2
+    },
+    {
+     "year": 2003,
+     "temperature_C": 12.49,
+     "precipitation_mm": 347.6
+    },
+    {
+     "year": 2004,
+     "temperature_C": 12.37,
+     "precipitation_mm": 309.2
+    },
+    {
+     "year": 2005,
+     "temperature_C": 12.55,
+     "precipitation_mm": 441.5
+    },
+    {
+     "year": 2006,
+     "temperature_C": 12.43,
+     "precipitation_mm": 380.5
+    },
+    {
+     "year": 2007,
+     "temperature_C": 13.38,
+     "precipitation_mm": 328.8
+    },
+    {
+     "year": 2008,
+     "temperature_C": 12.8,
+     "precipitation_mm": 311.4
+    },
+    {
+     "year": 2009,
+     "temperature_C": 12.7,
+     "precipitation_mm": 520.7
+    },
+    {
+     "year": 2010,
+     "temperature_C": 14.43,
+     "precipitation_mm": 478.7
+    },
+    {
+     "year": 2011,
+     "temperature_C": 11.62,
+     "precipitation_mm": 461.5
+    },
+    {
+     "year": 2012,
+     "temperature_C": 12.87,
+     "precipitation_mm": 489.3
+    },
+    {
+     "year": 2013,
+     "temperature_C": 13.13,
+     "precipitation_mm": 292.2
+    },
+    {
+     "year": 2014,
+     "temperature_C": 13.89,
+     "precipitation_mm": 507.4
+    },
+    {
+     "year": 2015,
+     "temperature_C": 12.6,
+     "precipitation_mm": 539.0
+    },
+    {
+     "year": 2016,
+     "temperature_C": 13.07,
+     "precipitation_mm": 441.0
+    },
+    {
+     "year": 2017,
+     "temperature_C": 12.36,
+     "precipitation_mm": 403.4
+    },
+    {
+     "year": 2018,
+     "temperature_C": 13.72,
+     "precipitation_mm": 443.2
+    },
+    {
+     "year": 2019,
+     "temperature_C": 12.77,
+     "precipitation_mm": 420.6
+    },
+    {
+     "year": 2020,
+     "temperature_C": 13.21,
+     "precipitation_mm": 283.0
+    },
+    {
+     "year": 2021,
+     "temperature_C": 12.35,
+     "precipitation_mm": 451.5
+    },
+    {
+     "year": 2022,
+     "temperature_C": 12.17,
+     "precipitation_mm": 379.1
+    },
+    {
+     "year": 2023,
+     "temperature_C": 13.28,
+     "precipitation_mm": 537.5
+    },
+    {
+     "year": 2024,
+     "temperature_C": 13.65,
+     "precipitation_mm": 464.0
+    },
+    {
+     "year": 2025,
+     "temperature_C": 13.53,
+     "precipitation_mm": 321.1
+    }
+   ]
+  },
+  "Canada": {
+   "fetched": "2026-10-09",
+   "archive": [
+    {
+     "year": 1990,
+     "temperature_C": 4.48,
+     "precipitation_mm": 526.2
+    },
+    {
+     "year": 1991,
+     "temperature_C": 4.79,
+     "precipitation_mm": 480.8
+    },
+    {
+     "year": 1992,
+     "temperature_C": 4.76,
+     "precipitation_mm": 584.7
+    },
+    {
+     "year": 1993,
+     "temperature_C": 3.74,
+     "precipitation_mm": 553.9
+    },
+    {
+     "year": 1994,
+     "temperature_C": 4.66,
+     "precipitation_mm": 443.9
+    },
+    {
+     "year": 1995,
+     "temperature_C": 3.39,
+     "precipitation_mm": 584.5
+    },
+    {
+     "year": 1996,
+     "temperature_C": 1.76,
+     "precipitation_mm": 535.2
+    },
+    {
+     "year": 1997,
+     "temperature_C": 4.54,
+     "precipitation_mm": 404.3
+    },
+    {
+     "year": 1998,
+     "temperature_C": 4.91,
+     "precipitation_mm": 579.6
+    },
+    {
+     "year": 1999,
+     "temperature_C": 5.41,
+     "precipitation_mm": 497.4
+    },
+    {
+     "year": 2000,
+     "temperature_C": 3.82,
+     "precipitation_mm": 373.3
+    },
+    {
+     "year": 2001,
+     "temperature_C": 5.09,
+     "precipitation_mm": 288.7
+    },
+    {
+     "year": 2002,
+     "temperature_C": 3.71,
+     "precipitation_mm": 492.4
+    },
+    {
+     "year": 2003,
+     "temperature_C": 4.34,
+     "precipitation_mm": 506.0
+    },
+    {
+     "year": 2004,
+     "temperature_C": 4.48,
+     "precipitation_mm": 492.1
+    },
+    {
+     "year": 2005,
+     "temperature_C": 4.52,
+     "precipitation_mm": 638.3
+    },
+    {
+     "year": 2006,
+     "temperature_C": 5.24,
+     "precipitation_mm": 467.0
+    },
+    {
+     "year": 2007,
+     "temperature_C": 4.65,
+     "precipitation_mm": 508.5
+    },
+    {
+     "year": 2008,
+     "temperature_C": 3.85,
+     "precipitation_mm": 504.6
+    },
+    {
+     "year": 2009,
+     "temperature_C": 3.56,
+     "precipitation_mm": 359.6
+    },
+    {
+     "year": 2010,
+     "temperature_C": 3.91,
+     "precipitation_mm": 476.2
+    },
+    {
+     "year": 2011,
+     "temperature_C": 3.54,
+     "precipitation_mm": 474.5
+    },
+    {
+     "year": 2012,
+     "temperature_C": 4.49,
+     "precipitation_mm": 499.1
+    },
+    {
+     "year": 2013,
+     "temperature_C": 4.03,
+     "precipitation_mm": 524.7
+    },
+    {
+     "year": 2014,
+     "temperature_C": 3.79,
+     "precipitation_mm": 518.5
+    },
+    {
+     "year": 2015,
+     "temperature_C": 5.63,
+     "precipitation_mm": 442.0
+    },
+    {
+     "year": 2016,
+     "temperature_C": 5.69,
+     "precipitation_mm": 540.9
+    },
+    {
+     "year": 2017,
+     "temperature_C": 4.33,
+     "precipitation_mm": 436.5
+    },
+    {
+     "year": 2018,
+     "temperature_C": 3.65,
+     "precipitation_mm": 412.7
+    },
+    {
+     "year": 2019,
+     "temperature_C": 3.0,
+     "precipitation_mm": 533.6
+    },
+    {
+     "year": 2020,
+     "temperature_C": 4.27,
+     "precipitation_mm": 540.5
+    },
+    {
+     "year": 2021,
+     "temperature_C": 4.41,
+     "precipitation_mm": 425.9
+    },
+    {
+     "year": 2022,
+     "temperature_C": 4.34,
+     "precipitation_mm": 502.6
+    },
+    {
+     "year": 2023,
+     "temperature_C": 5.65,
+     "precipitation_mm": 415.9
+    },
+    {
+     "year": 2024,
+     "temperature_C": 4.49,
+     "precipitation_mm": 554.2
+    },
+    {
+     "year": 2025,
+     "temperature_C": 4.98,
+     "precipitation_mm": 486.9
+    }
+   ]
+  }
+ }
+}

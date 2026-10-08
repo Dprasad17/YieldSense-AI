@@ -1,7 +1,9 @@
 import json
+import math
+import os
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from typing import Any, Dict, Optional
 
@@ -39,29 +41,50 @@ class LiveWeatherUnavailable(Exception):
     """Open-Meteo could not be reached or has no data for the region."""
 
 
-def _fetch_json(url: str) -> dict:
-    req = urllib.request.Request(url, headers={"User-Agent": "YieldSenseAI/1.0"})
+def _fetch_json(url: str, user_agent: str = "YieldSenseAI/1.0") -> dict:
+    req = urllib.request.Request(url, headers={"User-Agent": user_agent})
     with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT_S) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
 
-def _http_get_json(url: str) -> dict:
-    """Open-Meteo GET with a MongoDB cache (TTL index removes entries after WEATHER_CACHE_SECONDS)."""
-    from datetime import timedelta
-
+def mongo_cached(url: str, fetch) -> dict:
+    """GET through a MongoDB cache (TTL index removes entries after WEATHER_CACHE_SECONDS)."""
     from backend.app.core.config import settings
     from backend.app.db import mongo
 
     cached = mongo.cache_get("weather_cache", url)
     if cached is not None:
         return cached
-    data = _fetch_json(url)
+    data = fetch()
     mongo.cache_set("weather_cache", url, data, expires_at=datetime.now(timezone.utc) + timedelta(seconds=settings.WEATHER_CACHE_SECONDS))
     return data
 
 
+def _http_get_json(url: str) -> dict:
+    """Open-Meteo GET with the MongoDB cache."""
+    return mongo_cached(url, lambda: _fetch_json(url))
+
+
+REFERENCE_PATH = os.path.join("datasets", "processed", "weather_reference.json")
+
+
+@lru_cache(maxsize=1)
+def weather_reference() -> dict:
+    """Snapshot built by scripts/build_weather_reference.py: country centroids for every dataset region
+    and ERA5 yearly climate for the hand-picked regions. Used when Open-Meteo refuses requests (HTTP 429
+    is common from shared cloud IP addresses)."""
+    try:
+        with open(REFERENCE_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
 @lru_cache(maxsize=256)
 def _geocode_country(name: str) -> Optional[dict]:
+    snap = (weather_reference().get("coordinates") or {}).get(name.lower())
+    if snap:
+        return dict(snap)
     url = "https://geocoding-api.open-meteo.com/v1/search?" + urllib.parse.urlencode({"name": name, "count": 10})
     try:
         results = _http_get_json(url).get("results") or []
@@ -73,6 +96,79 @@ def _geocode_country(name: str) -> Optional[dict]:
         if str(r.get("feature_code", "")).startswith("PCL"):
             return {"lat": r["latitude"], "lon": r["longitude"], "name": f"{name} (country centroid)"}
     return None
+
+
+MET_USER_AGENT = "YieldSenseAI/1.0 github.com/Dprasad17/YieldSense-AI"
+
+
+def _daylight_hours(lat: float, day_of_year: int) -> float:
+    decl = math.radians(23.44) * math.sin(2 * math.pi * (284 + day_of_year) / 365)
+    x = -math.tan(math.radians(lat)) * math.tan(decl)
+    return 24.0 / math.pi * math.acos(max(-1.0, min(1.0, x)))
+
+
+def _met_norway_forecast(lat: float, lon: float) -> dict:
+    """MET Norway locationforecast (free, no key; needs an identifying User-Agent), reshaped into the
+    Open-Meteo forecast fields the service reads. Daily values use the local solar date (longitude / 15 h).
+    MET Norway has no sunshine duration, so it is estimated as daylight × (1 − mean cloud cover)."""
+    url = "https://api.met.no/weatherapi/locationforecast/2.0/compact?" + urllib.parse.urlencode(
+        {"lat": round(lat, 4), "lon": round(lon, 4)}
+    )
+    data = mongo_cached(url, lambda: _fetch_json(url, MET_USER_AGENT))
+    series = (data.get("properties") or {}).get("timeseries") or []
+    if not series:
+        raise LiveWeatherUnavailable("MET Norway returned no data for this location.")
+
+    offset = timedelta(hours=round(lon / 15.0))
+    days: Dict[str, Dict[str, list]] = {}
+    covered_until = None
+    for entry in series:
+        t = datetime.fromisoformat(entry["time"].replace("Z", "+00:00"))
+        d = (t + offset).date().isoformat()
+        details = ((entry.get("data") or {}).get("instant") or {}).get("details") or {}
+        day = days.setdefault(d, {"temp": [], "cloud": [], "rain": []})
+        if "air_temperature" in details:
+            day["temp"].append(float(details["air_temperature"]))
+        if "cloud_area_fraction" in details:
+            day["cloud"].append(float(details["cloud_area_fraction"]))
+        # Precipitation comes per 1 h early in the series and per 6 h later; count each hour once.
+        for key, hours in (("next_1_hours", 1), ("next_6_hours", 6)):
+            block = (entry.get("data") or {}).get(key)
+            if block and (covered_until is None or t >= covered_until):
+                day["rain"].append(float((block.get("details") or {}).get("precipitation_amount", 0.0)))
+                covered_until = t + timedelta(hours=hours)
+                break
+
+    dates = sorted(d for d, v in days.items() if v["temp"])
+    if len(dates) > 1 and len(days[dates[0]]["temp"]) < 3:  # today is nearly over: skip the partial day
+        dates = dates[1:]
+    dates = dates[:FORECAST_DAYS]
+    first = series[0]
+    now = ((first.get("data") or {}).get("instant") or {}).get("details") or {}
+    now_rain = (((first.get("data") or {}).get("next_1_hours") or {}).get("details") or {}).get("precipitation_amount", 0.0)
+
+    def sunshine_s(d: str) -> float:
+        doy = datetime.fromisoformat(d).timetuple().tm_yday
+        clouds = days[d]["cloud"]
+        cover = sum(clouds) / len(clouds) / 100.0 if clouds else 0.5
+        return _daylight_hours(lat, doy) * (1.0 - cover) * 3600.0
+
+    return {
+        "current": {
+            "time": first.get("time"),
+            "temperature_2m": now.get("air_temperature", 0.0),
+            "relative_humidity_2m": now.get("relative_humidity", 0.0),
+            "precipitation": now_rain,
+            "wind_speed_10m": float(now.get("wind_speed", 0.0)) * 3.6,  # m/s → km/h
+        },
+        "daily": {
+            "time": dates,
+            "temperature_2m_max": [max(days[d]["temp"]) for d in dates],
+            "temperature_2m_min": [min(days[d]["temp"]) for d in dates],
+            "precipitation_sum": [sum(days[d]["rain"]) for d in dates],
+            "sunshine_duration": [sunshine_s(d) for d in dates],
+        },
+    }
 
 
 def _clamp(v: float, lo: float = 0.0, hi: float = 100.0) -> float:
@@ -173,11 +269,17 @@ class WeatherService:
                 "timezone": "auto",
             }
         )
+        source = "Open-Meteo"
         try:
             res = _http_get_json(url)
         except Exception as e:
-            log.warning(f"[WeatherService] Live API call failed: {e}")
-            raise LiveWeatherUnavailable("Open-Meteo is unreachable right now. Switch to dataset mode or try again.")
+            log.warning(f"[WeatherService] Live API call failed: {e}; trying MET Norway")
+            try:
+                res = _met_norway_forecast(coords["lat"], coords["lon"])
+                source = "MET Norway"
+            except Exception as e2:
+                log.warning(f"[WeatherService] MET Norway call failed: {e2}")
+                raise LiveWeatherUnavailable("Live weather services are unreachable right now. Switch to dataset mode or try again.")
 
         current = res.get("current") or {}
         daily = res.get("daily") or {}
@@ -218,8 +320,8 @@ class WeatherService:
 
         return {
             "mode": "live",
-            "status_claim": f"Live Open-Meteo forecast · {coords['name']}",
-            "data_source": "Open-Meteo",
+            "status_claim": f"Live {source} forecast · {coords['name']}",
+            "data_source": source,
             "period": f"{FORECAST_DAYS}-day forecast",
             "region": region.strip(),
             "analytics": {
@@ -328,14 +430,20 @@ def climate_trend(region: str) -> Dict[str, Any]:
             ]
     except LiveWeatherUnavailable as e:
         error = str(e)
-    except Exception as e:  # network or parsing: keep the dataset series
+    except Exception as e:  # network or parsing: use the stored snapshot, else keep the dataset series
         log.warning(f"[WeatherService] Archive call failed: {e}")
         error = "The Open-Meteo climate archive is unreachable right now; showing dataset values only."
+
+    source = "ERA5 reanalysis via Open-Meteo archive API"
+    snap = (weather_reference().get("climate") or {}).get(name)
+    if not archive and snap and snap.get("archive"):
+        archive, error = snap["archive"], None
+        source = f"ERA5 reanalysis via Open-Meteo archive API (stored snapshot, {snap.get('fetched', 'undated')})"
 
     return {
         "region": name,
         "location": location,
-        "archive_source": "ERA5 reanalysis via Open-Meteo archive API" if archive else None,
+        "archive_source": source if archive else None,
         "archive": archive,
         "dataset": dataset_years,
         "temperature_trend_C_per_decade": _slope_per_decade([a["year"] for a in archive], [a["temperature_C"] for a in archive]) if archive else None,
