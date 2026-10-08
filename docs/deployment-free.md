@@ -16,6 +16,13 @@ The image is `deploy/huggingface/Dockerfile` (it also runs on any Docker host). 
 - memory in use: about 235 MB;
 - browser test: all checks passed, 0 console errors.
 
+**Live deployment:** https://yieldsense-ai-hilr.onrender.com (Render free plan, Ohio; Neon and Atlas in US East). Checked on the live site:
+
+- health `healthy`, with database, MongoDB and model all `true`;
+- browser test 38/38, 0 console errors;
+- load test with 5 users for 30 s: 182 requests, 0 errors, p50 0.6 s, p95 2.0 s;
+- a restart with data already present goes live in about 1.5 minutes.
+
 > Hugging Face Spaces was the first choice, but Docker Spaces now need a paid PRO plan, so the deployment moved to Render. `deploy/huggingface/deploy_space.py` still works for a PRO account.
 
 ---
@@ -101,6 +108,7 @@ Push to the branch, then click **Manual Deploy** → **Deploy latest commit** on
 | Logs: `prepared statement ... already exists` | Use Neon's direct host (no `-pooler` in the address) |
 | Deploy fails with *Ran out of memory* | Check that `WEB_CONCURRENCY` is `1` |
 | App takes about a minute to open | The service was asleep after 15 minutes without visitors. Open it a few minutes before a demo |
+| Weather page says *Live MET Norway forecast* | Expected on Render: Open-Meteo answers HTTP 429 to Render's shared IP addresses, so the app uses MET Norway. Country coordinates and climate trends for the main regions come from `datasets/processed/weather_reference.json` (rebuild with `python scripts/build_weather_reference.py`) |
 | Pages are slow (1–2 s) | The free plan has 0.1 CPU. Keep Render, Neon and Atlas in the same region (US East) |
 | Soil panel shows an error for a new farm | SoilGrids is slow; demo farms are pre-cached during start-up |
 

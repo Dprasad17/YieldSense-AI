@@ -140,7 +140,7 @@ def _met_norway_forecast(lat: float, lon: float) -> dict:
                 break
 
     dates = sorted(d for d, v in days.items() if v["temp"])
-    if len(dates) > 1 and len(days[dates[0]]["temp"]) < 3:  # today is nearly over: skip the partial day
+    if len(dates) > 1 and len(days[dates[0]]["temp"]) < 6:  # today is nearly over: skip the partial day
         dates = dates[1:]
     dates = dates[:FORECAST_DAYS]
     first = series[0]

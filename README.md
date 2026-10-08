@@ -295,7 +295,7 @@ Verified locally with Docker Desktop: all services healthy, the browser test pas
 
 Step-by-step instructions (VM creation on AWS and Azure, GitHub secrets, HTTPS, backups, rollback, troubleshooting) are in **[docs/deployment.md](docs/deployment.md)**.
 
-**Free deployment, no credit card:** one container on a free Render web service (`render.yaml` Blueprint) with Neon PostgreSQL and MongoDB Atlas. See **[docs/deployment-free.md](docs/deployment-free.md)**.
+**Free deployment, no credit card:** one container on a free Render web service (`render.yaml` Blueprint) with Neon PostgreSQL and MongoDB Atlas. Live demo: **https://yieldsense-ai-hilr.onrender.com** (it sleeps when idle; the first visit can take about a minute). See **[docs/deployment-free.md](docs/deployment-free.md)**.
 
 | Script | Purpose |
 | --- | --- |
