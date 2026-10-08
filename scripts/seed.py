@@ -165,8 +165,9 @@ SOIL_SNAPSHOT = os.path.join("datasets", "processed", "soilgrids_demo_farms.json
 
 def seed_soil_cache() -> None:
     """Pre-warms the SoilGrids cache for the demo farms so the demo never waits on the public API.
-    Tries a live fetch first; if SoilGrids is slow or down, loads the saved snapshot of its real responses
-    for the same coordinates (datasets/processed/soilgrids_demo_farms.json). Nothing here is synthetic."""
+    Uses the saved snapshot of SoilGrids' real responses for the same coordinates
+    (datasets/processed/soilgrids_demo_farms.json) when it has the point, so start-up never depends on the
+    slow public API; fetches live only for points the snapshot lacks. Nothing here is synthetic."""
     import json
     from datetime import datetime, timedelta, timezone
 
@@ -182,16 +183,16 @@ def seed_soil_cache() -> None:
             if mongo.cache_get("soilgrids_cache", key) is not None:
                 print(f"soilgrids: {spec['name']} already cached")
                 continue
+            saved = snapshot.get(key)
+            if saved:
+                value = {k: v for k, v in saved.items() if k != "farm"}
+                mongo.cache_set("soilgrids_cache", key, value, expires_at=datetime.now(timezone.utc) + timedelta(days=soil_real.CACHE_DAYS))
+                print(f"soilgrids: {spec['name']} cached from the saved SoilGrids snapshot (fetched {saved.get('fetched_at')})")
+                continue
             soil_real.fetch_soilgrids(spec["latitude"], spec["longitude"])
             print(f"soilgrids: {spec['name']} fetched live and cached")
         except soil_real.SoilGridsUnavailable as e:
-            saved = snapshot.get(key)
-            if not saved:
-                print(f"soilgrids: {spec['name']} not cached ({e})")
-                continue
-            value = {k: v for k, v in saved.items() if k != "farm"}
-            mongo.cache_set("soilgrids_cache", key, value, expires_at=datetime.now(timezone.utc) + timedelta(days=soil_real.CACHE_DAYS))
-            print(f"soilgrids: {spec['name']} cached from the saved SoilGrids snapshot (fetched {saved.get('fetched_at')})")
+            print(f"soilgrids: {spec['name']} not cached ({e})")
         except Exception as e:  # Mongo down: the app still works, the first soil request just goes live
             print(f"soilgrids: skipped ({e})")
             return

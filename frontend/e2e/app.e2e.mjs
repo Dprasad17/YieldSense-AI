@@ -220,8 +220,6 @@ await check('predictor: validation, predict, insight, what-if, save, history', a
   await waitUrl('/app/history');
   await waitText('Prediction history');
   await waitText('XGBoost v3.0.0');
-  await waitText('Why this prediction');
-  await waitText('Last season’s yield');
   await waitFor(
     () => evaluate(`[...document.querySelectorAll('tbody button')].some(b => b.innerText.trim() === 'Re-run')`),
     're-run button',

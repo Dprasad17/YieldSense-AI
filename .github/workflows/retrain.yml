@@ -2,10 +2,9 @@
 # The new model is uploaded as an artifact for review; it is not committed or deployed automatically.
 name: Retrain model
 
+# Manual only (Actions → Retrain model → Run workflow), so it never emails on its own.
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 3 1 */3 *" # quarterly, 03:00 UTC on the 1st
 
 jobs:
   retrain:
