@@ -189,3 +189,29 @@ def test_psi():
     base = rng.normal(0, 1, 5000)
     assert psi(base, rng.normal(0, 1, 2000)) < 0.05
     assert psi(base, rng.normal(1.5, 1, 2000)) > 0.25
+
+
+def test_interface_translation_is_cached(client, auth, monkeypatch):
+    from backend.app.services import translation
+    from backend.app.services.llm_service import llm_service
+
+    res = client.post("/api/i18n/translate", json={"lang": "kn", "texts": ["Farm records"]}, headers=auth("farmer"))
+    assert res.status_code == 503 and res.json()["error"]["code"] == "translation_unavailable"
+
+    calls = []
+
+    def fake(lang, texts):
+        calls.append(list(texts))
+        return {t: f"[{lang}] {t}" for t in texts}
+
+    monkeypatch.setattr(llm_service, "groq_api_key", "test-key")
+    monkeypatch.setattr(translation, "_groq", fake)
+    body = {"lang": "kn", "texts": ["Farm records", "Average yield", "Farm records"]}
+    first = client.post("/api/i18n/translate", json=body, headers=auth("farmer")).json()
+    assert first["translations"] == {"Farm records": "[kn] Farm records", "Average yield": "[kn] Average yield"}
+    assert calls == [["Farm records", "Average yield"]]
+    # Second request comes from the MongoDB cache: no new LLM call.
+    again = client.post("/api/i18n/translate", json=body, headers=auth("agronomist")).json()
+    assert again["translations"] == first["translations"] and len(calls) == 1
+    assert client.post("/api/i18n/translate", json={"lang": "fr", "texts": ["x"]}, headers=auth("farmer")).status_code == 422
+    assert client.post("/api/i18n/translate", json=body).status_code == 401

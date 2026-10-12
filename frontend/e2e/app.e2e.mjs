@@ -310,10 +310,13 @@ await check('phase C: profile edit and notification preferences persist', async 
   await go('/app/settings');
   await waitText('Change password');
   await waitText('Risk alerts');
-  await setInput('#pf-name', 'Ramesh K.');
+  // A unique interim name: if an earlier run stopped halfway, the stored name could equal a fixed value,
+  // and typing the same value leaves Save disabled.
+  const interim = `Ramesh T${Date.now() % 100000}`;
+  await setInput('#pf-name', interim);
   await clickText('button', 'Save profile');
   await waitText('Profile saved');
-  await waitText('Ramesh K.');
+  await waitText(interim);
   await setInput('#pf-name', 'Ramesh Kumar');
   await clickText('button', 'Save profile');
   await waitText('Profile saved');
@@ -484,7 +487,11 @@ await check('analytics: real yearly trend, band, record table, export', async ()
 await check('v3: assistant, market revenue, leaf check, satellite panel, language', async () => {
   await go('/app/assistant');
   await waitText('Ask YieldSense');
-  await waitFor(async () => /needs a Groq API key|Ask about your farms/.test(await text()), 'assistant state', 20000);
+  await waitFor(
+    async () => /needs a Groq API key|Ask about your farms|Clear chat/.test(await text()),
+    'assistant state',
+    20000,
+  );
   await go('/app/market?region=Kenya');
   await waitText('Expected revenue by crop', 30000);
   await waitText('not profit');

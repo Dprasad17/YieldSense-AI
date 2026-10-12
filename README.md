@@ -78,7 +78,7 @@ This repository covers all four milestones of the project specification: project
 - **Satellite crop health.** NASA MODIS NDVI for each farm over the last 12 months, compared with the year before.
 - **Market & revenue.** Expected gross revenue per hectare for each crop: next-season model yield × FAOSTAT producer price.
 - **Leaf check.** Photograph a leaf and get a first check for 38 diseases of 14 plants (MobileNetV2, ONNX) with treatment guidance.
-- **For farmers in the field.** Installable app with an offline shell, menus in Hindi, Kannada, Telugu and Tamil, weekly digests by email or SMS/WhatsApp, and Google sign-in.
+- **For farmers in the field.** Installable app with an offline shell, the whole interface in Hindi, Kannada, Telugu or Tamil (AI-translated, cached), weekly digests by email or SMS/WhatsApp, and Google sign-in.
 
 ### Analytics and reporting
 

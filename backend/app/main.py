@@ -22,6 +22,7 @@ from backend.app.api.intelligence import (
     assistant_router,
     digest_router,
     disease_router,
+    i18n_router,
     market_router,
     ops_router,
     satellite_router,
@@ -135,6 +136,7 @@ for r in (
     disease_router,
     ops_router,
     digest_router,
+    i18n_router,
 ):
     app.include_router(r)
 

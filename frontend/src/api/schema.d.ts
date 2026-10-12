@@ -1178,6 +1178,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/i18n/translate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Translate Texts
+         * @description Translates interface strings into an Indian language (cached for everyone after the first request).
+         */
+        post: operations["translate_texts_api_i18n_translate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/": {
         parameters: {
             query?: never;
@@ -3002,6 +3022,25 @@ export interface components {
             email: string;
             /** Full Name */
             full_name: string;
+        };
+        /** TranslateIn */
+        TranslateIn: {
+            /**
+             * Lang
+             * @enum {string}
+             */
+            lang: "hi" | "kn" | "te" | "ta";
+            /** Texts */
+            texts: string[];
+        };
+        /** TranslateOut */
+        TranslateOut: {
+            /** Lang */
+            lang: string;
+            /** Translations */
+            translations: {
+                [key: string]: string;
+            };
         };
         /** UploadSummary */
         UploadSummary: {
@@ -7486,6 +7525,66 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DigestResult"];
+                };
+            };
+            /** @description Not signed in or session expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Role not allowed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid request */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    translate_texts_api_i18n_translate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TranslateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranslateOut"];
                 };
             };
             /** @description Not signed in or session expired */

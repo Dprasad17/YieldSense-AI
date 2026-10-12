@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from 'react';
+import { setAutoTranslate } from './autoTranslate';
 
-/** Interface languages. Navigation, page titles and main actions are translated; detailed text stays in
- * English. The AI assistant answers in whatever language the question is written in. */
+/** Interface languages. Navigation, page titles and main actions come from the table below; lib/autoTranslate.ts
+ * translates the rest of each page (Groq, cached). The AI assistant answers in the language of the question. */
 export const LANGUAGES = [
   { code: 'en', label: 'English' },
   { code: 'hi', label: 'हिन्दी (Hindi)' },
@@ -180,6 +181,7 @@ export function setLanguage(lang: Lang) {
   }
   if (typeof document !== 'undefined') document.documentElement.lang = lang;
   listeners.forEach(l => l());
+  if (typeof document !== 'undefined') setAutoTranslate(lang);
 }
 
 export function getLanguage(): Lang {
@@ -204,4 +206,12 @@ export function useLanguage(): [Lang, (t: string) => string] {
   return [lang, (t: string) => translate(t, lang)];
 }
 
-if (typeof document !== 'undefined') document.documentElement.lang = current;
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = current;
+  // Whole-page translation for a saved non-English choice, once the app has rendered.
+  if (current !== 'en') {
+    const start = () => setAutoTranslate(current);
+    if (document.readyState === 'complete') window.setTimeout(start, 0);
+    else window.addEventListener('load', start, { once: true });
+  }
+}

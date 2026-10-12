@@ -275,3 +275,29 @@ def send_my_digest(user: dict = Depends(require_user)):
 
     return messaging.send_digests(only_user=user["username"])
 
+
+
+# ------------------------------------------------------------------ interface translation
+
+i18n_router = APIRouter(prefix="/api/i18n", tags=["Translation"], responses=ERROR_RESPONSES)
+
+
+class TranslateIn(BaseModel):
+    lang: Literal["hi", "kn", "te", "ta"]
+    texts: list[str] = Field(min_length=1, max_length=80)
+
+
+class TranslateOut(BaseModel):
+    lang: str
+    translations: dict[str, str]
+
+
+@i18n_router.post("/translate", response_model=TranslateOut)
+def translate_texts(body: TranslateIn, _user: dict = Depends(require_user)):
+    """Translates interface strings into an Indian language (cached for everyone after the first request)."""
+    from backend.app.services import translation
+
+    try:
+        return {"lang": body.lang, "translations": translation.translate(body.lang, body.texts)}
+    except translation.TranslationUnavailable as e:
+        raise AppError(503, str(e), code="translation_unavailable")

@@ -12,7 +12,7 @@ Everything below is implemented, tested and documented. For each feature the tab
 | 6 | Market and revenue per crop | `/app/market` | Test; live check | — |
 | 7 | Leaf-photo disease check (ONNX) | `/app/leaf-check` | Test with a real image through the model | — |
 | 8 | Installable app (PWA) with offline shell | `manifest.webmanifest`, `sw.js` | Production build | — |
-| 9 | Interface in Hindi, Kannada, Telugu and Tamil | Settings → Language | Browser test switches to Hindi | — |
+| 9 | Whole app in Hindi, Kannada, Telugu and Tamil | Settings → Language | Browser test switches to Hindi; endpoint test | `GROQ_API_KEY` (already set) |
 | 10 | Weekly digest by email and SMS/WhatsApp | Settings → Weekly digest | Test with mocked senders | SMTP and/or Twilio |
 | 11 | Google sign-in (OAuth 2.0 / OpenID Connect) | Sign-in page | Test with mocked Google | `GOOGLE_CLIENT_ID` |
 | 12 | API-wide rate limit | Middleware | Test | — |
@@ -117,7 +117,20 @@ The web app installs on Android, iOS and desktop. The service worker:
 - serves the last API responses when offline;
 - deletes those cached responses on sign-out, so a shared phone doesn't leak data.
 
-Menus and page titles are available in English, हिन्दी, ಕನ್ನಡ, తెలుగు and தமிழ். The assistant answers in whatever language the question is in.
+Choose English, हिन्दी, ಕನ್ನಡ, తెలుగు or தமிழ் under Settings → Language, and the **whole app** switches:
+
+- Menus come from a built-in word list.
+- Everything else on the page is translated by the Groq LLM (`POST /api/i18n/translate`).
+- Each string is translated once, then cached for every user in MongoDB `i18n_cache` and in the browser.
+- The first visit to a page fills in within a few seconds; after that it is instant.
+
+What stays as it is:
+
+- numbers, units and product names;
+- dropdown values such as crop and country names;
+- anything typed into a form.
+
+Without a Groq key, only the menus are translated. The assistant answers in whatever language the question is in.
 
 ## 10. Weekly digest
 

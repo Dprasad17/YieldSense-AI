@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import './styles/globals.css';
+import './lib/i18n'; // applies a saved interface language (whole-page translation) on start-up
 import { Providers } from './app/Providers';
 import { router } from './app/router';
 

@@ -645,10 +645,10 @@ function DigestSettings({ prefs, onSaved }: { prefs: Prefs; onSaved: () => void 
 function LanguageSettings() {
   const [lang, t] = useLanguage();
   return (
-    <Card>
+    <Card translate="no">
       <CardHeader
         title={t('Language')}
-        subtitle="Menus and page titles. The AI assistant answers in the language you write in."
+        subtitle="The whole app is translated (by AI, the first time a page is opened, then from a cache). The assistant answers in the language you write in."
       />
       <Select
         aria-label="Interface language"

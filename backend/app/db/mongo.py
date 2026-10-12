@@ -34,6 +34,7 @@ def ensure_indexes() -> None:
     d.satellite_cache.create_index("key", unique=True)
     d.satellite_cache.create_index("expires_at", expireAfterSeconds=0)
     d.assistant_chats.create_index([("user", ASCENDING), ("created_at", DESCENDING)])
+    d.i18n_cache.create_index("key", unique=True)
 
 
 def ping() -> bool:
